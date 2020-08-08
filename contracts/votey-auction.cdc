@@ -47,7 +47,7 @@ pub contract VoteyAuction {
         // Auction Items
         pub var auctionQueue: @{UInt64: NonFungibleToken.NFT}
         pub var auctionQueueMeta: {UInt64: AuctionQueueMeta}
-        pub var currentAuctionItem: UInt64?
+        pub var currentAuctionItemID: UInt64?
 
         // Auction Settings
         pub let minimumBidIncrement: UFix64
@@ -55,29 +55,29 @@ pub contract VoteyAuction {
         pub var auctionStartBlock: UInt64
 
         // Recipient's Receiver References
-        pub var recipientNFTCollection: &AnyResource{NonFungibleToken.CollectionPublic}?
-        pub var recipientVault: &AnyResource{FungibleToken.Receiver}?
+        pub var recipientNFTCollectionCapability: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>?
+        pub var recipientVaultCapability: Capability<&AnyResource{FungibleToken.Receiver}>?
 
         // Vaults
-        pub let ownerVault: &AnyResource{FungibleToken.Receiver}
+        pub let ownerVaultCapability: Capability<&AnyResource{FungibleToken.Receiver}>
         pub let bidVault: @FungibleToken.Vault
 
 
         init(
             minimumBidIncrement: UFix64,
             auctionLengthInBlocks: UInt64,
-            ownerVault: &AnyResource{FungibleToken.Receiver},
+            ownerVaultCapability: Capability<&AnyResource{FungibleToken.Receiver}>,
             bidVault: @FungibleToken.Vault
         ) {
             self.auctionQueue <- {}
-            self.currentAuctionItem = nil
+            self.currentAuctionItemID = nil
             self.auctionQueueMeta = {}
             self.minimumBidIncrement = minimumBidIncrement
             self.auctionLengthInBlocks = auctionLengthInBlocks
             self.auctionStartBlock = UInt64(0)
-            self.recipientNFTCollection = nil
-            self.recipientVault = nil
-            self.ownerVault = ownerVault
+            self.recipientNFTCollectionCapability = nil
+            self.recipientVaultCapability = nil
+            self.ownerVaultCapability = ownerVaultCapability
             self.bidVault <- bidVault
         }
 
@@ -123,7 +123,7 @@ pub contract VoteyAuction {
         // auction queue and puts it up for auction while storing the current block number
         pub fun startAuction() {
             pre {
-                self.currentAuctionItem == nil:
+                self.currentAuctionItemID == nil:
                 "the auction has already been started"
             }
             // Store the current block height as the start block number
@@ -133,12 +133,12 @@ pub contract VoteyAuction {
             log("got the current block height")
 
             // update the current auction item from the auction queue
-            self.updateCurrentAuctionItem()
+            self.updateCurrentAuctionItemID()
         }
 
-        // updateCurrentAuctionItem adds the next token from the auction queue
+        // updateCurrentAuctionItemID adds the next token from the auction queue
         // to the current auction array
-        pub fun updateCurrentAuctionItem() {
+        pub fun updateCurrentAuctionItemID() {
             pre {
                 self.auctionQueue.keys.length > 0:
                 "there are no tokens in the auction queue"
@@ -150,7 +150,7 @@ pub contract VoteyAuction {
             var tokenID = self.getNextTokenID()
             
             // set the current auction item to the new token ID
-            self.currentAuctionItem = tokenID
+            self.currentAuctionItemID = tokenID
 
             // set the auction start block to the current block height
             let currentBlock = getCurrentBlock()
@@ -221,7 +221,7 @@ pub contract VoteyAuction {
 
             if blockTimeDifference >= self.auctionLengthInBlocks {
                 self.settleCurrentAuction()
-                self.updateCurrentAuctionItem()
+                self.updateCurrentAuctionItemID()
             }
             
         }
@@ -229,9 +229,12 @@ pub contract VoteyAuction {
         // settleCurrentAuction sends the current auction item to the highest bidder
         // and deposits the FungibleTokens into the auction owner's account
         pub fun settleCurrentAuction() {
-            
+            pre {
+                self.recipientNFTCollectionCapability != nil:
+                "Recipient's NFT receiver capability is invalid"
+            }
             // If there is a token available for auction
-            if let tokenID = self.currentAuctionItem {
+            if let tokenID = self.currentAuctionItemID {
                 
                 // get the token meta data
                 let tokenMeta = self.auctionQueueMeta[tokenID]??
@@ -242,12 +245,18 @@ pub contract VoteyAuction {
 
                     if let purchasedToken <- self.auctionQueue.remove(key: tokenID) {
                         
-                        //... send the NFT to the highest bidder
-                        self.recipientNFTCollection!.deposit(token: <-purchasedToken)
+                        //... borrow a reference to the highest bidder's NFT collection receiver
+                        let recipientNFTCollectionRef = self.recipientNFTCollectionCapability!.borrow()
                         
+                        //... send the NFT to the highest bidder
+                        recipientNFTCollectionRef!.deposit(token: <-purchasedToken)
+                        
+                        //... borrow a reference to the owner's Vault
+                        let ownerVaultRef = self.ownerVaultCapability.borrow()
+
                         //... send the FTs to the Auction Owner
                         let bidVaultTokens <- self.bidVault.withdraw(amount: self.bidVault.balance)
-                        self.ownerVault.deposit(from:<-bidVaultTokens)
+                        ownerVaultRef!.deposit(from:<-bidVaultTokens)
 
                         emit TokenPurchased(tokenID: tokenID, price: tokenMeta.currentPrice)
 
@@ -268,18 +277,23 @@ pub contract VoteyAuction {
         // currentPrice of the current auction item
         pub fun placeBid(
             bidTokens: @FungibleToken.Vault, 
-            vaultRef: &AnyResource{FungibleToken.Receiver}, 
-            collectionRef: &AnyResource{NonFungibleToken.CollectionPublic}) 
+            vaultCap: Capability<&AnyResource{FungibleToken.Receiver}>, 
+            collectionCap: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>
+        ) 
             {
             pre {
-                self.currentAuctionItem != nil:
-                "there is no item to bid on"
-                bidTokens.balance - self.auctionQueueMeta[self.currentAuctionItem!]!.currentPrice >= self.minimumBidIncrement:
-                "bid amount must be larger than the minimum bid increment"
+                self.currentAuctionItemID != nil:
+                    "there is no item to bid on"
+                bidTokens.balance - self.auctionQueueMeta[self.currentAuctionItemID!]!.currentPrice >= self.minimumBidIncrement:
+                    "bid amount must be larger than the minimum bid increment"
+                vaultCap != nil:
+                    "Bidder's Vault receiver capability is invalid"
+                collectionCap != nil:
+                    "Bidder's NFT Collection capability is invalid"
             }
 
             // get the meta data for the current token
-            let tokenID = self.currentAuctionItem!
+            let tokenID = self.currentAuctionItemID!
             let currentTokenMeta = self.auctionQueueMeta[tokenID]!
 
             // release any previously held bid tokens
@@ -292,8 +306,8 @@ pub contract VoteyAuction {
             currentTokenMeta.currentPrice = self.bidVault.balance
 
             // Add the bidder's Vault and NFT receiver references
-            self.recipientVault = vaultRef
-            self.recipientNFTCollection = collectionRef
+            self.recipientVaultCapability = vaultCap
+            self.recipientNFTCollectionCapability = collectionCap
 
             // check if the auction needs to be updated
             self.maybeUpdateAuctionItem()
@@ -305,14 +319,20 @@ pub contract VoteyAuction {
         // their vault receiver
         access(contract) fun releasePreviousBid() {
             // If there was a previous bidder...
-            if var recipientVault = self.recipientVault {
+            if var recipientVaultCapability = self.recipientVaultCapability {
                 //... send the previous bidder's tokens back
                 let oldBalance <- self.bidVault.withdraw(amount: self.bidVault.balance)
-                recipientVault.deposit(from:<-oldBalance)
+                
+                //... borrow a reference to the recipient's Vault receiver
+                let recipientVaultRef = self.recipientVaultCapability!.borrow()
+
+                //.. deposit the tokens in the recipient's Vault
+                recipientVaultRef!.deposit(from:<-oldBalance)
             }
         }
 
         destroy() {
+            // TODO: Safely return tokens to owners
             destroy self.auctionQueue
             destroy self.bidVault
         }
@@ -322,14 +342,14 @@ pub contract VoteyAuction {
     pub fun createAuctionCollection(
         minimumBidIncrement: UFix64,
         auctionLengthInBlocks: UInt64,
-        ownerVault: &AnyResource{FungibleToken.Receiver},
+        ownerVaultCapability: Capability<&AnyResource{FungibleToken.Receiver}>,
         bidVault: @FungibleToken.Vault
     ): @AuctionCollection {
 
         let auctionCollection <- create AuctionCollection(
             minimumBidIncrement: minimumBidIncrement,
             auctionLengthInBlocks: auctionLengthInBlocks,
-            ownerVault: ownerVault,
+            ownerVaultCapability: ownerVaultCapability,
             bidVault: <-bidVault
         )
 
