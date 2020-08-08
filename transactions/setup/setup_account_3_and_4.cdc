@@ -54,7 +54,7 @@ transaction{
 
         log("Created a Rock Collection and published the references")
 
-        log("Account 3 is ready to Rock!")        
+        log("Account is ready to Rock!")        
     }
 }
  

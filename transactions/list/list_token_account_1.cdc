@@ -18,7 +18,6 @@ import VoteyAuction from 0xf3fcd2c1a78f5eee
 
 transaction {
     prepare(account: AuthAccount) {
-
         let bidVault <- DemoToken.createEmptyVault()
 
         // borrow a reference to the signer's Vault
@@ -35,7 +34,6 @@ transaction {
             minimumBidIncrement: UFix64(5),
             auctionLengthInBlocks: UInt64(30),
             ownerVault: receiver,
-            ownerNFTCollection: collectionRef,
             bidVault: <-bidVault
         )
 
