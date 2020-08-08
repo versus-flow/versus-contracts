@@ -38,8 +38,12 @@ pub contract VoteyAuction {
     }
 
     pub resource interface AuctionPublic {
-        // TODO: Add all public methods here
         pub fun getAuctionQueuePrices(): {UInt64: UFix64}
+        pub fun placeBid(
+            bidTokens: @FungibleToken.Vault, 
+            vaultCap: Capability<&AnyResource{FungibleToken.Receiver}>, 
+            collectionCap: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>
+        )
     }
 
     pub resource AuctionCollection: AuctionPublic {
@@ -54,18 +58,21 @@ pub contract VoteyAuction {
         pub let auctionLengthInBlocks: UInt64
         pub var auctionStartBlock: UInt64
 
-        // Recipient's Receiver References
+        // Recipient's Receiver Capabilities
         pub var recipientNFTCollectionCapability: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>?
         pub var recipientVaultCapability: Capability<&AnyResource{FungibleToken.Receiver}>?
 
-        // Vaults
+        // Owner's Receiver Capabilities
+        pub let ownerNFTCollectionCapability: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>
         pub let ownerVaultCapability: Capability<&AnyResource{FungibleToken.Receiver}>
-        pub let bidVault: @FungibleToken.Vault
 
+        // Auction Collection's Vault
+        pub let bidVault: @FungibleToken.Vault
 
         init(
             minimumBidIncrement: UFix64,
             auctionLengthInBlocks: UInt64,
+            ownerNFTCollectionCapability: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>,
             ownerVaultCapability: Capability<&AnyResource{FungibleToken.Receiver}>,
             bidVault: @FungibleToken.Vault
         ) {
@@ -77,6 +84,7 @@ pub contract VoteyAuction {
             self.auctionStartBlock = UInt64(0)
             self.recipientNFTCollectionCapability = nil
             self.recipientVaultCapability = nil
+            self.ownerNFTCollectionCapability = ownerNFTCollectionCapability
             self.ownerVaultCapability = ownerVaultCapability
             self.bidVault <- bidVault
         }
@@ -124,13 +132,8 @@ pub contract VoteyAuction {
         pub fun startAuction() {
             pre {
                 self.currentAuctionItemID == nil:
-                "the auction has already been started"
+                    "the auction is already in progress"
             }
-            // Store the current block height as the start block number
-            let currentBlock = getCurrentBlock()
-            self.auctionStartBlock = currentBlock.height
-
-            log("got the current block height")
 
             // update the current auction item from the auction queue
             self.updateCurrentAuctionItemID()
@@ -141,10 +144,8 @@ pub contract VoteyAuction {
         pub fun updateCurrentAuctionItemID() {
             pre {
                 self.auctionQueue.keys.length > 0:
-                "there are no tokens in the auction queue"
+                    "there are no tokens in the auction queue"
             }
-
-            log("CODE BREAKS IN UPDATE FUNCTION")
             
             // get the next token ID
             var tokenID = self.getNextTokenID()
@@ -231,7 +232,7 @@ pub contract VoteyAuction {
         pub fun settleCurrentAuction() {
             pre {
                 self.recipientNFTCollectionCapability != nil:
-                "Recipient's NFT receiver capability is invalid"
+                    "Recipient's NFT receiver capability is invalid"
             }
             // If there is a token available for auction
             if let tokenID = self.currentAuctionItemID {
@@ -317,7 +318,7 @@ pub contract VoteyAuction {
 
         // releasePreviousBid returns the outbid user's tokens to
         // their vault receiver
-        access(contract) fun releasePreviousBid() {
+        pub fun releasePreviousBid() {
             // If there was a previous bidder...
             if var recipientVaultCapability = self.recipientVaultCapability {
                 //... send the previous bidder's tokens back
@@ -331,8 +332,33 @@ pub contract VoteyAuction {
             }
         }
 
+        pub fun returnAuctionQueueItemsToOwner() {
+
+            // borrow a reference to the auction owner's NFT Collection
+            let ownerCollectionRef = self.ownerNFTCollectionCapability.borrow()
+
+            // get the IDs from the auction queue
+            let auctionQueueIDs = self.auctionQueue.keys
+
+            // for each ID in the auction queue...
+            for id in auctionQueueIDs {
+                // ... remove the NFT from the auction queue and deposit it into
+                // the owner's collection
+                ownerCollectionRef!.deposit(token:<-self.auctionQueue.remove(key: id)!)
+                
+                // ... clear the NFT's meta data from the auction queue
+                self.auctionQueueMeta[id] = nil
+            }
+        }
+
         destroy() {
-            // TODO: Safely return tokens to owners
+            // return all NFTs in the auctionQueue to the resource owner
+            self.returnAuctionQueueItemsToOwner()
+
+            // return bidToken balance to the bidder
+            self.releasePreviousBid()
+
+            // destroy the empty resources
             destroy self.auctionQueue
             destroy self.bidVault
         }
@@ -342,6 +368,7 @@ pub contract VoteyAuction {
     pub fun createAuctionCollection(
         minimumBidIncrement: UFix64,
         auctionLengthInBlocks: UInt64,
+        ownerNFTCollectionCapability: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>,
         ownerVaultCapability: Capability<&AnyResource{FungibleToken.Receiver}>,
         bidVault: @FungibleToken.Vault
     ): @AuctionCollection {
@@ -349,6 +376,7 @@ pub contract VoteyAuction {
         let auctionCollection <- create AuctionCollection(
             minimumBidIncrement: minimumBidIncrement,
             auctionLengthInBlocks: auctionLengthInBlocks,
+            ownerNFTCollectionCapability: ownerNFTCollectionCapability,
             ownerVaultCapability: ownerVaultCapability,
             bidVault: <-bidVault
         )
