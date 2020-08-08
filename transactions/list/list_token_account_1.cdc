@@ -20,9 +20,9 @@ transaction {
     prepare(account: AuthAccount) {
         let bidVault <- DemoToken.createEmptyVault()
 
-        // borrow a reference to the signer's Vault
-        let receiver = account.borrow<&{FungibleToken.Receiver}>(from: /storage/DemoTokenVault)
-                              ?? panic("Unable to borrow a reference to the owner's vault")
+        // get the public Capability for the signer's Vault
+        let receiver = account.getCapability<&DemoToken.Vault{FungibleToken.Receiver}>(/public/DemoTokenVault)??
+            panic("Account 1 has no DemoToken Vault capability")
 
         // borrow a reference to the NFT collection in storage
         let collectionRef = account.borrow<&NonFungibleToken.Collection>(from: /storage/RockCollection) 
@@ -33,7 +33,7 @@ transaction {
         let auction <- VoteyAuction.createAuctionCollection(
             minimumBidIncrement: UFix64(5),
             auctionLengthInBlocks: UInt64(30),
-            ownerVault: receiver,
+            ownerVaultCapability: receiver,
             bidVault: <-bidVault
         )
 
