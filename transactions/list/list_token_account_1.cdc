@@ -24,25 +24,29 @@ transaction {
         let receiver = account.getCapability<&DemoToken.Vault{FungibleToken.Receiver}>(/public/DemoTokenVault)??
             panic("Account 1 has no DemoToken Vault capability")
 
-        // borrow a reference to the NFT collection in storage
-        let collectionRef = account.borrow<&NonFungibleToken.Collection>(from: /storage/RockCollection) 
-                              ?? panic("Unable to borrow a reference to the NFT collection")
+        // borrow a reference to the entire NFT Collection functionality (for withdrawing)
+        let accountCollectionRef = account.borrow<&NonFungibleToken.Collection>(from: /storage/RockCollection)!
+
+        // get the public Capability for the signer's NFT collection (for the auction)
+        let publicCollectionCap = account.getCapability<&NonFungibleToken.Collection{NonFungibleToken.CollectionPublic}>(/public/RockCollection)
+        ?? panic("Unable to borrow a reference to the NFT collection")
 
         // create a new sale object     
         // initializing it with the reference to the owner's Vault
         let auction <- VoteyAuction.createAuctionCollection(
             minimumBidIncrement: UFix64(5),
             auctionLengthInBlocks: UInt64(30),
+            ownerNFTCollectionCapability: publicCollectionCap,
             ownerVaultCapability: receiver,
             bidVault: <-bidVault
         )
 
-        let collectionIDs = collectionRef.getIDs()
+        let collectionIDs = accountCollectionRef.getIDs()
 
         for id in collectionIDs {
             // withdraw the NFT from the collection that you want to sell
             // and move it into the transaction's context
-            let NFT <- collectionRef.withdraw(withdrawID: id)
+            let NFT <- accountCollectionRef.withdraw(withdrawID: id)
 
             // list the token for sale by moving it into the sale resource
             auction.addTokenToAuctionQueue(token: <-NFT, startPrice: UFix64(10))
