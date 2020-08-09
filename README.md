@@ -12,7 +12,7 @@ This demo is currently available for download and deployment with the Flow CLI a
 2. Switch to `account 4 (0xe03daebed8ca0615)` and deploy `onflow/NonFungibleToken.cdc`
 3. Switch to `account 1 (0x01cf0e2f2f715450)` and deploy `demo-token.cdc`
 4. Switch to `account 2 (0x179b6b1cb6755e31)` and deploy `rocks.cdc`
-5. Switch to `account 3 (0xf3fcd2c1a78f5eee)` and deploy `marketplace.cdc`
+5. Switch to `account 3 (0xf3fcd2c1a78f5eee)` and deploy `votey-auction.cdc`
 
 ## Account Setup
 
@@ -31,21 +31,33 @@ This demo is currently available for download and deployment with the Flow CLI a
         - creates a new DemoToken minter with an allowedAmount of 1000
         - mints and deposits 40 DemoTokens into `account 1`'s Vault
         - mints and deposits 20 DemoTokens into `account 2`'s Vault
-4. Run `scripts/check_setup.cdc` to check the account balances are correct
-    - `account 1` should have 1040 DemoTokens and 1 NFT (ID: 1)
-    - `account 2` should have 20 DemoTokens and no NFTs
+4. Send `transactions/setup/setup_account_3_and_4.cdc` with `account 3` and `account 4` selected as the signer
+    - This transaction:
+        - creates an stores an empty DemoToken Vault
+        - publishes separate references to the vault Receiver and Balance interfaces 
+5. Run `scripts/check_setup.cdc` to check the account balances are correct
+    - `account 1` should have 100 DemoTokens and 10 NFT 
+    - `account 2, 3, 4` should have 200 DemoTokens and no NFTs
 
 Example `scripts/check_setup.cdc` response:
 
 ```bash
-DEBU[0155] LOG [f615da] "Account 1 DemoToken Balance:"
-DEBU[0155] LOG [f615da] 1040.00000000
-DEBU[0155] LOG [f615da] "Account 2 DemoToken Balance:"
-DEBU[0155] LOG [f615da] 20.00000000  
-DEBU[0155] LOG [f615da] "Account 1 NFT IDs"
-DEBU[0155] LOG [f615da] [1]
-DEBU[0155] LOG [f615da] "Account 2 NFT IDs"
-DEBU[0155] LOG [f615da] []
+DEBU[0782] LOG [5175e9] "Account 1 DemoToken Balance:" 
+DEBU[0782] LOG [5175e9] 100.00000000 
+DEBU[0782] LOG [5175e9] "Account 2 DemoToken Balance:" 
+DEBU[0782] LOG [5175e9] 200.00000000 
+DEBU[0782] LOG [5175e9] "Account 3 DemoToken Balance:" 
+DEBU[0782] LOG [5175e9] 200.00000000 
+DEBU[0782] LOG [5175e9] "Account 4 DemoToken Balance:" 
+DEBU[0782] LOG [5175e9] 200.00000000 
+DEBU[0782] LOG [5175e9] "Account 1 NFT IDs" 
+DEBU[0782] LOG [5175e9] [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] 
+DEBU[0782] LOG [5175e9] "Account 2 NFT IDs" 
+DEBU[0782] LOG [5175e9] []           
+DEBU[0782] LOG [5175e9] "Account 3 NFT IDs" 
+DEBU[0782] LOG [5175e9] []           
+DEBU[0782] LOG [5175e9] "Account 4 NFT IDs" 
+DEBU[0782] LOG [5175e9] []        
 ```
 
 ## List a Token For Sale
@@ -55,17 +67,17 @@ DEBU[0155] LOG [f615da] []
         - creates a new SaleCollection
         - withdraw's NFT.id: 1
         - places NFT.id: 1 in the SaleCollection with a price of 10 DemoTokens
-        - publishes a refernence to the SaleCollection's SalePublic interface
-2. Run `scripts/check_sales_account_1.cdc` to check for active NFT sales
-    - `account 1` should have one NFT (ID: 1) for sale for a price of 10 DemoTokens
-
+        - publishes a reference to the SaleCollection's SalePublic interface
+2. Run `transactions/list/start_auction_account_1.cdc` with `account 1` selected as the signer
+    - This transaction:
+        - start the auction
+3. Run `scripts/check_sales_account_1.cdc` to check for active NFT sales
+    - `account 1` should have ten NFT (ID: 1) in the queue for a price of 10 DemoTokens
 Example `scripts/check_sales_account_1.cdc` response:
 
 ```bash
-DEBU[0194] LOG [e4e15e] "Account 1 NFTs for sale"
-DEBU[0194] LOG [e4e15e] [1]
-DEBU[0194] LOG [e4e15e] "Price of NFT 1"
-DEBU[0194] LOG [e4e15e] 10.00000000  
+DEBU[0866] LOG [4a2468] "Account 1 NFTs in the auction queue" 
+DEBU[0866] LOG [4a2468] {0: 10.00000000, 1: 10.00000000, 2: 10.00000000, 3: 10.00000000, 4: 10.00000000, 5: 10.00000000, 6: 10.00000000, 7: 10.00000000, 8: 10.00000000, 9: 10.00000000}  
 ```
 
 ## Purchase a Token
@@ -92,3 +104,4 @@ DEBU[0363] LOG [8f886c] []
 DEBU[0363] LOG [8f886c] "Account 2 NFT IDs"
 DEBU[0363] LOG [8f886c] [1]
 ```
+ 
