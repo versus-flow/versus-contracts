@@ -9,10 +9,10 @@ This demo is currently available for download and deployment with the Flow CLI a
 ### VS Code Deployment Instructions
 
 1. Start the Flow Emulator and ensure you have 4 accounts created
-2. Switch to `account 4 (0xe03daebed8ca0615)` and deploy `onflow/NonFungibleToken.cdc`
-3. Switch to `account 1 (0x01cf0e2f2f715450)` and deploy `demo-token.cdc`
-4. Switch to `account 2 (0x179b6b1cb6755e31)` and deploy `rocks.cdc`
-5. Switch to `account 3 (0xf3fcd2c1a78f5eee)` and deploy `votey-auction.cdc`
+2. Switch to `account 1 (0x01cf0e2f2f715450)` and deploy `onflow/NonFungibleToken.cdc`
+3. Switch to `account 2 (0x179b6b1cb6755e31)` and deploy `demo-token.cdc`
+4. Switch to `account 3 (0xf3fcd2c1a78f5eee)` and deploy `rocks.cdc`
+5. Switch to `account 4 (0xe03daebed8ca0615)` and deploy `auction.cdc`
 
 ## Account Setup
 

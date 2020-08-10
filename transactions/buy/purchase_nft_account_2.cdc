@@ -4,14 +4,14 @@
 // Signer - Account 2 - 0x179b6b1cb6755e31
 
 import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken from 0xe03daebed8ca0615
-import Marketplace from 0xf3fcd2c1a78f5eee
+import NonFungibleToken from 0x01cf0e2f2f715450
+import Marketplace from 0xe03daebed8ca0615
 
 // Contract Deployment:
-// Acct 1 - 0x01cf0e2f2f715450 - demo-token.cdc
-// Acct 2 - 0x179b6b1cb6755e31 - rocks.cdc
-// Acct 3 - 0xf3fcd2c1a78f5eee - marketplace.cdc
-// Acct 4 - 0xe03daebed8ca0615 - onflow/NonFungibleToken.cdc
+// Acct 1 - 0x01cf0e2f2f715450 - onflow/NonFungibleToken.cdc
+// Acct 2 - 0x179b6b1cb6755e31 - demo-token.cdc
+// Acct 3 - 0xf3fcd2c1a78f5eee - rocks.cdc
+// Acct 4 - 0xe03daebed8ca0615 - auction.cdc
 
 transaction {
     // reference to the buyer's NFT collection where they
