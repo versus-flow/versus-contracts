@@ -50,7 +50,7 @@ transaction{
 
     execute {
         // Get the recipient's public account object
-        let recipient = getAccount(0x01cf0e2f2f715450)
+        let recipient = getAccount(0x179b6b1cb6755e31)
 
         // get the collection reference for the receiver
         // getting the public capability and borrowing the reference from it

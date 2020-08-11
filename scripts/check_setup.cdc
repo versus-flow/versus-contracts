@@ -18,10 +18,10 @@ import Rocks from 0xf3fcd2c1a78f5eee
 
 pub fun main() {
     // get the accounts' public address objects
-    let account1 = getAccount(0x01cf0e2f2f715450)
-    let account2 = getAccount(0x179b6b1cb6755e31)
-    let account3 = getAccount(0xf3fcd2c1a78f5eee)
-    let account4 = getAccount(0xe03daebed8ca0615)
+    let account1 = getAccount(0xe03daebed8ca0615)
+    let account2 = getAccount(0x01cf0e2f2f715450)
+    let account3 = getAccount(0x179b6b1cb6755e31)
+    let account4 = getAccount(0xf3fcd2c1a78f5eee)
 
     // get the reference to the account's receivers
     // by getting their public capability
@@ -56,17 +56,19 @@ pub fun main() {
     log(account2ReceiverRef.balance)
 
     log("Account 3 DemoToken Balance:")
-    log(account2ReceiverRef.balance)
+    log(account3ReceiverRef.balance)
 
     log("Account 4 DemoToken Balance:")
-    log(account2ReceiverRef.balance)
+    log(account4ReceiverRef.balance)
 
 
     // verify that the balances are correct
-    if account1ReceiverRef.balance != UFix64(100) || account2ReceiverRef.balance != UFix64(200) || account3ReceiverRef.balance != UFix64(200) || account4ReceiverRef.balance != UFix64(200) {
-        panic("Account balances are incorrect!")
+    if account3ReceiverRef.balance != UFix64(100) || account2ReceiverRef.balance != UFix64(200) || account1ReceiverRef.balance != UFix64(200) || account4ReceiverRef.balance != UFix64(200) {
+        log("Account balances are incorrect!")
+        return
     }
 
+     
     // find the public receiver capability for their Collections
     let account1NFTCapability = account1.getCapability(/public/RockCollection)!
     let account2NFTCapability = account2.getCapability(/public/RockCollection)!
@@ -97,8 +99,10 @@ pub fun main() {
     log(account4NFTRef.getIDs())
 
     // verify that the collections are correct
-    if account1NFTRef.getIDs().length == 0 || account2NFTRef.getIDs().length != 0 || account3NFTRef.getIDs().length != 0 || account4NFTRef.getIDs().length != 0 {
-        panic("Wrong NFT Collections!")
+    if account1NFTRef.getIDs().length == 0 || account2NFTRef.getIDs().length == 0 || account3NFTRef.getIDs().length != 0 || account4NFTRef.getIDs().length == 0 {
+        log("A OK")
+    } else {
+        log("Wrong NFT collection")
     }
 }
  

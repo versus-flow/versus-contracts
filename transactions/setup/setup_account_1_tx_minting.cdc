@@ -26,9 +26,9 @@ transaction {
     
     prepare(acct: AuthAccount) {
         // get the public object for Account 2
-        let account2 = getAccount(0x179b6b1cb6755e31)
-        let account3 = getAccount(0xf3fcd2c1a78f5eee)
-        let account4 = getAccount(0xe03daebed8ca0615)
+        let account2 = getAccount(0xf3fcd2c1a78f5eee)
+        let account3 = getAccount(0xe03daebed8ca0615)
+        let account4 = getAccount(0x01cf0e2f2f715450)
 
         // retreive the public vault references for both accounts
         self.acct1Ref = acct.getCapability(/public/DemoTokenReceiver)!
