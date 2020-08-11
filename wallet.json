@@ -1,0 +1,16 @@
+{
+	"accounts": {
+		"NonFungibleToken": {
+			"address": "01cf0e2f2f715450",
+			"privateKey": "a9a81cdf716f763ac53f59a421e19039dd542ff3a294bde647989841618ea4db",
+			"sigAlgorithm": "ECDSA_P256",
+			"hashAlgorithm": "SHA3_256"
+		},
+		"DemoToken": {
+			"address": "179b6b1cb6755e31",
+			"privateKey": "a9a81cdf716f763ac53f59a421e19039dd542ff3a294bde647989841618ea4db",
+			"sigAlgorithm": "ECDSA_P256",
+			"hashAlgorithm": "SHA3_256"
+		}
+	}
+}
