@@ -12,13 +12,13 @@
 			"sigAlgorithm": "ECDSA_P256",
 			"hashAlgorithm": "SHA3_256"
 		},
-		"rocks": {
+		"Rocks": {
 			"address": "f3fcd2c1a78f5eee",
 			"privateKey": "a9a81cdf716f763ac53f59a421e19039dd542ff3a294bde647989841618ea4db",
 			"sigAlgorithm": "ECDSA_P256",
 			"hashAlgorithm": "SHA3_256"
 		},
-		"auction": {
+		"Auction": {
 			"address": "e03daebed8ca0615",
 			"privateKey": "a9a81cdf716f763ac53f59a421e19039dd542ff3a294bde647989841618ea4db",
 			"sigAlgorithm": "ECDSA_P256",
