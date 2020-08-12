@@ -16,7 +16,7 @@ import VoteyAuction from 0xe03daebed8ca0615
 // Acct 3 - 0xf3fcd2c1a78f5eee - rocks.cdc
 // Acct 4 - 0xe03daebed8ca0615 - auction.cdc
 
-transaction {
+transaction(tokenID: UInt64, startPrice: UFix64) {
     prepare(account: AuthAccount) {
 
         // borrow a reference to the entire NFT Collection functionality (for withdrawing)
@@ -38,14 +38,14 @@ transaction {
 
             // withdraw the NFT from the collection that you want to sell
             // and move it into the transaction's context
-            let NFT <- accountCollectionRef.withdraw(withdrawID: id)
+            let NFT <- accountCollectionRef.withdraw(withdrawID: tokenID)
 
             // list the token for sale by moving it into the sale resource
             auctionCollectionRef.addTokenToAuctionItems(
                 token: <-NFT,
                 minimumBidIncrement: UFix64(5),
                 auctionLengthInBlocks: UInt64(30),
-                startPrice: UFix64(10),
+                startPrice: startPrice,
                 bidVault: <-bidVault
             )
         }

@@ -14,8 +14,6 @@ import VoteyAuction from 0xe03daebed8ca0615
 transaction {
 
     prepare(account: AuthAccount) {
-        let bidVault <- DemoToken.createEmptyVault()
-
         // get the public Capability for the signer's Vault
         let receiver = account.getCapability<&DemoToken.Vault{FungibleToken.Receiver}>(/public/DemoTokenVault)??
             panic("Account 1 has no DemoToken Vault capability")
@@ -29,11 +27,8 @@ transaction {
         // create a new sale object     
         // initializing it with the reference to the owner's Vault
         let auction <- VoteyAuction.createAuctionCollection(
-            minimumBidIncrement: UFix64(5),
-            auctionLengthInBlocks: UInt64(30),
             ownerNFTCollectionCapability: publicCollectionCap,
             ownerVaultCapability: receiver,
-            bidVault: <-bidVault
         )
 
         // store the sale resource in the account for storage
