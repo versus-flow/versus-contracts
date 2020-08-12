@@ -25,6 +25,7 @@ pub contract VoteyAuction {
     pub event TokenPurchased(tokenID: UInt64, price: UFix64)
     pub event NewTokenAvailableForAuction(tokenID: UInt64, startPrice: UFix64)
 
+    // TODO: Should be a resource containing a @Vault
     pub struct auctionItemsMeta {
         pub(set) var startPrice: UFix64
         pub(set) var currentPrice: UFix64
@@ -88,7 +89,7 @@ pub contract VoteyAuction {
 
         // addTokenToauctionItems adds a token to the auction queue, sets the start price
         // and sets the vote count to 0
-        pub fun addTokenToauctionItems(token: @NonFungibleToken.NFT, startPrice: UFix64) {
+        pub fun addTokenToAuctionItems(token: @NonFungibleToken.NFT, startPrice: UFix64) {
             // store the token ID
             let tokenID = token.id
 
