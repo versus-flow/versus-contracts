@@ -21,27 +21,6 @@ transaction{
     let minterRef: &Rocks.NFTMinter
     
     prepare(acct: AuthAccount) {
-        
-        // create a new empty Vault resource
-        let vaultA <- DemoToken.createEmptyVault()
-
-        // store the vault in the accout storage
-        acct.save<@FungibleToken.Vault>(<-vaultA, to: /storage/DemoTokenVault)
-
-        // create a public Receiver capability to the Vault
-        acct.link<&DemoToken.Vault{FungibleToken.Receiver}>(
-            /public/DemoTokenReceiver,
-            target: /storage/DemoTokenVault
-        )
-
-        // create a public Balance capability to the Vault
-        acct.link<&DemoToken.Vault{FungibleToken.Balance}>(
-            /public/DemoTokenBalance,
-            target: /storage/DemoTokenVault
-        )
-
-        log("Created a Vault and published the references")
-
         // borrow a reference to the NFTMinter in storage
         self.minterRef = acct.borrow<&Rocks.NFTMinter>(from: /storage/RockMinter)
             ?? panic("Could not borrow owner's vault minter reference")

@@ -18,11 +18,6 @@ import VoteyAuction from 0xe03daebed8ca0615
 
 transaction {
     prepare(account: AuthAccount) {
-        let bidVault <- DemoToken.createEmptyVault()
-
-        // get the public Capability for the signer's Vault
-        let receiver = account.getCapability<&DemoToken.Vault{FungibleToken.Receiver}>(/public/DemoTokenVault)??
-            panic("Account 1 has no DemoToken Vault capability")
 
         // borrow a reference to the entire NFT Collection functionality (for withdrawing)
         let accountCollectionRef = account.borrow<&NonFungibleToken.Collection>(from: /storage/RockCollection)!
@@ -31,17 +26,11 @@ transaction {
         let publicCollectionCap = account.getCapability<&NonFungibleToken.Collection{NonFungibleToken.CollectionPublic}>(/public/RockCollection)
         ?? panic("Unable to borrow a reference to the NFT collection")
 
-        // create a new sale object     
-        // initializing it with the reference to the owner's Vault
-        let auction <- VoteyAuction.createAuctionCollection(
-            minimumBidIncrement: UFix64(5),
-            auctionLengthInBlocks: UInt64(30),
-            ownerNFTCollectionCapability: publicCollectionCap,
-            ownerVaultCapability: receiver,
-            bidVault: <-bidVault
-        )
-
+        // Get the array of token IDs in the account's collection
         let collectionIDs = accountCollectionRef.getIDs()
+
+        // borrow a reference to the Auction Collection in account storage
+        let auctionCollectionRef = account.borrow<&VoteyAuction.AuctionCollection>(from: /storage/NFTAuction)!
 
         for id in collectionIDs {
             // withdraw the NFT from the collection that you want to sell
@@ -49,20 +38,10 @@ transaction {
             let NFT <- accountCollectionRef.withdraw(withdrawID: id)
 
             // list the token for sale by moving it into the sale resource
-            auction.addTokenToAuctionQueue(token: <-NFT, startPrice: UFix64(10))
+            auctionCollectionRef.addTokenToAuctionItems(token: <-NFT, startPrice: UFix64(10))
         }
 
-        // store the sale resource in the account for storage
-        account.save(<-auction, to: /storage/NFTAuction)
-
-        // create a public capability to the sale so that others
-        // can call it's methods
-        account.link<&VoteyAuction.AuctionCollection{VoteyAuction.AuctionPublic}>(
-            /public/NFTAuction,
-            target: /storage/NFTAuction
-        )
-
-        log("Auction created for account 1. Listed NFT ids[1-10] for start price of 10 DemoTokens each.")
+        log("Added all NFTs to auction with start price of 10 DemoTokens each.")
     }
 }
  

@@ -14,7 +14,7 @@ transaction{
     prepare(account: AuthAccount) {
 
         let auction = account.borrow<&VoteyAuction.AuctionCollection>(from: /storage/NFTAuction)
-            ?? panic("Couldn't borrow a reference to the auction collection stored in account 1")
+            ?? panic("Couldn't borrow a reference to the Auction Collection")
 
         auction.startAuction()
     }
