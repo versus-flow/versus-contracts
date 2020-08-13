@@ -269,13 +269,12 @@ pub contract VoteyAuction {
             let itemMeta=self.auctionItemsMeta[id] ?? panic("cannot fetch item")
 
 
-/*             let recipientNFTCollectionRef: Capability<&AnyResource{NonFungibleToken.CollectionPublic}> = 
-                itemMeta.recipientCollectionCap ?? panic("L!(£U)(!£)(!*£)*!")
+             let recipientNFTCollectionRef: Capability<&AnyResource{NonFungibleToken.CollectionPublic}> = itemMeta.recipientCollectionCap ?? panic("L!(£U)(!£)(!*£)*!")
                 
             let collectionPublic &AnyResource{NonFungibleToken.CollectionPublic}= recipientNFTCollectionRef.borrow()
              
-             collectionPublic.deposit(token: <- purchasedTokenResources.withdrawNFT())
-*/
+          //   collectionPublic.deposit(token: <- purchasedTokenResources.withdrawNFT())
+
              log(purchasedTokenResources) 
              log(itemMeta)
              /* 
