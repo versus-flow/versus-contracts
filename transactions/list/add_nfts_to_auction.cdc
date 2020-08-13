@@ -44,7 +44,7 @@ transaction {
             auctionCollectionRef.addTokenToAuctionItems(
                 token: <-NFT,
                 minimumBidIncrement: UFix64(5),
-                auctionLengthInBlocks: UInt64(30),
+                auctionLengthInBlocks: UInt64(2),
                 startPrice: UFix64(10),
                 bidVault: <-bidVault
             )

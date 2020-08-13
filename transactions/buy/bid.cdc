@@ -26,23 +26,25 @@ transaction {
     prepare(account: AuthAccount) {
 
         // get the references to the buyer's Vault and NFT Collection receiver
-        self.collectionCap = account.getCapability<&NonFungibleToken.Collection{NonFungibleToken.CollectionPublic}>(/public/RockCollection) ?? panic("Unable to borrow a reference to the NFT collection")
-    // retreive the public vault references for both accounts
-        self.vaultCap = account.getCapability<&AnyResource{FungibleToken.Receiver}>(/public/DemoTokenReceiver) ?? panic("Could not find demoVaultCap")
+        self.collectionCap = account.getCapability<&NonFungibleToken.Collection{NonFungibleToken.CollectionPublic}>(/public/RockCollection) 
+            ?? panic("Unable to borrow a reference to the NFT collection")
+
+        self.vaultCap = account.getCapability<&AnyResource{FungibleToken.Receiver}>(/public/DemoTokenReceiver) 
+            ?? panic("Could not find demoVaultCap")
                     
         let vaultRef = account.borrow<&FungibleToken.Vault>(from: /storage/DemoTokenVault)
             ?? panic("Could not borrow owner's Vault reference")
 
         // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: 10.0)
+        self.temporaryVault <- vaultRef.withdraw(amount: UFix64(20))
     }
 
     execute {
         // get the read-only account storage of the seller
-        let seller = getAccount(0x01cf0e2f2f715450)
+        let seller = getAccount(0x179b6b1cb6755e31)
 
         // get the reference to the seller's sale
-        let auctionRef = seller.getCapability(/public/NFTSale)!
+        let auctionRef = seller.getCapability(/public/NFTAuction)!
                          .borrow<&AnyResource{VoteyAuction.AuctionPublic}>()
                          ?? panic("Could not borrow seller's sale reference")
 
@@ -50,5 +52,5 @@ transaction {
 
         log("Token ID 1 has been bid on")
     }
-}
+    }
  
