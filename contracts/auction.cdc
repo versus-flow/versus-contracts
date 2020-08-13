@@ -101,21 +101,22 @@ pub contract VoteyAuction {
         pub(set) var auctionStartBlock: UInt64
 
         // Recipient's Receiver Capabilities
-        pub(set) var recipientCollectionCap: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>?
+        pub(set) var recipientCollectionCap: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>
         pub(set) var recipientVaultCap: Capability<&AnyResource{FungibleToken.Receiver}>?
 
         init(
             minimumBidIncrement: UFix64,
             auctionLengthInBlocks: UInt64,
             startPrice: UFix64, 
-            auctionStartBlock: UInt64
+            auctionStartBlock: UInt64,
+            recipientCollectionCap :Capability<&AnyResource{NonFungibleToken.CollectionPublic}>
         ) {
             self.minimumBidIncrement = minimumBidIncrement
             self.auctionLengthInBlocks = auctionLengthInBlocks
             self.startPrice = startPrice
             self.currentPrice = startPrice
             self.auctionStartBlock = auctionStartBlock
-            self.recipientCollectionCap = nil
+            self.recipientCollectionCap = recipientCollectionCap
             self.recipientVaultCap = nil
         }
     }
@@ -172,7 +173,8 @@ pub contract VoteyAuction {
                 minimumBidIncrement: minimumBidIncrement,
                 auctionLengthInBlocks: auctionLengthInBlocks,
                 startPrice: startPrice,
-                auctionStartBlock: getCurrentBlock().height
+                auctionStartBlock: getCurrentBlock().height,
+                recipientCollectionCap: self.ownerNFTReceiverCap 
             )
 
             // update the NFT meta dictionary
@@ -269,9 +271,8 @@ pub contract VoteyAuction {
             let itemMeta=self.auctionItemsMeta[id] ?? panic("cannot fetch item")
 
 
-             let recipientNFTCollectionRef: Capability<&AnyResource{NonFungibleToken.CollectionPublic}> = itemMeta.recipientCollectionCap ?? panic("L!(£U)(!£)(!*£)*!")
-                
-            let collectionPublic &AnyResource{NonFungibleToken.CollectionPublic}= recipientNFTCollectionRef.borrow()
+            let recipientNFTCollectionRef = itemMeta.recipientCollectionCap
+            let collectionPublic= recipientNFTCollectionRef.borrow()
              
           //   collectionPublic.deposit(token: <- purchasedTokenResources.withdrawNFT())
 
