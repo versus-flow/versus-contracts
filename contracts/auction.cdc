@@ -17,6 +17,7 @@ import NonFungibleToken from 0x01cf0e2f2f715450
 
 pub contract VoteyAuction {
 
+    // The total amount of AuctionItems that have been created
     pub var totalAuctions: UInt64
 
     // Events
@@ -26,10 +27,14 @@ pub contract VoteyAuction {
     pub event NewBid(tokenID: UInt64, bidPrice: UFix64)
     pub event AuctionSettled(tokenID: UInt64, price: UFix64)
 
+    // AuctionItem contains the Resources and metadata for a single auction
     pub resource AuctionItem {
-
+        
+        // Resources
         pub(set) var NFT: @NonFungibleToken.NFT?
         pub let bidVault: @FungibleToken.Vault
+
+        // Metadata
         pub(set) var meta: ItemMeta
 
         init(
@@ -44,21 +49,26 @@ pub contract VoteyAuction {
             VoteyAuction.totalAuctions = VoteyAuction.totalAuctions + UInt64(1)
         }
 
+        // depositBidTokens deposits the bidder's tokens into the AuctionItem's Vault
         pub fun depositBidTokens(vault: @FungibleToken.Vault) {
             self.bidVault.deposit(from: <-vault)
         }
 
+        // withdrawNFT removes the NFT from the AuctionItem and returns it to the caller
         pub fun withdrawNFT(): @NonFungibleToken.NFT {
             let NFT <- self.NFT <- nil
             return <- NFT!
         }
 
+        // updateRecipientVaultCap updates the bidder's Vault capability, providing the
+        // us with a way to return their FungibleTokens
         access(contract) fun updateRecipientVaultCap(cap: Capability<&{FungibleToken.Receiver}>) {
             let meta = self.meta
             meta.recipientVaultCap = cap
             self.meta = meta
         }
 
+        // returnOwnerNFT returns the NFT to the owner's Collection
         access(contract) fun returnOwnerNFT(token: @NonFungibleToken.NFT) {
             // borrow a reference to the owner's NFT receiver
             let NFTReceiver = self.meta.ownerCollectionCap.borrow()!
@@ -67,11 +77,13 @@ pub contract VoteyAuction {
             NFTReceiver.deposit(token: <-token)
         }
 
+        // releaseBidderTokens returns the bidder's FungibleTokens to their Vault
         access(contract) fun releaseBidderTokens() {
             pre {
                 self.meta.recipientVaultCap != nil: "There is no recipient to release the tokens to"
             }
 
+            // return home early if the Vault is empty
             if self.bidVault.balance == UFix64(0) { return }
 
             // withdraw the entire token balance from bidVault
@@ -91,6 +103,7 @@ pub contract VoteyAuction {
         }
     }
 
+    // ItemMeta contains the metadata for an AuctionItem
     pub struct ItemMeta {
 
         // Auction Settings
@@ -132,6 +145,8 @@ pub contract VoteyAuction {
         }
     }
 
+    // AuctionPublic is a resource interface that restricts users to
+    // retreiving the auction price list and placing bids
     pub resource interface AuctionPublic {
         pub fun getAuctionPrices(): {UInt64: UFix64}
         pub fun placeBid(
@@ -142,6 +157,8 @@ pub contract VoteyAuction {
         )
     }
 
+    // AuctionCollection contains a dictionary of AuctionItems and provides
+    // methods for manipulating the AuctionItems
     pub resource AuctionCollection: AuctionPublic {
 
         // Auction Items
@@ -315,6 +332,8 @@ pub contract VoteyAuction {
             auctionItem.releaseBidderTokens()
         }
 
+        // returnAuctionItemToOwner releases any bids and returns the NFT
+        // to the owner's Collection
         pub fun returnAuctionItemToOwner(_ id: UInt64) {
             let itemRef = &self.auctionItems[id] as &AuctionItem
             let itemMeta = itemRef.meta
