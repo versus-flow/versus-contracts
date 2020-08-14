@@ -14,22 +14,9 @@ import VoteyAuction from 0xe03daebed8ca0615
 transaction {
 
     prepare(account: AuthAccount) {
-        // get the public Capability for the signer's Vault
-        let receiver = account.getCapability<&DemoToken.Vault{FungibleToken.Receiver}>(/public/DemoTokenVault)??
-            panic("Account 1 has no DemoToken Vault capability")
-
-        // get the public Capability for the signer's NFT collection (for the auction)
-        let publicCollectionCap = account.getCapability
-        <&NonFungibleToken.Collection{NonFungibleToken.CollectionPublic}>
-            (/public/RockCollection)?? 
-            panic("Unable to borrow a reference to the NFT collection")
-
         // create a new sale object     
         // initializing it with the reference to the owner's Vault
-        let auction <- VoteyAuction.createAuctionCollection(
-            ownerNFTCollectionCapability: publicCollectionCap,
-            ownerVaultCapability: receiver,
-        )
+        let auction <- VoteyAuction.createAuctionCollection()
 
         // store the sale resource in the account for storage
         account.save(<-auction, to: /storage/NFTAuction)
