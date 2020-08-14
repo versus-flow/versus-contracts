@@ -219,7 +219,6 @@ pub contract VoteyAuction {
         // settleAuction sends the auction item to the highest bidder
         // and deposits the FungibleTokens into the auction owner's account
         pub fun settleAuction(_ id: UInt64) {
-            /* 
             pre {
                 self.auctionItemsMeta[id]!.recipientCollectionCap != nil:
                     "Recipient's NFT receiver capability is invalid"
@@ -241,7 +240,7 @@ pub contract VoteyAuction {
                 log("No bids. Nothing to settle")
                 return
             }
-*/
+
             self.exchangeTokens(id)
         }
 
@@ -260,38 +259,40 @@ pub contract VoteyAuction {
             }
         }
 
+        // exchangeTokens sends the purchased NFT to the buyer and the bidTokens to the seller
         pub fun exchangeTokens(_ id: UInt64) {
          
-            let purchasedTokenResources =&self.auctionItems[id] as &auctionItemResources
+            let purchasedTokenResources = &self.auctionItems[id] as &auctionItemResources
 
             if purchasedTokenResources == nil {
                 panic("Trying to exchange an NFT that doesn't exist!")
             }
 
-            let itemMeta=self.auctionItemsMeta[id] ?? panic("cannot fetch item")
+            let itemMeta = self.auctionItemsMeta[id] ?? panic("cannot fetch item")
 
+            let itemPrice = itemMeta.currentPrice
 
-            let recipientNFTCollectionRef = itemMeta.recipientCollectionCap
-            let collectionPublic= recipientNFTCollectionRef.borrow()
-             
-          //   collectionPublic.deposit(token: <- purchasedTokenResources.withdrawNFT())
-
-             log(purchasedTokenResources) 
-             log(itemMeta)
-             /* 
-                //... send the purchased NFT to the highest bidder
-                recipientNFTCollectionRef!.deposit(token: <- purchasedTokenResources.withdrawNFT())
-                
-                //... send the fungible tokens to the auction owner
-                let ownerVaultRef = self.ownerVaultCapability.borrow()!
-                let bidVaultTokens <- purchasedTokenResources.bidVault.withdraw(amount: purchasedTokenResources.bidVault.balance)
-                let bidVaultBalance = bidVaultTokens.balance
-                ownerVaultRef.deposit(from:<-bidVaultTokens)
-
-                emit AuctionSettled(tokenID: id, price: bidVaultBalance)
-*/
- 
+            let recipientCollectionRef = itemMeta.recipientCollectionCap
             
+            // send the purchased NFT to the highest bidder
+            if let collectionPublic = recipientCollectionRef.borrow() {
+                collectionPublic.deposit(token: <- purchasedTokenResources.withdrawNFT())
+            } else {
+                panic("could not borrow recipient collection reference")
+            }
+
+            //  log(purchasedTokenResources)
+            //  log(itemMeta)
+              
+            // send the fungible tokens to the auction owner
+            if let ownerVaultRef = self.ownerVaultCapability.borrow() {
+                let bidVaultTokens <- purchasedTokenResources.bidVault.withdraw(amount: purchasedTokenResources.bidVault.balance)
+                ownerVaultRef.deposit(from:<-bidVaultTokens)
+            } else {
+                panic("could not borrow owner vault reference")
+            }
+
+            emit AuctionSettled(tokenID: id, price: itemPrice)
         }
 
         // placeBid sends the bidder's tokens to the bid vault and updates the
