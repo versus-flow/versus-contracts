@@ -9,10 +9,10 @@ import FungibleToken from 0xee82856bf20e2aa6
 import NonFungibleToken from 0x01cf0e2f2f715450
 
 // Contract Deployment:
-// Acct 1 - 0x01cf0e2f2f715450 - onflow/NonFungibleToken.cdc
-// Acct 2 - 0x179b6b1cb6755e31 - demo-token.cdc
-// Acct 3 - 0xf3fcd2c1a78f5eee - rocks.cdc
-// Acct 4 - 0xe03daebed8ca0615 - auction.cdc
+// Acct 1 - 0x01cf0e2f2f715450 - NonFungibleToken.cdc
+// Acct 2 - 0x179b6b1cb6755e31 - DemoToken.cdc
+// Acct 3 - 0xf3fcd2c1a78f5eee - Rocks.cdc
+// Acct 4 - 0xe03daebed8ca0615 - Auction.cdc
 //
 
 pub contract VoteyAuction {
@@ -332,6 +332,9 @@ pub contract VoteyAuction {
             auctionItem.releaseBidderTokens()
         }
 
+        // TODO: I don't think we need this... this should already happen
+        // when the resource gets destroyed
+        //
         // returnAuctionItemToOwner releases any bids and returns the NFT
         // to the owner's Collection
         pub fun returnAuctionItemToOwner(_ id: UInt64) {
@@ -365,9 +368,7 @@ pub contract VoteyAuction {
 
     // createAuctionCollection returns a new AuctionCollection resource to the caller
     pub fun createAuctionCollection(): @AuctionCollection {
-
         let auctionCollection <- create AuctionCollection()
-
         return <- auctionCollection
     }
 
