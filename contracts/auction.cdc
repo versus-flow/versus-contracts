@@ -342,12 +342,12 @@ pub contract VoteyAuction {
             
             // release the bidder's tokens
             itemRef.releaseBidderTokens()
-
+            
             // withdraw the NFT from the auction collection
             let NFT <-itemRef.withdrawNFT()
             
             // deposit the NFT into the owner's collection
-            ownerCollectionRef.deposit(token:<-NFT)
+            itemRef.returnOwnerNFT(token:<-NFT)
 
             // clear the NFT's meta data
             let oldItem <- self.auctionItems[id] <- nil
