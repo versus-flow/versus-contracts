@@ -30,7 +30,7 @@ pub contract VoteyAuction {
 
         pub(set) var NFT: @NonFungibleToken.NFT?
         pub let bidVault: @FungibleToken.Vault
-        pub (set) var meta: ItemMeta
+        pub(set) var meta: ItemMeta
 
         init(
             NFT: @NonFungibleToken.NFT,
@@ -53,7 +53,7 @@ pub contract VoteyAuction {
             return <- NFT!
         }
 
-        access(contract) fun updateRecipientVaultCap(cap: Capability<&AnyResource{FungibleToken.Receiver}>) {
+        access(contract) fun updateRecipientVaultCap(cap: Capability<&{FungibleToken.Receiver}>) {
             let meta = self.meta
             meta.recipientVaultCap = cap
             self.meta = meta
@@ -71,6 +71,8 @@ pub contract VoteyAuction {
             pre {
                 self.meta.recipientVaultCap != nil: "There is no recipient to release the tokens to"
             }
+
+            if self.bidVault.balance == UFix64(0) { return }
 
             // withdraw the entire token balance from bidVault
             let bidTokens <- self.bidVault.withdraw(amount: self.bidVault.balance)
@@ -102,20 +104,20 @@ pub contract VoteyAuction {
         pub(set) var auctionStartBlock: UInt64
 
         // Recipient's Receiver Capabilities
-        pub(set) var recipientCollectionCap: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>
-        pub(set) var recipientVaultCap: Capability<&AnyResource{FungibleToken.Receiver}>?
+        pub(set) var recipientCollectionCap: Capability<&{NonFungibleToken.CollectionPublic}>
+        pub(set) var recipientVaultCap: Capability<&{FungibleToken.Receiver}>?
 
         // Owner's Receiver Capabilities
-        pub let ownerCollectionCap: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>
-        pub let ownerVaultCap: Capability<&AnyResource{FungibleToken.Receiver}>
+        pub let ownerCollectionCap: Capability<&{NonFungibleToken.CollectionPublic}>
+        pub let ownerVaultCap: Capability<&{FungibleToken.Receiver}>
 
         init(
             minimumBidIncrement: UFix64,
             auctionLengthInBlocks: UInt64,
             startPrice: UFix64, 
             auctionStartBlock: UInt64,
-            ownerCollectionCap: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>,
-            ownerVaultCap: Capability<&AnyResource{FungibleToken.Receiver}>
+            ownerCollectionCap: Capability<&{NonFungibleToken.CollectionPublic}>,
+            ownerVaultCap: Capability<&{FungibleToken.Receiver}>
         ) {
             self.auctionID = VoteyAuction.totalAuctions + UInt64(1)
             self.minimumBidIncrement = minimumBidIncrement
@@ -135,8 +137,8 @@ pub contract VoteyAuction {
         pub fun placeBid(
             id: UInt64, 
             bidTokens: @FungibleToken.Vault, 
-            vaultCap: Capability<&AnyResource{FungibleToken.Receiver}>, 
-            collectionCap: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>
+            vaultCap: Capability<&{FungibleToken.Receiver}>, 
+            collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>
         )
     }
 
@@ -145,10 +147,7 @@ pub contract VoteyAuction {
         // Auction Items
         pub var auctionItems: @{UInt64: AuctionItem}
         
-        init(
-            ownerNFTReceiverCap: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>,
-            ownerVaultCapability: Capability<&AnyResource{FungibleToken.Receiver}>
-        ) {
+        init() {
             self.auctionItems <- {}
         }
 
@@ -250,8 +249,8 @@ pub contract VoteyAuction {
 
             let itemMeta = itemRef.meta
             
-            log(itemRef)
-            log(itemMeta)
+            // log(itemRef)
+            // log(itemMeta)
 
             // send the purchased NFT to the highest bidder
             if let collectionPublic = itemMeta.recipientCollectionCap.borrow() {
@@ -273,7 +272,7 @@ pub contract VoteyAuction {
 
         // placeBid sends the bidder's tokens to the bid vault and updates the
         // currentPrice of the current auction item
-        pub fun placeBid(id: UInt64, bidTokens: @FungibleToken.Vault, vaultCap: Capability<&AnyResource{FungibleToken.Receiver}>, collectionCap: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>) 
+        pub fun placeBid(id: UInt64, bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>) 
             {
             pre {
                 self.auctionItems[id] != nil:
@@ -288,7 +287,7 @@ pub contract VoteyAuction {
                 panic("bid amount be larger than minimum bid increment")
             }
             
-            if itemMeta.recipientVaultCap != nil {
+            if itemRef.bidVault.balance != UFix64(0) {
                 itemRef.releaseBidderTokens()
             }
 
@@ -346,15 +345,9 @@ pub contract VoteyAuction {
     }
 
     // createAuctionCollection returns a new AuctionCollection resource to the caller
-    pub fun createAuctionCollection(
-        ownerNFTCollectionCapability: Capability<&AnyResource{NonFungibleToken.CollectionPublic}>,
-        ownerVaultCapability: Capability<&AnyResource{FungibleToken.Receiver}>,
-    ): @AuctionCollection {
+    pub fun createAuctionCollection(): @AuctionCollection {
 
-        let auctionCollection <- create AuctionCollection(
-            ownerNFTReceiverCap: ownerNFTCollectionCapability,
-            ownerVaultCapability: ownerVaultCapability
-        )
+        let auctionCollection <- create AuctionCollection()
 
         return <- auctionCollection
     }
