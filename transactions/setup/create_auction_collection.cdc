@@ -23,7 +23,7 @@ transaction {
 
         // create a public capability to the sale so that others
         // can call it's methods
-        account.link<&VoteyAuction.AuctionCollection{VoteyAuction.AuctionPublic}>(
+        account.link<&{VoteyAuction.AuctionPublic}>(
             /public/NFTAuction,
             target: /storage/NFTAuction
         )

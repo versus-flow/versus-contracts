@@ -13,12 +13,14 @@ pub fun main() {
     let account1 = getAccount(0x179b6b1cb6755e31)
 
     // find the public Sale Collection capability
-    let account1AuctionRef = account1.getCapability(/public/NFTAuction)!
-                                  .borrow<&VoteyAuction.AuctionCollection{VoteyAuction.AuctionPublic}>()
-                                  ?? panic("unable to borrow a reference to the Auction collection for account 1")
+    let auctionCap = account1.getCapability(/public/NFTAuction)??
+        panic("couldn't get auction capability")
+
+    let auctionRef = auctionCap.borrow<&{VoteyAuction.AuctionPublic}>()?? 
+        panic("unable to borrow a reference to the Auction collection for account 1")
 
     // Get the IDs from the auction queue
-    let prices = account1AuctionRef.getAuctionPrices()
+    let prices = auctionRef.getAuctionPrices()
 
     // Log the NFTs that are in the auction queue with their start prices
     log("Account 1 NFTs in the auction queue")

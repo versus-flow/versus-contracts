@@ -13,9 +13,11 @@ import VoteyAuction from 0xe03daebed8ca0615
 transaction{
     prepare(account: AuthAccount) {
 
-        let auction = account.borrow<&VoteyAuction.AuctionCollection>(from: /storage/NFTAuction)
-            ?? panic("Couldn't borrow a reference to the Auction Collection")
+        // WE DON'T NEED THIS
 
-        auction.startAuction()
+        // let auction = account.borrow<&VoteyAuction.AuctionCollection>(from: /storage/NFTAuction)
+            // ?? panic("Couldn't borrow a reference to the Auction Collection")
+
+        // auction.startAuction()
     }
 }

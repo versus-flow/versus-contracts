@@ -15,10 +15,10 @@ import DemoToken from 0x179b6b1cb6755e31
 transaction {
 
     // public Vault reciever references for both accounts
-    let acct1Ref: &AnyResource{FungibleToken.Receiver}
-    let acct2Ref: &AnyResource{FungibleToken.Receiver}
-    let acct3Ref: &AnyResource{FungibleToken.Receiver}
-    let acct4Ref: &AnyResource{FungibleToken.Receiver}
+    let acct1Ref: &{FungibleToken.Receiver}
+    let acct2Ref: &{FungibleToken.Receiver}
+    let acct3Ref: &{FungibleToken.Receiver}
+    let acct4Ref: &{FungibleToken.Receiver}
 
     // reference to the DemoToken administrator
     let adminRef: &DemoToken.Administrator

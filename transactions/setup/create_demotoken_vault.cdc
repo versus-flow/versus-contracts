@@ -24,13 +24,13 @@ transaction{
         acct.save<@FungibleToken.Vault>(<-vaultA, to: /storage/DemoTokenVault)
 
         // create a public Receiver capability to the Vault
-        acct.link<&DemoToken.Vault{FungibleToken.Receiver}>(
+        acct.link<&{FungibleToken.Receiver}>(
             /public/DemoTokenReceiver,
             target: /storage/DemoTokenVault
         )
 
         // create a public Balance capability to the Vault
-        acct.link<&DemoToken.Vault{FungibleToken.Balance}>(
+        acct.link<&{FungibleToken.Balance}>(
             /public/DemoTokenBalance,
             target: /storage/DemoTokenVault
         )

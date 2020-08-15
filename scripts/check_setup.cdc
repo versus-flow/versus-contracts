@@ -27,19 +27,19 @@ pub fun main() {
     // by getting their public capability
     // and borrowing a reference from the capability
     let account1ReceiverRef = account1.getCapability(/public/DemoTokenBalance)!
-                                      .borrow<&DemoToken.Vault{FungibleToken.Balance}>()
+                                      .borrow<&{FungibleToken.Balance}>()
                                       ?? panic("could not borrow the vault balance reference for account 1")
     
     let account2ReceiverRef = account2.getCapability(/public/DemoTokenBalance)!
-                                      .borrow<&DemoToken.Vault{FungibleToken.Balance}>()
+                                      .borrow<&{FungibleToken.Balance}>()
                                       ?? panic("could not borrow the vault balance reference for account 2")
 
     let account3ReceiverRef = account3.getCapability(/public/DemoTokenBalance)!
-                                      .borrow<&DemoToken.Vault{FungibleToken.Balance}>()
+                                      .borrow<&{FungibleToken.Balance}>()
                                       ?? panic("could not borrow the vault balance reference for account 3")
 
     let account4ReceiverRef = account4.getCapability(/public/DemoTokenBalance)!
-                                      .borrow<&DemoToken.Vault{FungibleToken.Balance}>()
+                                      .borrow<&{FungibleToken.Balance}>()
                                       ?? panic("could not borrow the vault balance reference for account 4")
     
     // log the Vault balance of both accounts
@@ -48,25 +48,24 @@ pub fun main() {
     // Account 2 should have 200
     // Account 3 should have 200
     // Account 4 should have 200
-
-    log("Account 1 DemoToken Balance:")
+    
+    log(account1ReceiverRef.owner)
     log(account1ReceiverRef.balance)
     
-    log("Account 2 DemoToken Balance:")
+    log(account2ReceiverRef.owner)
     log(account2ReceiverRef.balance)
 
-    log("Account 3 DemoToken Balance:")
+    log(account3ReceiverRef.owner)
     log(account3ReceiverRef.balance)
 
-    log("Account 4 DemoToken Balance:")
+    log(account4ReceiverRef.owner)
     log(account4ReceiverRef.balance)
 
 
     // verify that the balances are correct
-    if account3ReceiverRef.balance != UFix64(100) || account2ReceiverRef.balance != UFix64(200) || account1ReceiverRef.balance != UFix64(200) || account4ReceiverRef.balance != UFix64(200) {
-        log("Account balances are incorrect!")
-        return
-    }
+    // if account3ReceiverRef.balance != UFix64(100) || account2ReceiverRef.balance != UFix64(200) || account1ReceiverRef.balance != UFix64(200) || account4ReceiverRef.balance != UFix64(200) {
+    //     panic("Account balances are incorrect!")
+    // }
 
      
     // find the public receiver capability for their Collections
@@ -76,33 +75,33 @@ pub fun main() {
     let account4NFTCapability = account4.getCapability(/public/RockCollection)!
 
     // borrow references from the capabilities
-    let account1NFTRef = account1NFTCapability.borrow<&{Rocks.PublicCollectionMethods}>()
+    let account1NFTRef = account1NFTCapability.borrow<&{NonFungibleToken.CollectionPublic}>()
                         ?? panic("unable to borrow a reference to NFT collection for Account 1")
-    let account2NFTRef = account2NFTCapability.borrow<&{Rocks.PublicCollectionMethods}>()
+    let account2NFTRef = account2NFTCapability.borrow<&{NonFungibleToken.CollectionPublic}>()
                         ?? panic("unable to borrow a reference to NFT collection for Account 2")
-    let account3NFTRef = account3NFTCapability.borrow<&{Rocks.PublicCollectionMethods}>()
+    let account3NFTRef = account3NFTCapability.borrow<&{NonFungibleToken.CollectionPublic}>()
                         ?? panic("unable to borrow a reference to NFT collection for Account 3")
-    let account4NFTRef = account4NFTCapability.borrow<&{Rocks.PublicCollectionMethods}>()
+    let account4NFTRef = account4NFTCapability.borrow<&{NonFungibleToken.CollectionPublic}>()
                         ?? panic("unable to borrow a reference to NFT collection for Account 4")
 
     // print both collections as arrays of ids
-    log("Account 1 NFT IDs")
+    log(account1NFTRef.owner)
     log(account1NFTRef.getIDs())
     
-    log("Account 2 NFT IDs")
+    log(account2NFTRef.owner)
     log(account2NFTRef.getIDs())
     
-    log("Account 3 NFT IDs")
+    log(account3NFTRef.owner)
     log(account3NFTRef.getIDs())
     
-    log("Account 4 NFT IDs")
+    log(account4NFTRef.owner)
     log(account4NFTRef.getIDs())
 
     // verify that the collections are correct
-    if account1NFTRef.getIDs().length == 0 || account2NFTRef.getIDs().length == 0 || account3NFTRef.getIDs().length != 0 || account4NFTRef.getIDs().length == 0 {
-        log("A OK")
-    } else {
-        log("Wrong NFT collection")
-    }
+    // if account1NFTRef.getIDs().length == 0 || account2NFTRef.getIDs().length == 0 || account3NFTRef.getIDs().length != 0 || account4NFTRef.getIDs().length == 0 {
+    //     log("A OK")
+    // } else {
+    //     log("Wrong NFT collection")
+    // }
 }
  

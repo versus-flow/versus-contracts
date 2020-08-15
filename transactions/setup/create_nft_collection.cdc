@@ -18,7 +18,7 @@ transaction {
         acct.save<@NonFungibleToken.Collection>(<-Rocks.createEmptyCollection(), to: /storage/RockCollection)
 
         // publish a capability to the Collection in storage
-        acct.link<&{Rocks.PublicCollectionMethods}>(/public/RockCollection, target: /storage/RockCollection)
+        acct.link<&{NonFungibleToken.CollectionPublic}>(/public/RockCollection, target: /storage/RockCollection)
 
         log("Created a new empty collection and published a reference")
     }

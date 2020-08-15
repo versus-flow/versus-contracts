@@ -223,7 +223,7 @@ pub contract Rocks: NonFungibleToken {
 
         // mintNFT mints a new NFT with a new ID and deposits it into the recipients 
         // Collection using their Collection reference
-        pub fun mintNFT(recipient: &{Rocks.PublicCollectionMethods}) {
+        pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}) {
 
             // get the current block
             let currentBlock = getCurrentBlock()
@@ -258,7 +258,7 @@ pub contract Rocks: NonFungibleToken {
         self.account.save(<-collection, to: /storage/RockCollection)
 
         // create a public capability for the Collection
-        self.account.link<&{Rocks.PublicCollectionMethods}>(
+        self.account.link<&{NonFungibleToken.CollectionPublic}>(
             /public/RockCollection,
             target: /storage/RockCollection
         )

@@ -17,7 +17,7 @@ transaction {
     // reference to the buyer's NFT collection where they
     // will store the bought NFT
 
-    let vaultCap:&VoteyAuction.AuctionCollection 
+    let vaultCap: &VoteyAuction.AuctionCollection 
 
     prepare(account: AuthAccount) {
 

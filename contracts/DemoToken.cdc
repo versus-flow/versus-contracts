@@ -197,7 +197,7 @@ pub contract DemoToken: FungibleToken {
 
         // Create a public capability to the stored Vault that only exposes
         // the 'balance' field through the 'Balance' interface
-        self.account.link<&DemoToken.Vault{FungibleToken.Balance}>(
+        self.account.link<&{FungibleToken.Balance}>(
             /public/DemoTokenBalance,
             target: /storage/DemoTokenVault
         )

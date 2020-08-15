@@ -23,11 +23,14 @@ transaction(tokenID: UInt64, startPrice: UFix64) {
         let accountCollectionRef = account.borrow<&NonFungibleToken.Collection>(from: /storage/RockCollection)!
 
         // get the public Capability for the signer's NFT collection (for the auction)
-        let publicCollectionCap = account.getCapability<&NonFungibleToken.Collection{NonFungibleToken.CollectionPublic}>(/public/RockCollection)
+        let publicCollectionCap = account.getCapability<&{NonFungibleToken.CollectionPublic}>(/public/RockCollection)
         ?? panic("Unable to borrow a reference to the NFT collection")
 
         // Get the array of token IDs in the account's collection
         let collectionIDs = accountCollectionRef.getIDs()
+
+        let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenVault)??
+            panic("Unable to borrow the Vault Receiver capability")
 
         // borrow a reference to the Auction Collection in account storage
         let auctionCollectionRef = account.borrow<&VoteyAuction.AuctionCollection>(from: /storage/NFTAuction)!
@@ -46,7 +49,9 @@ transaction(tokenID: UInt64, startPrice: UFix64) {
                 minimumBidIncrement: UFix64(5),
                 auctionLengthInBlocks: UInt64(30),
                 startPrice: startPrice,
-                bidVault: <-bidVault
+                bidVault: <-bidVault,
+                collectionCap: publicCollectionCap,
+                vaultCap: vaultCap
             )
         }
     }
