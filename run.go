@@ -45,11 +45,17 @@ func main() {
 	// Check the auction sale data for the DemoToken account (hardcoded for now)
 	flow.RunScript("check_sales_listings")
 
-	flow.SendTransaction("buy/bid", nonFungibleToken)
+	flow.SendTransaction("buy/bid", rocks)
+
+	flow.RunScript("check_sales_listings")
+
 	flow.RunScript("check_setup")
+
+	flow.SendTransaction("buy/settle", demoToken)
+	flow.SendTransaction("buy/settle", demoToken)
+	flow.SendTransaction("buy/settle", demoToken)
+
 	flow.RunScript("check_sales_listings")
-	flow.SendTransaction("buy/settle", demoToken)
-	flow.SendTransaction("buy/settle", demoToken)
-	flow.SendTransaction("buy/settle", demoToken)
-	flow.RunScript("check_sales_listings")
+
+	flow.RunScript("check_setup")
 }
