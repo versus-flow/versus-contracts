@@ -42,7 +42,7 @@ func main() {
 	// Add NFTs to the Auction collection for the DemoToken account
 	flow.SendTransaction("list/add_nfts_to_auction", demoToken)
 
-	// Check the auction sale data for the DemoToken account (hardcoded for now)
+	// Check the auction sale data for the DemoToken account
 	flow.RunScript("check_sales_listings")
 
 	flow.SendTransaction("buy/bid", rocks)
@@ -59,5 +59,6 @@ func main() {
 
 	flow.RunScript("check_setup")
 
-	flow.SendTransaction("buy/bid", rocks)
+	// this should panic - "auction has already completed"
+	// flow.SendTransaction("buy/bid", rocks)
 }
