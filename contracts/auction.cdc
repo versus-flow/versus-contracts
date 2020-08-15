@@ -307,6 +307,10 @@ pub contract VoteyAuction {
             let itemRef = &self.auctionItems[id] as &AuctionItem
             let itemMeta = itemRef.meta
 
+            if itemMeta.auctionCompleted {
+                panic("auction has already completed")
+            }
+
             if bidTokens.balance < itemMeta.minimumBidIncrement {
                 panic("bid amount be larger than minimum bid increment")
             }

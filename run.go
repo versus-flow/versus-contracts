@@ -58,4 +58,6 @@ func main() {
 	flow.RunScript("check_sales_listings")
 
 	flow.RunScript("check_setup")
+
+	flow.SendTransaction("buy/bid", rocks)
 }
