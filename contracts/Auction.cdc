@@ -82,7 +82,7 @@ pub contract VoteyAuction {
             }
         }
 
-        // sendBitTokens sends the bid tokens to the Vault Receiver belonging to the provided Capability
+        // sendBidTokens sends the bid tokens to the Vault Receiver belonging to the provided Capability
         access(contract) fun sendBidTokens(_ capability: Capability<&{FungibleToken.Receiver}>) {
             // borrow a reference to the owner's NFT receiver
             if let vaultRef = capability.borrow() {
