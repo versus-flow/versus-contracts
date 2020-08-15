@@ -23,13 +23,13 @@ transaction {
         let accountCollectionRef = account.borrow<&NonFungibleToken.Collection>(from: /storage/RockCollection)!
 
         // get the public Capability for the signer's NFT collection (for the auction)
-        let publicCollectionCap = account.getCapability<&NonFungibleToken.Collection{NonFungibleToken.CollectionPublic}>(/public/RockCollection)
+        let publicCollectionCap = account.getCapability<&{NonFungibleToken.CollectionPublic}>(/public/RockCollection)
         ?? panic("Unable to borrow the CollectionPublic capability")
 
         // Get the array of token IDs in the account's collection
         let collectionIDs = accountCollectionRef.getIDs()
 
-        let vaultCap = account.getCapability<&FungibleToken.Vault{FungibleToken.Receiver}>(/public/DemoTokenVault)??
+        let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenReceiver)??
             panic("Unable to borrow the Vault Receiver capability")
 
         // borrow a reference to the Auction Collection in account storage
