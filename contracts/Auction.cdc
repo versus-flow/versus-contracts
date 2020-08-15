@@ -68,8 +68,8 @@ pub contract VoteyAuction {
 
             self.meta = meta
         }
-
-        // returnOwnerNFT returns the NFT to the owner's Collection
+        
+        // sendNFT sends the NFT to the Collection belonging to the provided Capability
         access(contract) fun sendNFT(_ capability: Capability<&{NonFungibleToken.CollectionPublic}>) {
             // borrow a reference to the owner's NFT receiver
             if let collectionRef = capability.borrow() {
@@ -82,6 +82,7 @@ pub contract VoteyAuction {
             }
         }
 
+        // sendBitTokens sends the bid tokens to the Vault Receiver belonging to the provided Capability
         access(contract) fun sendBidTokens(_ capability: Capability<&{FungibleToken.Receiver}>) {
             // borrow a reference to the owner's NFT receiver
             if let vaultRef = capability.borrow() {
@@ -94,10 +95,13 @@ pub contract VoteyAuction {
         }
 
         destroy() {
+            // send the NFT back to auction owner
             self.sendNFT(self.meta.ownerCollectionCap)
             
+            // if there's a bidder...
             if let vaultCap = self.meta.recipientVaultCap {
-                self.sendBidTokens(self.meta.recipientVaultCap!)
+                // ...send the bid tokens back to the bidder
+                self.sendBidTokens(vaultCap)
             }
 
             destroy self.NFT
