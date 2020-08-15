@@ -16,6 +16,7 @@ import VoteyAuction from 0xe03daebed8ca0615
 // Acct 3 - 0xf3fcd2c1a78f5eee - rocks.cdc
 // Acct 4 - 0xe03daebed8ca0615 - auction.cdc
 
+//TODO use this
 transaction(tokenID: UInt64, startPrice: UFix64) {
     prepare(account: AuthAccount) {
 

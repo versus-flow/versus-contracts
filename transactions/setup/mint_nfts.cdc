@@ -15,7 +15,7 @@ import Rocks from 0xf3fcd2c1a78f5eee
 // Acct 3 - 0xf3fcd2c1a78f5eee - rocks.cdc
 // Acct 4 - 0xe03daebed8ca0615 - auction.cdc
 
-transaction{
+transaction(recipient: Address, amount: Int){
 
     // private reference to this account's minter resource
     let minterRef: &Rocks.NFTMinter
@@ -29,17 +29,16 @@ transaction{
 
     execute {
         // Get the recipient's public account object
-        let recipient = getAccount(0x179b6b1cb6755e31)
 
         // get the collection reference for the receiver
         // getting the public capability and borrowing the reference from it
-        let receiverCap = recipient.getCapability(/public/RockCollection)!
+        let receiverCap = getAccount(recipient).getCapability(/public/RockCollection)!
 
         let receiverRef = receiverCap.borrow<&{NonFungibleToken.CollectionPublic}>()
                                    ?? panic("unable to borrow nft receiver reference")
 
         // mint an NFT and deposit it in the receiver's collection
-        let amountNFTs = 10
+        let amountNFTs = amount
         var counter = 0
 
         while counter < amountNFTs {

@@ -1,6 +1,12 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/0xAlchemist/go-flow-tooling v0.6.0 h1:V8fwXVAJn1pAOqGnzZgFOOA9rCrqyZHS2bIxEzsb4rE=
 github.com/0xAlchemist/go-flow-tooling v0.6.0/go.mod h1:xyNPAePkIs0ClX2p+9QtAi5wIpr/yh0Gkvfy4YRzNPk=
+github.com/0xAlchemist/go-flow-tooling v0.7.0 h1:XhwcEcAamYZgCCwRTZDk7oFJO1M6loBbms9O4OIhUL8=
+github.com/0xAlchemist/go-flow-tooling v0.7.0/go.mod h1:SWowsPSupcwf1WFYBxjIp40TN5m7abWYakE9YvmfehY=
+github.com/0xAlchemist/go-flow-tooling v0.8.0 h1:sVKoSBb6iik2zGtgXfAwqlYTTSGEyRpH4EfDnlYLY2s=
+github.com/0xAlchemist/go-flow-tooling v0.8.0/go.mod h1:SWowsPSupcwf1WFYBxjIp40TN5m7abWYakE9YvmfehY=
+github.com/0xAlchemist/go-flow-tooling v0.9.0 h1:5ZBc6Rt0fKXiGPDCQnJYcvlab6dk2HsNgZtpGSsKeqk=
+github.com/0xAlchemist/go-flow-tooling v0.9.0/go.mod h1:SWowsPSupcwf1WFYBxjIp40TN5m7abWYakE9YvmfehY=
 github.com/Azure/azure-pipeline-go v0.2.1/go.mod h1:UGSo8XybXnIGZ3epmeBw7Jdz+HiUVpqIlpz/HKHylF4=
 github.com/Azure/azure-pipeline-go v0.2.2/go.mod h1:4rQ/NZncSvGqNkkOsNpOU1tgoNuIlp9AfUH5G1tvCHc=
 github.com/Azure/azure-storage-blob-go v0.7.0/go.mod h1:f9YQKtsG1nMisotuTPpO0tjNuEjKRYAcJU8/ydDI++4=

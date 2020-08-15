@@ -30,52 +30,81 @@ pub contract VoteyAuction {
     // AuctionItem contains the Resources and metadata for a single auction
     pub resource AuctionItem {
         
-        // Resources
+        //The Item that is sold at this auction
         pub(set) var NFT: @NonFungibleToken.NFT?
+
+        //This is the escrow vault that holds the tokens for the current largest bid
         pub let bidVault: @FungibleToken.Vault
 
-        // Metadata
-        pub(set) var meta: ItemMeta
+        //Should an auction know about its Id? It has to in order to send good events. But Then it is hard to move it to 
+        //another collection? Or should this be a pub(set) var?
+        pub let auctionID: UInt64
+
+        //The minimum increment for a bid. This is an english auction style system where bids increase
+        pub let minimumBidIncrement: UFix64
+
+        //the block this auction should start at
+        pub(set) var auctionStartBlock: UInt64
+
+        //The length in blocks for this auction
+        pub let auctionLengthInBlocks: UInt64
+
+        pub(set) var auctionCompleted: Bool
+
+        // Auction State
+        pub(set) var startPrice: UFix64
+        pub(set) var currentPrice: UFix64
+
+        //the capability that points to the resource wher  you want the NFT transfered to if you win this bid. 
+        pub(set) var recipientCollectionCap: Capability<&{NonFungibleToken.CollectionPublic}>
+
+        //the capablity to send the escrow bidVault to if you are outbid
+        pub(set) var recipientVaultCap: Capability<&{FungibleToken.Receiver}>?
+
+        //the capability for the owner of the NFT to return the item to if the auction is cancelled
+        pub let ownerCollectionCap: Capability<&{NonFungibleToken.CollectionPublic}>
+
+        //the capability to pay the owner of the item when the auction is done
+        pub let ownerVaultCap: Capability<&{FungibleToken.Receiver}>
 
         init(
             NFT: @NonFungibleToken.NFT,
             bidVault: @FungibleToken.Vault,
-            meta: ItemMeta
+            minimumBidIncrement: UFix64,
+            auctionLengthInBlocks: UInt64,
+            startPrice: UFix64, 
+            auctionStartBlock: UInt64,
+            ownerCollectionCap: Capability<&{NonFungibleToken.CollectionPublic}>,
+            ownerVaultCap: Capability<&{FungibleToken.Receiver}>
         ) {
-            self.NFT <- NFT
-            self.bidVault <- bidVault
-            self.meta = meta
 
             VoteyAuction.totalAuctions = VoteyAuction.totalAuctions + UInt64(1)
+            self.NFT <- NFT
+            self.bidVault <- bidVault
+            self.auctionID = VoteyAuction.totalAuctions
+            self.minimumBidIncrement = minimumBidIncrement
+            self.auctionLengthInBlocks = auctionLengthInBlocks
+            self.startPrice = startPrice
+            self.currentPrice = startPrice
+            self.auctionStartBlock = auctionStartBlock
+            self.auctionCompleted = false
+            self.recipientCollectionCap = ownerCollectionCap
+            self.recipientVaultCap = ownerVaultCap
+            self.ownerCollectionCap = ownerCollectionCap
+            self.ownerVaultCap = ownerVaultCap
         }
 
-        // depositBidTokens deposits the bidder's tokens into the AuctionItem's Vault
-        pub fun depositBidTokens(vault: @FungibleToken.Vault) {
-            self.bidVault.deposit(from: <-vault)
-        }
-
-        // withdrawNFT removes the NFT from the AuctionItem and returns it to the caller
-        pub fun withdrawNFT(): @NonFungibleToken.NFT {
-            let NFT <- self.NFT <- nil
-            return <- NFT!
-        }
-
-        // updateRecipientVaultCap updates the bidder's Vault capability, providing the
-        // us with a way to return their FungibleTokens
-        access(contract) fun updateRecipientVaultCap(cap: Capability<&{FungibleToken.Receiver}>) {
-            let meta = self.meta
-            meta.recipientVaultCap = cap
-
-            self.meta = meta
-        }
+        
         
         // sendNFT sends the NFT to the Collection belonging to the provided Capability
         access(contract) fun sendNFT(_ capability: Capability<&{NonFungibleToken.CollectionPublic}>) {
             // borrow a reference to the owner's NFT receiver
             if let collectionRef = capability.borrow() {
-                let NFT <- self.withdrawNFT()
+
+                let NFT <- self.NFT <- nil
                 // deposit the token into the owner's collection
-                collectionRef.deposit(token: <-NFT)
+                //TODO: What if does not exist?
+                collectionRef.deposit(token: <-NFT!)
             } else {
                 log("sendNFT(): unable to borrow collection ref")
                 log(capability)
@@ -94,12 +123,125 @@ pub contract VoteyAuction {
             }
         }
 
+        pub fun releasePreviousBid() {
+            // release the bidTokens from the vault back to the bidder
+            if let vaultCap = self.recipientVaultCap {
+                self.sendBidTokens(self.recipientVaultCap!)
+            } else {
+                log("unable to get vault capability")
+            }
+        }
+
+        pub fun settleAuction()  {
+
+            if self.auctionCompleted {
+                log("this auction is already settled")
+                return 
+            }
+
+            if self.NFT == nil {
+                log("auction doesn't exist")
+                return 
+            }
+
+            // check if the auction has expired
+            if self.isAuctionExpired() == false {
+                log("Auction has not completed yet")
+                return
+            }
+                
+            // return if there are no bids to settle
+            if self.currentPrice == self.startPrice {
+                self.returnAuctionItemToOwner()
+                log("No bids. Nothing to settle")
+                return
+            }            
+
+            self.exchangeTokens()
+
+            self.auctionCompleted = true
+            
+            emit AuctionSettled(tokenID: self.auctionID, price: self.currentPrice)
+            
+        }
+
+        pub fun returnAuctionItemToOwner() {
+
+            // release the bidder's tokens
+            self.releasePreviousBid()
+
+            // deposit the NFT into the owner's collection
+            self.sendNFT(self.ownerCollectionCap)
+         }
+
+           // isAuctionExpired returns true if the auction has exceeded it's length in blocks,
+        // otherwise it returns false
+        pub fun isAuctionExpired(): Bool {
+
+            let auctionLength = self.auctionLengthInBlocks
+            let startBlock = self.auctionStartBlock 
+            let currentBlock = getCurrentBlock()
+            
+            if currentBlock.height - startBlock > auctionLength {
+                return true
+            } else {
+                return false
+            }
+        }
+
+        // exchangeTokens sends the purchased NFT to the buyer and the bidTokens to the seller
+        pub fun exchangeTokens() {
+            
+            if self.NFT == nil {
+                log("auction doesn't exist")
+                return
+            }
+            
+
+            self.sendNFT(self.recipientCollectionCap)
+            self.sendBidTokens(self.ownerVaultCap)
+        }
+
+        pub fun placeBid(bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>) {
+
+
+            if self.auctionCompleted {
+                panic("auction has already completed")
+            }
+
+            if bidTokens.balance < self.minimumBidIncrement {
+                panic("bid amount be larger than minimum bid increment")
+            }
+            
+            if self.bidVault.balance != UFix64(0) {
+                if let vaultCap = self.recipientVaultCap {
+                    self.sendBidTokens(self.recipientVaultCap!)
+                } else {
+                    panic("unable to get recipient Vault capability")
+                }
+            }
+
+            // Update the auction item
+            self.bidVault.deposit(from: <-bidTokens)
+
+            self.recipientVaultCap = vaultCap
+
+            // Update the current price of the token
+            self.currentPrice = self.bidVault.balance
+
+            // Add the bidder's Vault and NFT receiver references
+            self.recipientCollectionCap = collectionCap
+
+            //TODO make better bid event
+            emit NewBid(tokenID: self.auctionID, bidPrice: self.currentPrice)
+        }
+
         destroy() {
             // send the NFT back to auction owner
-            self.sendNFT(self.meta.ownerCollectionCap)
+            self.sendNFT(self.ownerCollectionCap)
             
             // if there's a bidder...
-            if let vaultCap = self.meta.recipientVaultCap {
+            if let vaultCap = self.recipientVaultCap {
                 // ...send the bid tokens back to the bidder
                 self.sendBidTokens(vaultCap)
             }
@@ -109,49 +251,7 @@ pub contract VoteyAuction {
         }
     }
 
-    // ItemMeta contains the metadata for an AuctionItem
-    pub struct ItemMeta {
-
-        // Auction Settings
-        pub let auctionID: UInt64
-        pub let minimumBidIncrement: UFix64
-        pub let auctionLengthInBlocks: UInt64
-
-        // Auction State
-        pub(set) var startPrice: UFix64
-        pub(set) var currentPrice: UFix64
-        pub(set) var auctionStartBlock: UInt64
-        pub(set) var auctionCompleted: Bool
-
-        // Recipient's Receiver Capabilities
-        pub(set) var recipientCollectionCap: Capability<&{NonFungibleToken.CollectionPublic}>
-        pub(set) var recipientVaultCap: Capability<&{FungibleToken.Receiver}>?
-
-        // Owner's Receiver Capabilities
-        pub let ownerCollectionCap: Capability<&{NonFungibleToken.CollectionPublic}>
-        pub let ownerVaultCap: Capability<&{FungibleToken.Receiver}>
-
-        init(
-            minimumBidIncrement: UFix64,
-            auctionLengthInBlocks: UInt64,
-            startPrice: UFix64, 
-            auctionStartBlock: UInt64,
-            ownerCollectionCap: Capability<&{NonFungibleToken.CollectionPublic}>,
-            ownerVaultCap: Capability<&{FungibleToken.Receiver}>
-        ) {
-            self.auctionID = VoteyAuction.totalAuctions + UInt64(1)
-            self.minimumBidIncrement = minimumBidIncrement
-            self.auctionLengthInBlocks = auctionLengthInBlocks
-            self.startPrice = startPrice
-            self.currentPrice = startPrice
-            self.auctionStartBlock = auctionStartBlock
-            self.auctionCompleted = false
-            self.recipientCollectionCap = ownerCollectionCap
-            self.recipientVaultCap = ownerVaultCap
-            self.ownerCollectionCap = ownerCollectionCap
-            self.ownerVaultCap = ownerVaultCap
-        }
-    }
+    
 
     // AuctionPublic is a resource interface that restricts users to
     // retreiving the auction price list and placing bids
@@ -180,8 +280,10 @@ pub contract VoteyAuction {
         // for the auction item
         pub fun addTokenToAuctionItems(token: @NonFungibleToken.NFT, minimumBidIncrement: UFix64, auctionLengthInBlocks: UInt64, startPrice: UFix64, bidVault: @FungibleToken.Vault, collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>, vaultCap: Capability<&{FungibleToken.Receiver}>) {
             
-            // create a new auction meta resource
-            let meta = ItemMeta(
+            // create a new auction items resource container
+            let item <- create AuctionItem(
+                NFT: <-token,
+                bidVault: <-bidVault,
                 minimumBidIncrement: minimumBidIncrement,
                 auctionLengthInBlocks: auctionLengthInBlocks,
                 startPrice: startPrice,
@@ -189,15 +291,8 @@ pub contract VoteyAuction {
                 ownerCollectionCap: collectionCap,
                 ownerVaultCap: vaultCap
             )
-            
-            // create a new auction items resource container
-            let item <- create AuctionItem(
-                NFT: <-token,
-                bidVault: <-bidVault,
-                meta: meta
-            )
 
-            let id = item.meta.auctionID
+            let id = item.auctionID
 
             // update the auction items dictionary with the new resources
             let oldItem <- self.auctionItems[id] <- item
@@ -216,8 +311,8 @@ pub contract VoteyAuction {
 
             for id in self.auctionItems.keys {
                 let itemRef = &self.auctionItems[id] as? &AuctionItem
-                if itemRef.meta.auctionCompleted == false {
-                    priceList[id] = itemRef.meta.currentPrice
+                if itemRef.auctionCompleted == false {
+                    priceList[id] = itemRef.currentPrice
                 }
             }
             
@@ -228,74 +323,10 @@ pub contract VoteyAuction {
         // and deposits the FungibleTokens into the auction owner's account
         pub fun settleAuction(_ id: UInt64) {
             let itemRef = &self.auctionItems[id] as &AuctionItem
-            let itemMeta = itemRef.meta
 
-            if itemMeta.auctionCompleted {
-                log("this auction is already settled")
-                return
-            }
+            itemRef.settleAuction()
 
-            if itemRef.NFT == nil {
-                log("auction doesn't exist")
-                return
-            }
-
-            // check if the auction has expired
-            if self.isAuctionExpired(id) == false {
-                log("Auction has not completed yet")
-                return
-            }
-                
-            // return if there are no bids to settle
-            if itemMeta.currentPrice == itemMeta.startPrice {
-                self.returnAuctionItemToOwner(id)
-                log("No bids. Nothing to settle")
-                return
-            }            
-
-            self.exchangeTokens(id)
-
-            itemMeta.auctionCompleted = true
-            
-            emit AuctionSettled(tokenID: id, price: itemMeta.currentPrice)
-            
-            if let item <- self.auctionItems.remove(key: id) {
-                item.meta = itemMeta
-                self.auctionItems[id] <-! item
-            }
-        }
-
-        // isAuctionExpired returns true if the auction has exceeded it's length in blocks,
-        // otherwise it returns false
-        pub fun isAuctionExpired(_ id: UInt64): Bool {
-            let itemRef = &self.auctionItems[id] as &AuctionItem
-            let itemMeta = itemRef.meta
-
-            let auctionLength = itemMeta.auctionLengthInBlocks
-            let startBlock = itemMeta.auctionStartBlock 
-            let currentBlock = getCurrentBlock()
-            
-            if currentBlock.height - startBlock > auctionLength {
-                return true
-            } else {
-                return false
-            }
-        }
-
-        // exchangeTokens sends the purchased NFT to the buyer and the bidTokens to the seller
-        pub fun exchangeTokens(_ id: UInt64) {
-         
-            let itemRef = &self.auctionItems[id] as &AuctionItem    
-            
-            if itemRef.NFT == nil {
-                log("auction doesn't exist")
-                return
-            }
-            
-            let itemMeta = itemRef.meta
-
-            itemRef.sendNFT(itemMeta.recipientCollectionCap)
-            itemRef.sendBidTokens(itemMeta.ownerVaultCap)
+            //TODO: Marketplace cut
         }
 
         // placeBid sends the bidder's tokens to the bid vault and updates the
@@ -309,77 +340,13 @@ pub contract VoteyAuction {
 
             // Get the auction item resources
             let itemRef = &self.auctionItems[id] as &AuctionItem
-            let itemMeta = itemRef.meta
+            itemRef.placeBid(bidTokens: <- bidTokens, 
+              vaultCap:vaultCap, 
+              collectionCap:collectionCap)
 
-            if itemMeta.auctionCompleted {
-                panic("auction has already completed")
-            }
-
-            if bidTokens.balance < itemMeta.minimumBidIncrement {
-                panic("bid amount be larger than minimum bid increment")
-            }
-            
-            if itemRef.bidVault.balance != UFix64(0) {
-                if let vaultCap = itemMeta.recipientVaultCap {
-                    itemRef.sendBidTokens(itemMeta.recipientVaultCap!)
-                } else {
-                    panic("unable to get recipient Vault capability")
-                }
-            }
-
-            // Update the auction item
-            itemRef.depositBidTokens(vault: <-bidTokens)
-            itemRef.updateRecipientVaultCap(cap: vaultCap)
-
-            // Update the current price of the token
-            itemMeta.currentPrice = itemRef.bidVault.balance
-
-            // Add the bidder's Vault and NFT receiver references
-            itemMeta.recipientCollectionCap = collectionCap
-
-            itemRef.meta = itemMeta
-
-            emit NewBid(tokenID: id, bidPrice: itemMeta.currentPrice)
-        }
-
-        // releasePreviousBid returns the outbid user's tokens to
-        // their vault receiver
-        pub fun releasePreviousBid(_ id: UInt64) {
-            // get a reference to the auction items resources
-            let itemRef = &self.auctionItems[id] as &AuctionItem
-            let itemMeta = itemRef.meta
-            // release the bidTokens from the vault back to the bidder
-            if let vaultCap = itemMeta.recipientVaultCap {
-                itemRef.sendBidTokens(itemMeta.recipientVaultCap!)
-            } else {
-                log("unable to get vault capability")
-            }
-        }
-
-        // TODO: I don't think we need this... this should already happen
-        // when the resource gets destroyed
-        //
-        // returnAuctionItemToOwner releases any bids and returns the NFT
-        // to the owner's Collection
-        pub fun returnAuctionItemToOwner(_ id: UInt64) {
-            let itemRef = &self.auctionItems[id] as &AuctionItem
-            let itemMeta = itemRef.meta
-            
-            // release the bidder's tokens
-            self.releasePreviousBid(id)
-            
-            // deposit the NFT into the owner's collection
-            itemRef.sendNFT(itemMeta.ownerCollectionCap)
-
-            // clear the NFT's meta data
-            let oldItem <- self.auctionItems[id] <- nil
-            destroy oldItem
         }
 
         destroy() {
-            for id in self.auctionItems.keys {
-                self.returnAuctionItemToOwner(id)
-            }
             // destroy the empty resources
             destroy self.auctionItems
         }

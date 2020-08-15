@@ -13,6 +13,7 @@ import VoteyAuction from 0xe03daebed8ca0615
 // Acct 3 - 0xf3fcd2c1a78f5eee - rocks.cdc
 // Acct 4 - 0xe03daebed8ca0615 - auction.cdc
 
+//TODO add arguments here
 transaction {
     // reference to the buyer's NFT collection where they
     // will store the bought NFT
