@@ -212,7 +212,9 @@ pub contract VoteyAuction {
 
             for id in self.auctionItems.keys {
                 let itemRef = &self.auctionItems[id] as? &AuctionItem
-                priceList[id] = itemRef.meta.currentPrice
+                if itemRef.meta.auctionCompleted == false {
+                    priceList[id] = itemRef.meta.currentPrice
+                }
             }
             
             return priceList
