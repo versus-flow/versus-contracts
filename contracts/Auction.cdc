@@ -65,6 +65,7 @@ pub contract VoteyAuction {
     pub event TokenStartPriceUpdated(tokenID: UInt64, newPrice: UFix64)
     pub event NewBid(tokenID: UInt64, bidPrice: UFix64)
     pub event AuctionSettled(tokenID: UInt64, price: UFix64)
+    pub event AuctionCanceled(tokenID: UInt64)
 
     pub event MarketplaceEarned(amount:UFix64)
 
@@ -449,10 +450,19 @@ pub contract VoteyAuction {
 
         }
 
+        pub fun cancelAuction(_ id: UInt64) {
+            pre {
+                self.auctionItems[id] != nil:
+                    "Auction does not exist"
+            }
+            let itemRef = &self.auctionItems[id] as &AuctionItem
+            itemRef.returnAuctionItemToOwner()
+            emit AuctionCanceled(tokenID: id)
+        }
+
         // placeBid sends the bidder's tokens to the bid vault and updates the
         // currentPrice of the current auction item
-        pub fun placeBid(id: UInt64, bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>) 
-            {
+        pub fun placeBid(id: UInt64, bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>) {
             pre {
                 self.auctionItems[id] != nil:
                     "NFT doesn't exist"
