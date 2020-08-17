@@ -17,7 +17,7 @@ import VoteyAuction from 0xe03daebed8ca0615
 // Acct 4 - 0xe03daebed8ca0615 - auction.cdc
 
 //TODO use this
-transaction(auction: Address, tokenID: UInt64, startPrice: UFix64) {
+transaction(auction: Address, tokenID: UInt64, startPrice: UFix64, auctionLength: UInt64) {
     prepare(account: AuthAccount) {
 
 
@@ -27,12 +27,14 @@ transaction(auction: Address, tokenID: UInt64, startPrice: UFix64) {
         // get the public Capability for the signer's NFT collection (for the auction)
         let publicCollectionCap = account.getCapability<&{NonFungibleToken.CollectionPublic}>(/public/RockCollection)
         ?? panic("Unable to borrow the CollectionPublic capability")
+        // TODO: check if you can borrow
 
         // Get the array of token IDs in the account's collection
         let collectionIDs = accountCollectionRef.getIDs()
 
         let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenReceiver)??
             panic("Unable to borrow the Vault Receiver capability")
+        // TODO: check if you can borrow
 
         let auctionAccount= getAccount(auction)
        //get the auctionCollectionReference to add the item to
@@ -54,7 +56,7 @@ transaction(auction: Address, tokenID: UInt64, startPrice: UFix64) {
             auctionCollectionRef.createAuction(
                 token: <-NFT,
                 minimumBidIncrement: UFix64(5),
-                auctionLengthInBlocks: UInt64(2),
+                auctionLengthInBlocks: auctionLength,
                 startPrice: startPrice,
                 bidVault: <-bidVault,
                 collectionCap: publicCollectionCap,

@@ -192,6 +192,7 @@ pub contract VoteyAuction {
                 log("Auction has not completed yet")
                 return
             }
+
                 
             // return if there are no bids to settle
             if self.currentPrice == self.startPrice {
@@ -203,9 +204,11 @@ pub contract VoteyAuction {
             //Withdraw cutPercentage to marketplace and put it in their vault
             let amount=self.currentPrice*cutPercentage
             let beneficiaryCut <- self.bidVault.withdraw(amount:amount )
+
             log("Marketplace cut was")
             log(amount)
             emit MarketplaceEarned(amount: amount)
+            log(cutVault)
             cutVault.borrow()!.deposit(from: <- beneficiaryCut)
 
             self.exchangeTokens()
@@ -213,7 +216,6 @@ pub contract VoteyAuction {
             self.auctionCompleted = true
             
             emit AuctionSettled(tokenID: self.auctionID, price: self.currentPrice)
-            
         }
 
         pub fun returnAuctionItemToOwner() {
@@ -225,7 +227,7 @@ pub contract VoteyAuction {
             self.sendNFT(self.ownerCollectionCap)
          }
 
-        //this can be negative
+        //this can be negative if is expired
         pub fun blocksRemaining() : Int64 {
             let auctionLength = self.auctionLengthInBlocks
 
@@ -235,19 +237,9 @@ pub contract VoteyAuction {
             return Int64(startBlock+auctionLength) - Int64(currentBlock) 
         }
 
-           // isAuctionExpired returns true if the auction has exceeded it's length in blocks,
-        // otherwise it returns false
+      
         pub fun isAuctionExpired(): Bool {
-
-            let auctionLength = self.auctionLengthInBlocks
-            let startBlock = self.auctionStartBlock 
-            let currentBlock = getCurrentBlock()
-            
-            if currentBlock.height - startBlock > auctionLength {
-                return true
-            } else {
-                return false
-            }
+            return self.blocksRemaining() < Int64(0)
         }
 
         // exchangeTokens sends the purchased NFT to the buyer and the bidTokens to the seller
@@ -444,7 +436,6 @@ pub contract VoteyAuction {
         // and deposits the FungibleTokens into the auction owner's account
         pub fun settleAuction(_ id: UInt64) {
             let itemRef = &self.auctionItems[id] as &AuctionItem
-            log(itemRef)
 
             itemRef.settleAuction(cutPercentage: self.cutPercentage, cutVault: self.marketplaceVault)
 

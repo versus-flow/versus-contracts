@@ -46,7 +46,7 @@ transaction(marketplace: Address, auctionId: UInt64, bidAmount: UFix64) {
 
         // get the reference to the seller's sale
         let auctionRef = seller.getCapability(/public/NFTAuction)!
-                         .borrow<&AnyResource{VoteyAuction.AuctionPublic}>()
+                         .borrow<&{VoteyAuction.AuctionPublic}>()
                          ?? panic("Could not borrow seller's sale reference")
 
         auctionRef.placeBid(id: auctionId, bidTokens: <- self.temporaryVault, vaultCap: self.vaultCap, collectionCap: self.collectionCap)

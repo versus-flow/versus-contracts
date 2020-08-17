@@ -28,6 +28,7 @@ func ufix(input string) cadence.UFix64 {
 func main() {
 	flow := tooling.NewFlowConfigLocalhost()
 
+	flow.DeployContract(nonFungibleToken)
 	// TODO: Could this minter be in init of demoToken? Do we have any scenario where somebody else should mint art?
 	flow.DeployContract(demoToken)
 	flow.SendTransaction("setup/create_demotoken_minter", demoToken)
@@ -39,7 +40,7 @@ func main() {
 
 	//Marketplace will own a marketplace and get a cut for each sale, this account does not own any NFT
 	flow.CreateAccount(marketplace)
-	flow.SendTransaction("setup/create_nft_collection", marketplace)
+	flow.SendTransaction("setup/create_demotoken_vault", marketplace)
 	flow.SendTransaction("setup/create_auction_collection", marketplace)
 
 	//The artist owns NFTs and sells in the marketplace
@@ -50,9 +51,10 @@ func main() {
 	//Mint 1 new NFTs and add the for sale with a start price of 10.0
 	flow.SendTransactionWithArguments("setup/mint_nfts", rocks, flow.FindAddress(artist), cadence.NewInt(1))
 	flow.SendTransactionWithArguments("list/add_nft_to_auction", artist,
-		flow.FindAddress(marketplace),
-		cadence.NewUInt64(0),
-		ufix("10.0"))
+		flow.FindAddress(marketplace), //marketplace locaion
+		cadence.NewUInt64(0),          //tokenID
+		ufix("10.0"),                  //minimum bid
+		cadence.NewUInt64(10))         //auction length
 
 	//Buyer1 bid on NFTS and hope to grow his NFT collection, Starts out with 100 tokens and no NFTS
 	flow.CreateAccount(buyer1)
@@ -87,6 +89,5 @@ func main() {
 	flow.RunScript("check_account", flow.FindAddress(artist), cadence.NewString("artist"))
 	flow.RunScript("check_account", flow.FindAddress(buyer1), cadence.NewString("buyer1"))
 	flow.RunScript("check_account", flow.FindAddress(buyer2), cadence.NewString("buyer2"))
-
 
 }

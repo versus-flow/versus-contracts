@@ -27,7 +27,7 @@ pub struct AddressStatus {
   }
 }
 
-pub fun main(address:Address, name: String):AddressStatus {
+pub fun main(address:Address, name: String){
     // get the accounts' public address objects
     let account = getAccount(address)
     let status= AddressStatus(address)
@@ -59,7 +59,10 @@ pub fun main(address:Address, name: String):AddressStatus {
           log("Items up for auction")
           let auctionStatus=auctions.getAuctionStatuses()
           for s in auctionStatus.keys {
+             let status = auctionStatus[s]!
+             if(status.active) {
               log(auctionStatus[s])
+             }
           }
           status.auctions=auctionStatus
         } else {

@@ -17,7 +17,13 @@ transaction {
         // create a new sale object     
         // initializing it with the reference to the owner's Vault
 
+
+        // Would this fail if the capability was not here? 
         let marketplaceReceiver=account.getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenReceiver)!
+
+        if marketplaceReceiver.borrow() == nil {
+            panic("Cannot borrow vault receiver")
+        }
 
         let auction <- VoteyAuction.createAuctionCollection(
             marketplaceVault: marketplaceReceiver,
