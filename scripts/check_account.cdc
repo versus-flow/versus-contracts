@@ -9,7 +9,6 @@ import DemoToken from 0x179b6b1cb6755e31
 import Art from 0xf3fcd2c1a78f5eee
 import Auction from 0xe03daebed8ca0615
 
-
 pub struct AddressStatus {
 
   pub(set) var address:Address
