@@ -1,6 +1,6 @@
-// VoteyAuction.cdc
+// Auction.cdc
 //
-// The VoteyAuction contract is an experimental implementation of an NFT Auction on Flow.
+// The Auction contract is an experimental implementation of an NFT Auction on Flow.
 //
 // This contract allows users to put their NFTs up for sale. Other users
 // can purchase these NFTs with fungible tokens.
@@ -8,14 +8,8 @@
 import FungibleToken from 0xee82856bf20e2aa6
 import NonFungibleToken from 0x01cf0e2f2f715450
 
-// Contract Deployment:
-// Acct 1 - 0x01cf0e2f2f715450 - NonFungibleToken.cdc
-// Acct 2 - 0x179b6b1cb6755e31 - DemoToken.cdc
-// Acct 3 - 0xf3fcd2c1a78f5eee - Rocks.cdc
-// Acct 4 - 0xe03daebed8ca0615 - Auction.cdc
-//
 
-pub contract VoteyAuction {
+pub contract Auction {
 
     pub struct AuctionStatus{
 
@@ -121,10 +115,10 @@ pub contract VoteyAuction {
             ownerVaultCap: Capability<&{FungibleToken.Receiver}>
         ) {
 
-            VoteyAuction.totalAuctions = VoteyAuction.totalAuctions + UInt64(1)
+            Auction.totalAuctions = Auction.totalAuctions + UInt64(1)
             self.NFT <- NFT
             self.bidVault <- bidVault
-            self.auctionID = VoteyAuction.totalAuctions
+            self.auctionID = Auction.totalAuctions
             self.minimumBidIncrement = minimumBidIncrement
             self.auctionLengthInBlocks = auctionLengthInBlocks
             self.startPrice = startPrice
