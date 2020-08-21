@@ -15,12 +15,12 @@ pub struct AddressStatus {
   pub(set) var address:Address
   pub(set) var balance: UFix64
   pub(set) var art: {UInt64: {String : String}}
-  pub(set) var auctions: {UInt64: Auction.AuctionStatus}
+  pub(set) var drops: {UInt64: Versus.DropStatus}
   init (_ address:Address) {
     self.address=address
     self.balance= UFix64(0)
     self.art= {}
-    self.auctions ={}
+    self.drops ={}
   }
 }
 
@@ -38,6 +38,39 @@ pub fun main(address:Address, name: String){
           status.balance=demoTokens.balance
         }
     }
+    var isMarketplace=false
+    if let versusCap = account.getCapability(/public/Versus) {
+
+        if let versus = versusCap.borrow<&{Versus.PublicDrop}>() {
+          isMarketplace=true
+          log("Drops available")
+          log("=================")
+          let versusStatuses=versus.getAllStatuses()
+          for s in versusStatuses.keys {
+             let status = versusStatuses[s]!
+             if status.uniqueStatus.active != false {
+                log("dropid")
+                log(status.dropId)
+                log("Price unique")
+                log(status.uniquePrice)
+                log("Price editioned")
+                log(status.editionPrice)
+                log("Winning")
+                log(status.winning())
+                log(status.uniqueStatus)
+                for es in status.editionsStatuses.keys {
+                    let es = status.editionsStatuses[es]!
+                    log(es)
+                }
+             }
+          }
+          status.drops=versusStatuses
+        } 
+    } 
+    
+    if isMarketplace {
+      return 
+    }
 
     if let artCap = account.getCapability(/public/ArtCollection) {
        if let art= artCap.borrow<&{NonFungibleToken.CollectionPublic}>()  {
@@ -49,37 +82,7 @@ pub fun main(address:Address, name: String){
            }
        }
     }
-   
-   
-    if let versusCap = account.getCapability(/public/Versus) {
-        if let versus = versusCap.borrow<&{Versus.PublicDrop}>() {
-          log("Drops available")
-          log("=================")
-          let versusStatuses=versus.getAllStatuses()
-          for s in versusStatuses.keys {
-
-             let status = versusStatuses[s]!
-            log("dropid")
-             log(status.dropId)
-             log("Price unique")
-             log(status.uniquePrice)
-             log("Price editioned")
-             log(status.editionPrice)
-             log("Winning")
-             log(status.winning())
-             log(status.uniqueStatus)
-             for es in status.editionsStatuses.keys {
-                let es = status.editionsStatuses[es]!
-                log(es)
-             }
-          }
-          //status.auctions=auctionStatus
-        } else {
-          log("No items for sale 1")
-        }
-    } else {
-        log("No items for sale 2")
-    } 
+    
     log("=====================")
     //return status
 
