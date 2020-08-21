@@ -195,6 +195,8 @@ pub contract Versus {
              startPrice: UFix64,  
              vaultCap: Capability<&{FungibleToken.Receiver}>) {
 
+            //TODO: Check the vaultCap here
+
             //create the unique art
             var metadata=artMetadata
             metadata["edition"]= "1"

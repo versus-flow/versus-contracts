@@ -28,6 +28,7 @@ transaction(
         self.versus= account.borrow<&Versus.DropCollection>(from: /storage/Versus)!
         
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenReceiver)!
+        //Always check in the contract if you need it to be there. 
         if !self.artistWallet.check() {
             panic("Unable to borrow the Vault Receiver capability")
          }

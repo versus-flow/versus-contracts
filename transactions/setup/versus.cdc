@@ -30,7 +30,7 @@ transaction(cutPercentage: UFix64, dropLength: UInt64, minimumBlockRemainingAfte
         let versus <- Versus.createVersusDropCollection(
             marketplaceVault: marketplaceReceiver,
             marketplaceNFTTrash:marketplaceNFTTrash,
-            cutPercentage: UFix64(0.15),
+            cutPercentage: cutPercentage,
             dropLength: dropLength, 
             minimumBlockRemainingAfterBidOrTie: minimumBlockRemainingAfterBidOrTie
         )
