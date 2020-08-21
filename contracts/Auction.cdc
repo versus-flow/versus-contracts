@@ -1,6 +1,4 @@
-// Auction.cdc
-//
-// The Auction contract is an experimental implementation of an NFT Auction on Flow.
+// The Auction contract is an implementation of an NFT Auction on Flow.
 //
 // This contract allows users to put their NFTs up for sale. Other users
 // can purchase these NFTs with fungible tokens.
@@ -11,7 +9,7 @@ import DemoToken from 0x179b6b1cb6755e31
 
 pub contract Auction {
 
-    //TODO: expose minNextBid
+    // This struct aggreates status for the auction and is expoded in order to create websites using auction information
     pub struct AuctionStatus{
 
         pub let id: UInt64
@@ -71,7 +69,9 @@ pub contract Auction {
     // AuctionItem contains the Resources and metadata for a single auction
     pub resource AuctionItem {
         
+        //Number of bids made, that is aggregated to the status struct
         pub var numberOfBids: UInt64
+
         //The Item that is sold at this auction
         pub(set) var NFT: @NonFungibleToken.NFT?
 
@@ -138,12 +138,8 @@ pub contract Auction {
         
         // sendNFT sends the NFT to the Collection belonging to the provided Capability
         access(contract) fun sendNFT(_ capability: Capability<&{NonFungibleToken.CollectionPublic}>) {
-            // borrow a reference to the owner's NFT receiver
             if let collectionRef = capability.borrow() {
-
                 let NFT <- self.NFT <- nil
-                // deposit the token into the owner's collection
-                //TODO: What if does not exist?
                 collectionRef.deposit(token: <-NFT!)
             } else {
                 log("sendNFT(): unable to borrow collection ref")

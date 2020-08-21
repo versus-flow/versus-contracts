@@ -2,6 +2,8 @@
 // It is not part of the official standard but it assumed to be
 // very similar to how many NFTs would implement the core functionality.
 
+//This contract is on purpose pretty simple, it does not have a minter on anything
+
 import NonFungibleToken from 0x01cf0e2f2f715450
 
 pub contract Art: NonFungibleToken {
