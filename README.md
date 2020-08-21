@@ -1,17 +1,29 @@
-# Flow Auction Contract
+# Versus Flow Auction Contract
 
-A composable auction contract with a custom fungible and non-fungible token for testing. Both tokens conform to the token standards found in the Flow repo: [FT](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleToken.cdc) | [NFT](https://github.com/onflow/flow-nft/blob/master/contracts/NonFungibleToken.cdc)
+This is a git repo for the cadence contrats for versus@flow. Follow the guide below to set it up and test locally in the terminal.
 
-## Deployment
-
-This demo is currently available for download and deployment with the Flow CLI and VS Code Extension
-
-### Go Tooling Deployment (Recommended)
+## Prerequisites
 
 1. Ensure Go is [installed on your machine](https://golang.org/dl/) `recommended version 1.13^`
-2. [Install the Flow CLI](https://docs.onflow.org/docs/cli) and VS Code Extension
-3. Run `$ git clone https://github.com/0xAlchemist/votey-auction` in a terminal window
-4. Change to the project directory `cd votey-auction`
+2. [Install the Flow CLI](https://docs.onflow.org/docs/cli) 
+3. Run `$ git clone https://github.com/versu-flow/auction-flow-contract` in a terminal window
+4. Change to the project directory `cd auction-flow-contract`
 5. Rename `flow.sample.json` to `flow.json`: `$ mv flow.sample.json flow.json`
-6. Run `$ go run run.go`
+
+## How to run the sample
+
+Start two terminals. Both from the root directory.
+`flow emualator start -v`
+`go run run.go`
+
+
+## What happends in the sample
+
+1. install all the contracts
+2. setup an artist with a wallet to receive his share
+2. setup a marketplace and put a single 1 vs 10 auction active. Marketplace cut is 15%
+3. setup bidder1 and bidder2
+4. have bidder1 bid on the auction
+5. tick the clock and settle the auction
+6. settle the auction
 
