@@ -15,11 +15,13 @@ pub contract Versus {
 
     pub fun createVersusDropCollection(
         marketplaceVault: Capability<&{FungibleToken.Receiver}>,
+        marketplaceNFTTrash: Capability<&{NonFungibleToken.CollectionPublic}>,
         cutPercentage: UFix64,
         dropLength: UInt64, 
         minimumBlockRemainingAfterBidOrTie: UInt64): @DropCollection {
         let collection <- create DropCollection(
             marketplaceVault: marketplaceVault, 
+            marketplaceNFTTrash: marketplaceNFTTrash,
             cutPercentage: cutPercentage,
             dropLength: dropLength,
             minimumBlockRemainingAfterBidOrTie:minimumBlockRemainingAfterBidOrTie
@@ -35,8 +37,10 @@ pub contract Versus {
         // TODO: fix start block over then current block 
 
 
-        init( uniqueAuction: @Auction.AuctionItem, editionAuctions: @Auction.AuctionCollection) {
-             Versus.totalDrops = Versus.totalDrops + UInt64(1)
+        init( uniqueAuction: @Auction.AuctionItem, 
+            editionAuctions: @Auction.AuctionCollection) { 
+
+            Versus.totalDrops = Versus.totalDrops + UInt64(1)
 
             self.dropID=Versus.totalDrops
             self.uniqueAuction <-uniqueAuction
@@ -142,15 +146,7 @@ pub contract Versus {
     }
 
     pub resource interface PublicDrop {
-          pub fun createDrop(
-             uniqueArt: @NonFungibleToken.NFT, 
-             editionsArt: @NonFungibleToken.Collection,
-             minimumBidIncrement: UFix64, 
-             startBlock: UInt64, 
-             startPrice: UFix64,  
-             collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>, 
-             vaultCap: Capability<&{FungibleToken.Receiver}>)
-
+         
         pub fun getAllStatuses(): {UInt64: DropStatus}
         pub fun getStatus(dropId: UInt64): DropStatus
 
@@ -169,16 +165,20 @@ pub contract Versus {
         pub var drops: @{UInt64: Drop}
         pub var cutPercentage:UFix64 
         pub let marketplaceVault: Capability<&{FungibleToken.Receiver}>
+        pub let marketplaceNFTTrash: Capability<&{NonFungibleToken.CollectionPublic}>
 
         pub let minimumBlockRemainingAfterBidOrTie: UInt64
         pub let dropLength: UInt64
 
+
         init(
             marketplaceVault: Capability<&{FungibleToken.Receiver}>, 
+            marketplaceNFTTrash: Capability<&{NonFungibleToken.CollectionPublic}>,
             cutPercentage: UFix64,
             dropLength: UInt64,
             minimumBlockRemainingAfterBidOrTie:UInt64
         ) {
+            self.marketplaceNFTTrash=marketplaceNFTTrash
             self.cutPercentage= cutPercentage
             self.marketplaceVault = marketplaceVault
             self.dropLength=dropLength
@@ -186,40 +186,48 @@ pub contract Versus {
             self.drops <- {}
         }
 
+
         pub fun createDrop(
-             uniqueArt: @NonFungibleToken.NFT, 
-             editionsArt: @NonFungibleToken.Collection,
+             artMetadata: {String : String},
+             editions: UInt64,
              minimumBidIncrement: UFix64, 
              startBlock: UInt64, 
              startPrice: UFix64,  
-             collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>, 
              vaultCap: Capability<&{FungibleToken.Receiver}>) {
 
+            //create the unique art
+            var metadata=artMetadata
+            metadata["edition"]= "1"
+            metadata["maxEdition"]= "1"
             let item <- Auction.createStandaloneAuction(
-                token: <-uniqueArt,
+                token: <- Art.createArt(metadata),
                 minimumBidIncrement: minimumBidIncrement,
                 auctionLengthInBlocks: self.dropLength,
                 auctionStartBlock: startBlock,
                 startPrice: startPrice,
-                collectionCap: collectionCap,
+                collectionCap: self.marketplaceNFTTrash,
                 vaultCap: vaultCap
             )
 
-            let editionedAuctions <- Auction.createAuctionCollection( marketplaceVault: self.marketplaceVault , cutPercentage: self.cutPercentage)
+            //create the editioned art
 
-
-            for editionId in editionsArt.getIDs() {
-                let art <- editionsArt.withdraw(withdrawID: editionId)
+            let editionedAuctions <- Auction.createAuctionCollection( 
+                marketplaceVault: self.marketplaceVault , 
+                cutPercentage: self.cutPercentage)
+            metadata["maxEdition"]= editions.toString()
+            var currentEdition=UInt64(1)
+            while(currentEdition < editions) {
+                metadata["edition"]= currentEdition.toString()
+                currentEdition=currentEdition+UInt64(1)
                 editionedAuctions.createAuction(
-                    token: <- art, 
+                    token: <- Art.createArt(metadata), 
                     minimumBidIncrement: minimumBidIncrement, 
                     auctionLengthInBlocks: self.dropLength,
                     auctionStartBlock:startBlock,
                     startPrice: startPrice, 
-                    collectionCap: collectionCap, 
+                    collectionCap: self.marketplaceNFTTrash, 
                     vaultCap: vaultCap)
             }
-            destroy editionsArt
             
             let drop  <- create Drop(uniqueAuction: <- item, editionAuctions:  <- editionedAuctions)
 
@@ -270,6 +278,8 @@ pub contract Versus {
             }else {
                 panic("tie")
             }
+            //todo: delete the trash
+
         }
 
         pub fun placeBid(

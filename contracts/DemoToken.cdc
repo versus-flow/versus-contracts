@@ -6,31 +6,29 @@ import FungibleToken from 0xee82856bf20e2aa6
 
 
 pub contract DemoToken: FungibleToken {
-
-    // Total supply of all DemoTokens in existence.
+ /// The total number of tokens in existence.
+    /// It is up to the implementer to ensure that the total supply
+    /// stays accurate and up to date
+    ///
     pub var totalSupply: UFix64
 
-    // Event that is emitted when the contract is created
+    /// TokensInitialized
+    ///
+    /// The event that is emitted when the contract is created
+    ///
     pub event TokensInitialized(initialSupply: UFix64)
 
-    // Event that is emitted when tokens are withdrawn from a Vault
+    /// TokensWithdrawn
+    ///
+    /// The event that is emitted when tokens are withdrawn from a Vault
+    ///
     pub event TokensWithdrawn(amount: UFix64, from: Address?)
 
-    // Event that is emitted when tokens are deposited into a Vault
+    /// TokensDeposited
+    ///
+    /// The event that is emitted when tokens are deposited into a Vault
+    ///
     pub event TokensDeposited(amount: UFix64, to: Address?)
-
-    // Event that is emitted when tokens are minted
-    pub event TokensMinted(amount: UFix64)
-
-    // Event that is emitted when tokens are destroyed
-    pub event TokensBurned(amount: UFix64)
-
-    // Event that is emitted when a new minter resource is created
-    pub event MinterCreated(allowedAmount: UFix64)
-    
-    // Event that is emitted when a new burner resource is created
-    pub event BurnerCreated()
-
     // Vault
     //
     // Each user stores an instance of only the Vault in their storage
@@ -85,7 +83,7 @@ pub contract DemoToken: FungibleToken {
             destroy vault
         }
 
-        destroy() {
+         destroy() {
             DemoToken.totalSupply = DemoToken.totalSupply - self.balance
         }
     }
@@ -101,87 +99,20 @@ pub contract DemoToken: FungibleToken {
         return <-create Vault(balance: 0.0)
     }
 
-    pub resource Administrator {
-        // createNewMinter
-        //
-        // Function that returns a new minter resource
-        //
-        pub fun createNewMinter(allowedAmount: UFix64): @Minter {
-            emit MinterCreated(allowedAmount: allowedAmount)
-            return <-create Minter(allowedAmount: allowedAmount)
-        }
-
-        // createNewBurner
-        //
-        // Function that returns a new burner resource
-        //
-        pub fun createNewBurner(): @Burner {
-            emit BurnerCreated()
-            return <-create Burner()
-        }
+    // create vaultWithTokens
+    //
+    // This is for demo purposes only so we just create a vault with some tokens in it
+     pub fun createVaultWithTokens(_ balance: UFix64): @FungibleToken.Vault {
+         DemoToken.totalSupply= DemoToken.totalSupply+balance
+        return <-create Vault(balance: balance)
     }
 
-    // Minter
-    //
-    // Resource object that token admin accounts can hold to mint new tokens
-    //
-    pub resource Minter {
-
-        // the amount of tokens that the minter is allowed to mint
-        pub var allowedAmount: UFix64
-
-        // mintTokens
-        //
-        // Function that mints new tokens, adds them to the total supply,
-        // and returns them to the calling context
-        //
-        pub fun mintTokens(amount: UFix64): @DemoToken.Vault {
-            pre {
-                amount > UFix64(0): "Amount minted must be greater than zero"
-                amount <= self.allowedAmount: "Amount minted must be less than the allowed amount"
-            }
-            DemoToken.totalSupply = DemoToken.totalSupply + amount
-            self.allowedAmount = self.allowedAmount - amount
-            emit TokensMinted(amount: amount)
-            return <-create Vault(balance: amount)
-        }
-
-        init(allowedAmount: UFix64) {
-            self.allowedAmount = allowedAmount
-        }
-
-    }
-
-    // Burner
-    //
-    // Resource object that token admin accounts can hold to burn tokens
-    //
-    pub resource Burner {
-
-        // burnTokens
-        //
-        // Function that destroys a vault instance, effectively burning the tokens
-        //
-        // Note: the burned tokens are automatically subtracted from
-        // the totalSupply in the Vault destructor
-        //
-        pub fun burnTokens(from: @FungibleToken.Vault) {
-            let vault <- from as! @DemoToken.Vault
-            let amount = vault.balance
-            destroy vault
-            emit TokensBurned(amount: amount)
-        }
-    }
-
-    // The init function initializes the fields for the DemoToken contract.
     init() {
-        self.totalSupply = 0.0
+         self.totalSupply = 0.0
 
-        let admin <-create Administrator()
-        self.account.save(<-admin, to: /storage/DemoTokenAdmin)
-
-        // Emit an event that shows that the contract was initialized
-        emit TokensInitialized(initialSupply: self.totalSupply)
+         
+         emit TokensInitialized(initialSupply: self.totalSupply)
     }
+
 }
  

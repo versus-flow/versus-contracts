@@ -1,5 +1,9 @@
-// This transaction creates an empty NFT Collection for the signer
-// and publishes a capability to the collection in storage
+
+//This transaction setup of a versus marketplace
+//Each drop settlement will deposit cutPercentage number of tokens into the signers vault
+//Standard dropLength can be set and the number of blocks to postpone the drops on if there is a late bid
+
+// If there is a bid 1 block before it ends it will be extended with minimumBlockRemainingAfterBidOrTie-1 
 
 import FungibleToken from 0xee82856bf20e2aa6
 import NonFungibleToken from 0x01cf0e2f2f715450
@@ -18,11 +22,14 @@ transaction(cutPercentage: UFix64, dropLength: UInt64, minimumBlockRemainingAfte
         // Would this fail if the capability was not here? 
         let marketplaceReceiver=account.getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenReceiver)!
         if !marketplaceReceiver.check() {
-            panic("Cannot borrow vault receiver")
+            panic("Cannot borrow vault receiver run the setup/actor transaction first")
         }
+
+         let marketplaceNFTTrash=account.getCapability<&{NonFungibleToken.CollectionPublic}>(/public/ArtCollection)!
 
         let versus <- Versus.createVersusDropCollection(
             marketplaceVault: marketplaceReceiver,
+            marketplaceNFTTrash:marketplaceNFTTrash,
             cutPercentage: UFix64(0.15),
             dropLength: dropLength, 
             minimumBlockRemainingAfterBidOrTie: minimumBlockRemainingAfterBidOrTie

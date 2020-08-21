@@ -77,34 +77,19 @@ pub contract Art: NonFungibleToken {
         return <- create Collection()
     }
 
-    // Resource that an admin or something similar would own to be
-    // able to mint new NFTs
-    //
-	pub resource NFTMinter {
 
-		// mintNFT mints a new NFT with a new ID
-		// and deposit it in the recipients collection using their collection reference
-		pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}, metadata: {String: String}) {
+	// mintNFT mints a new NFT with a new ID
+	pub fun createArt(_ metadata: {String: String}) : @Art.NFT {
 
-			// create a new NFT
-			var newNFT <- create NFT(initID: Art.totalSupply, metadata: metadata)
+        var newNFT <- create NFT(initID: Art.totalSupply, metadata: metadata)
 
-			// deposit it in the recipient's account using their reference
-			recipient.deposit(token: <-newNFT)
-
-            Art.totalSupply = Art.totalSupply + UInt64(1)
-		}
+        Art.totalSupply = Art.totalSupply + UInt64(1)
+        return <- newNFT
 	}
 
 	init() {
         // Initialize the total supply
         self.totalSupply = 0
-
-
-        // Create a Minter resource and save it to storage
-        let minter <- create NFTMinter()
-        self.account.save(<-minter, to: /storage/ArtMinter)
-
         emit ContractInitialized()
 	}
 }
