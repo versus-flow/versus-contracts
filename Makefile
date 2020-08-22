@@ -1,4 +1,6 @@
-all: setup-marketplace create-drop setup_bidders bid settle check
+all: setup-marketplace create-drop setup-bidders bid settle check
+
+webpage: setup-marketplace create-drop 
 
 .PHONY: setup-marketplace
 setup-marketplace:
@@ -8,8 +10,8 @@ setup-marketplace:
 create-drop:
 	go run ./examples/create_drop/main.go
 
-.PHONY: setup_bidders
-setup_bidders:
+.PHONY: setup-bidders
+setup-bidders:
 	go run ./examples/setup_bidders/main.go
 
 .PHONY: bid

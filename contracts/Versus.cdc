@@ -50,7 +50,6 @@ pub contract Versus {
         pub let uniqueAuction: @Auction.AuctionItem
         pub let editionAuctions: @Auction.AuctionCollection
         pub let dropID: UInt64
-        // TODO: fix start block over then current block 
 
 
         init( uniqueAuction: @Auction.AuctionItem, 
