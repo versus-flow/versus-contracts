@@ -10,10 +10,10 @@ transaction(tokens:UFix64) {
 
     prepare(acct: AuthAccount) {
 
-        let tokens:UFix64 = 100.0
         let reciverRef = acct.getCapability(/public/DemoTokenReceiver)!
         //If we have a DemoTokenReceiver then we are already set up so just return
         if reciverRef.check<&{FungibleToken.Receiver}>() {
+            log("Account already initalized")
             return
         }
 

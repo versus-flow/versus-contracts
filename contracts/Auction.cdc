@@ -57,13 +57,18 @@ pub contract Auction {
     pub var totalAuctions: UInt64
 
     // Events
-    pub event NewAuctionCollectionCreated(minimumBidIncrement: UFix64, auctionLengthInBlocks: UInt64)
-    pub event AuctionCreated(tokenID: UInt64, startPrice: UFix64)
-    pub event NewBid(tokenID: UInt64, bidderAddress: Address, bidPrice: UFix64)
-    pub event AuctionSettled(tokenID: UInt64, price: UFix64)
-    pub event AuctionCanceled(tokenID: UInt64)
 
-    pub event MarketplaceEarned(amount:UFix64)
+    //And event that is emitted when a new AuctionCollection is started
+    pub event CollectionCreated(owner: Address, cutPercentage: UFix64)
+
+    //And event when an item is put up for auction
+    pub event Created(tokenID: UInt64, owner: Address, startPrice: UFix64, startBlock: UInt64)
+
+    pub event Bid(tokenID: UInt64, bidderAddress: Address, bidPrice: UFix64)
+    pub event Settled(tokenID: UInt64, price: UFix64)
+    pub event Canceled(tokenID: UInt64)
+
+    pub event MarketplaceEarned(amount:UFix64, owner: Address)
 
     // AuctionItem contains the Resources and metadata for a single auction
     pub resource AuctionItem {
@@ -196,14 +201,15 @@ pub contract Auction {
             let amount=self.currentPrice*cutPercentage
             let beneficiaryCut <- self.bidVault.withdraw(amount:amount )
 
-            emit MarketplaceEarned(amount: amount)
-            cutVault.borrow()!.deposit(from: <- beneficiaryCut)
+            let cutVault=cutVault.borrow()!
+            emit MarketplaceEarned(amount: amount, owner: cutVault.owner!.address)
+            cutVault.deposit(from: <- beneficiaryCut)
 
             self.exchangeTokens()
 
             self.auctionCompleted = true
             
-            emit AuctionSettled(tokenID: self.auctionID, price: self.currentPrice)
+            emit Settled(tokenID: self.auctionID, price: self.currentPrice)
         }
 
         pub fun returnAuctionItemToOwner() {
@@ -290,7 +296,7 @@ pub contract Auction {
 
             let bidderAddress=vaultCap.borrow()!.owner!.address
 
-            emit NewBid(tokenID: self.auctionID, bidderAddress: bidderAddress, bidPrice: self.currentPrice)
+            emit Bid(tokenID: self.auctionID, bidderAddress: bidderAddress, bidPrice: self.currentPrice)
         }
 
         pub fun getAuctionStatus() :AuctionStatus {
@@ -412,8 +418,11 @@ pub contract Auction {
             let oldItem <- self.auctionItems[id] <- item
             destroy oldItem
 
-            emit AuctionCreated(tokenID: id, startPrice: startPrice)
+            let owner= vaultCap.borrow()!.owner!.address
+
+            emit Created(tokenID: id, owner: owner, startPrice: startPrice, startBlock: auctionStartBlock)
         }
+
 
         // getAuctionPrices returns a dictionary of available NFT IDs with their current price
         pub fun getAuctionStatuses(): {UInt64: AuctionStatus} {
@@ -472,7 +481,7 @@ pub contract Auction {
             }
             let itemRef = &self.auctionItems[id] as &AuctionItem
             itemRef.returnAuctionItemToOwner()
-            emit AuctionCanceled(tokenID: id)
+            emit Canceled(tokenID: id)
         }
 
         // placeBid sends the bidder's tokens to the bid vault and updates the
@@ -525,6 +534,8 @@ pub contract Auction {
             marketplaceVault: marketplaceVault, 
             cutPercentage: cutPercentage
         )
+
+        emit CollectionCreated(owner: marketplaceVault.borrow()!.owner!.address, cutPercentage: cutPercentage)
         return <- auctionCollection
     }
 

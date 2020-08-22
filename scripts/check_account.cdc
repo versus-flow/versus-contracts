@@ -54,7 +54,7 @@ pub fun main(address:Address, name: String){
                 log("Price editioned")
                 log(status.editionPrice)
                 log("Winning")
-                log(status.winning())
+                log(status.winning)
                 log(status.uniqueStatus)
                 for es in status.editionsStatuses.keys {
                     let es = status.editionsStatuses[es]!

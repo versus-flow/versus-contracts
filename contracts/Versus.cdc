@@ -13,6 +13,21 @@ pub contract Versus {
 
     pub var totalDrops: UInt64
 
+    //Events
+    pub event CollectionCreated(owner:Address, cutPercentage: UFix64)
+
+    //When a drop is extended due to a late bid or bid after tie we emit and event
+    pub event DropExtended(id: UInt64, extendWith: UInt64, extendTo: UInt64)
+
+    //When somebody bids on a versus drop we emit and event with the  id of the drop and acution as well as who bid and how much
+    pub event Bid(dropId: UInt64, auctionId: UInt64, bidderAddress: Address, bidPrice: UFix64)
+
+    //When a drop is created we emit and event with its id, who owns the art, how many editions are sold vs the unique and the metadata
+    pub event DropCreated(id: UInt64, owner: Address, editions: UInt64, metadata: {String: String} )
+
+
+    pub event Settle(id: UInt64, winner: String, price:UFix64)
+
     pub fun createVersusDropCollection(
         marketplaceVault: Capability<&{FungibleToken.Receiver}>,
         marketplaceNFTTrash: Capability<&{NonFungibleToken.CollectionPublic}>,
@@ -26,6 +41,7 @@ pub contract Versus {
             dropLength: dropLength,
             minimumBlockRemainingAfterBidOrTie:minimumBlockRemainingAfterBidOrTie
         )
+        emit CollectionCreated(owner: marketplaceVault.borrow()!.owner!.address, cutPercentage:cutPercentage)
         return <- collection
     }
 
@@ -62,12 +78,22 @@ pub contract Versus {
             for es in editionStatuses.keys {
                 sum = sum + editionStatuses[es]!.price
             }
-
+            let uniqueStatus=uniqueRef.getAuctionStatus()
+            var price= uniqueStatus.price
+            var winningStatus="UNIQUE"
+            if(sum > price) {
+                winningStatus="EDITIONED"
+                price=sum
+            } else if (sum == price) {
+                winningStatus="TIE"
+            }
             return DropStatus(
                 dropId: self.dropID,
-                uniqueStatus: uniqueRef.getAuctionStatus(),
+                uniqueStatus: uniqueStatus,
                 editionsStatuses: editionStatuses, 
-                editionPrice: sum
+                editionPrice: sum,
+                price: price, 
+                status: winningStatus
             )
         }
 
@@ -84,7 +110,7 @@ pub contract Versus {
             if(dropStatus.uniqueStatus.startBlock > currentBlockHeight) {
                 panic("The drop has not started")
             }
-            if dropStatus.endBlock < currentBlockHeight && dropStatus.winning() != "TIE" {
+            if dropStatus.endBlock < currentBlockHeight && dropStatus.winning != "TIE" {
                 panic("This drop has ended")
             }
            
@@ -92,8 +118,14 @@ pub contract Versus {
             let bidEndBlock = currentBlockHeight + minimumBlockRemaining
 
             if currentEndBlock < bidEndBlock {
-                self.extendDropWith(bidEndBlock - currentEndBlock)
+                let extendWith=bidEndBlock - currentEndBlock
+                emit DropExtended(id: self.dropID, extendWith: extendWith, extendTo: bidEndBlock)
+                self.extendDropWith(extendWith)
             }
+
+            let bidPrice = bidTokens.balance
+            let bidder=vaultCap.borrow()!.owner!.address
+
             if self.uniqueAuction.auctionID == auctionId {
                 let auctionRef = &self.uniqueAuction as &Auction.AuctionItem
                 auctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
@@ -101,6 +133,7 @@ pub contract Versus {
                 let editionsRef = &self.editionAuctions as &Auction.AuctionCollection 
                 editionsRef.placeBid(id: auctionId, bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
             }
+            emit Bid(dropId: self.dropID, auctionId: auctionId, bidderAddress: bidder , bidPrice: bidPrice)
         }
 
         pub fun extendDropWith(_ block: UInt64) {
@@ -119,22 +152,18 @@ pub contract Versus {
         pub let endBlock: UInt64
         pub let uniqueStatus: Auction.AuctionStatus
         pub let editionsStatuses: {UInt64: Auction.AuctionStatus}
+        pub let price: UFix64
+        pub let winning: String
 
-        pub fun winning(): String {
-            if self.uniquePrice > self.editionPrice {
-                return "UNIQUE"
-            } else if ( self.uniquePrice== self.editionPrice) {
-                return "TIE"
-            } else {
-                return "EDITIONED"
-            }
-        }
+       
 
         init(
             dropId: UInt64,
             uniqueStatus: Auction.AuctionStatus,
             editionsStatuses: {UInt64: Auction.AuctionStatus},
-            editionPrice: UFix64
+            editionPrice: UFix64, 
+            price: UFix64,
+            status: String //can has enum!
             ) {
                 self.dropId=dropId
                 self.uniqueStatus=uniqueStatus
@@ -142,6 +171,8 @@ pub contract Versus {
                 self.uniquePrice= uniqueStatus.price
                 self.editionPrice= editionPrice
                 self.endBlock=uniqueStatus.endBlock
+                self.price=price
+                self.winning=status
             }
     }
 
@@ -187,22 +218,27 @@ pub contract Versus {
         }
 
 
+        // When creating a drop you send in an NFT and the number of editions you want to sell vs the unique one
+        // There will then be minted edition number of extra copies and put into the editions auction
+        // When the auction is settled all NFTs that are not sold will be destroyed.
         pub fun createDrop(
-             artMetadata: {String : String},
+             nft: @NonFungibleToken.NFT,
              editions: UInt64,
              minimumBidIncrement: UFix64, 
              startBlock: UInt64, 
              startPrice: UFix64,  
              vaultCap: Capability<&{FungibleToken.Receiver}>) {
 
-            //TODO: Check the vaultCap here
+            pre {
+                vaultCap.check() == true : "Vault capability should exist"
+            }
 
-            //create the unique art
-            var metadata=artMetadata
-            metadata["edition"]= "1"
-            metadata["maxEdition"]= "1"
+
+            //copy the metadata of the previous art since that is used to mint the copies
+            var metadata=nft.metadata
+            let originalMetadata=nft.metadata
             let item <- Auction.createStandaloneAuction(
-                token: <- Art.createArt(metadata),
+                token: <- nft,
                 minimumBidIncrement: minimumBidIncrement,
                 auctionLengthInBlocks: self.dropLength,
                 auctionStartBlock: startBlock,
@@ -232,10 +268,12 @@ pub contract Versus {
             }
             
             let drop  <- create Drop(uniqueAuction: <- item, editionAuctions:  <- editionedAuctions)
+            emit DropCreated(id: drop.dropID, owner: vaultCap.borrow()!.owner!.address, editions: editions,  metadata: originalMetadata )
 
             let oldDrop <- self.drops[drop.dropID] <- drop
             destroy oldDrop
         }
+
 
 
         pub fun getAllStatuses(): {UInt64: DropStatus} {
@@ -270,7 +308,7 @@ pub contract Versus {
             }
 
             let status=itemRef.getDropStatus()
-            let winning=status.winning()
+            let winning=status.winning
             if winning == "UNIQUE" {
                 itemRef.uniqueAuction.settleAuction(cutPercentage: self.cutPercentage, cutVault: self.marketplaceVault)
                 itemRef.editionAuctions.cancelAllAuctions()
@@ -280,7 +318,7 @@ pub contract Versus {
             }else {
                 panic("tie")
             }
-            //todo: delete the trash
+            emit Settle(id: dropId, winner: winning, price: status.price )
 
         }
 
@@ -291,10 +329,14 @@ pub contract Versus {
             vaultCap: Capability<&{FungibleToken.Receiver}>, 
             collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>
         ) {
-
             pre {
                 self.drops[dropId] != nil:
                     "NFT doesn't exist"
+
+                collectionCap.check() == true : "Collection capability must be linked"
+
+                vaultCap.check() == true : "Vault capability must be linked"
+
             }
             let drop = &self.drops[dropId] as &Drop
             let minimumBlockRemaining=self.minimumBlockRemainingAfterBidOrTie

@@ -13,6 +13,7 @@ pub contract Art: NonFungibleToken {
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
+    pub event Created(id: UInt64, metadata: {String: String})
 
     pub resource NFT: NonFungibleToken.INFT {
         pub let id: UInt64
@@ -84,6 +85,7 @@ pub contract Art: NonFungibleToken {
 	pub fun createArt(_ metadata: {String: String}) : @Art.NFT {
 
         var newNFT <- create NFT(initID: Art.totalSupply, metadata: metadata)
+        emit Created(id: Art.totalSupply, metadata: metadata)
 
         Art.totalSupply = Art.totalSupply + UInt64(1)
         return <- newNFT

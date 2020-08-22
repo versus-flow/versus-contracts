@@ -1,5 +1,6 @@
 //This transaction will setup a drop in a versus auction
 //Currently all art is minted inside the contract
+//If you want to audtion an NFT of you own you have to write a transaction that will send that into the crateDrop method.
 
 import NonFungibleToken from 0x01cf0e2f2f715450
 import FungibleToken from 0xee82856bf20e2aa6
@@ -26,13 +27,7 @@ transaction(
     prepare(account: AuthAccount) {
 
         self.versus= account.borrow<&Versus.DropCollection>(from: /storage/Versus)!
-        
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenReceiver)!
-        //Always check in the contract if you need it to be there. 
-        if !self.artistWallet.check() {
-            panic("Unable to borrow the Vault Receiver capability")
-         }
-       
     }
 
     execute {
@@ -46,7 +41,7 @@ transaction(
         }
         
        self.versus.createDrop(
-           artMetadata: metadata,
+           nft:  <-  Art.createArt(metadata),
            editions: editions,
            minimumBidIncrement: minimumBidIncrement,
            startBlock: startBlock,
