@@ -29,7 +29,7 @@ func main() {
 	flow.SendTransactionWithArguments("setup/drop", marketplace,
 		flow.FindAddress(artist),      //marketplace locaion
 		ufix("10.0"),                  //start price
-		cadence.NewUInt64(12),         //start block
+		cadence.NewUInt64(11),         //start block
 		cadence.NewString("John Doe"), //artist name
 		cadence.NewString("Name"),     //name of art
 		cadence.NewString("https://cdn.discordapp.com/attachments/744365120268009472/744964330663051364/image0.png"), //url
@@ -37,4 +37,5 @@ func main() {
 		cadence.NewUInt64(10), //number of editions to use for the editioned auction
 		ufix("5.0"))           //minimum bid incremen
 	flow.RunScript("check_account", flow.FindAddress(marketplace), cadence.NewString("marketplace"))
+	flow.RunScript("get_active_auction", flow.FindAddress(marketplace))
 }

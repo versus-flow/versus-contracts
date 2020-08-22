@@ -29,3 +29,4 @@ check:
 .PHONY: tick
 tick:
 	go run ./examples/tick/main.go
+
