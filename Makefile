@@ -26,3 +26,6 @@ settle:
 check:
 	go run ./examples/check/main.go
 
+.PHONY: tick
+tick:
+	go run ./examples/tick/main.go
