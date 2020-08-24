@@ -28,7 +28,6 @@ func main() {
 	flow := tooling.NewFlowConfigLocalhost()
 	flow.RunScript("check_account", flow.FindAddress(marketplace), cadence.NewString("marketplace"))
 	flow.RunScript("check_account", flow.FindAddress(buyer1), cadence.NewString("buyer1"))
-	flow.RunScript("check_account", flow.FindAddress(buyer2), cadence.NewString("buyer2"))
 	flow.RunScript("check_account", flow.FindAddress(artist), cadence.NewString("artist"))
 
 }

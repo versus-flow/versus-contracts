@@ -27,7 +27,7 @@ func ufix(input string) cadence.UFix64 {
 func main() {
 	flow := tooling.NewFlowConfigLocalhost()
 	auctionID := 1
-	amount := "10.0"
+	amount := "10.01"
 	flow.SendTransactionWithArguments("buy/bid", buyer1,
 		flow.FindAddress(marketplace),
 		cadence.UInt64(1),         //id of drop

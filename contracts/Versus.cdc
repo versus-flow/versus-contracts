@@ -20,7 +20,7 @@ pub contract Versus {
     pub event DropExtended(id: UInt64, extendWith: UInt64, extendTo: UInt64)
 
     //When somebody bids on a versus drop we emit and event with the  id of the drop and acution as well as who bid and how much
-    pub event Bid(dropId: UInt64, auctionId: UInt64, bidderAddress: Address, bidPrice: UFix64)
+    pub event Bid(dropId: UInt64, auctionId: UInt64, bidderAddress: Address, bidPrice: UFix64, time: UFix64, blockHeight:UInt64)
 
     //When a drop is created we emit and event with its id, who owns the art, how many editions are sold vs the unique and the metadata
     pub event DropCreated(id: UInt64, owner: Address, editions: UInt64, metadata: {String: String} )
@@ -104,7 +104,9 @@ pub contract Versus {
             minimumBlockRemaining: UInt64) {
 
             let dropStatus = self.getDropStatus()
-            let currentBlockHeight=getCurrentBlock().height
+            let block=getCurrentBlock()
+            let time=block.timestamp
+            let currentBlockHeight=block.height
 
             if(dropStatus.uniqueStatus.startBlock > currentBlockHeight) {
                 panic("The drop has not started")
@@ -132,7 +134,7 @@ pub contract Versus {
                 let editionsRef = &self.editionAuctions as &Auction.AuctionCollection 
                 editionsRef.placeBid(id: auctionId, bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
             }
-            emit Bid(dropId: self.dropID, auctionId: auctionId, bidderAddress: bidder , bidPrice: bidPrice)
+            emit Bid(dropId: self.dropID, auctionId: auctionId, bidderAddress: bidder , bidPrice: bidPrice, time: time, blockHeight: currentBlockHeight)
         }
 
         pub fun extendDropWith(_ block: UInt64) {
