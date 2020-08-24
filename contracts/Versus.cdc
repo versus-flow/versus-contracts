@@ -154,8 +154,6 @@ pub contract Versus {
         pub let price: UFix64
         pub let winning: String
 
-       
-
         init(
             dropId: UInt64,
             uniqueStatus: Auction.AuctionStatus,
@@ -216,6 +214,7 @@ pub contract Versus {
             self.drops <- {}
         }
 
+        //TODO: different start price for unique and editioned, different bid increment aswell?
 
         // When creating a drop you send in an NFT and the number of editions you want to sell vs the unique one
         // There will then be minted edition number of extra copies and put into the editions auction
@@ -231,7 +230,6 @@ pub contract Versus {
             pre {
                 vaultCap.check() == true : "Vault capability should exist"
             }
-
 
             //copy the metadata of the previous art since that is used to mint the copies
             var metadata=nft.metadata
@@ -253,7 +251,7 @@ pub contract Versus {
                 cutPercentage: self.cutPercentage)
             metadata["maxEdition"]= editions.toString()
             var currentEdition=UInt64(1)
-            while(currentEdition < editions) {
+            while(currentEdition <= editions) {
                 metadata["edition"]= currentEdition.toString()
                 currentEdition=currentEdition+UInt64(1)
                 editionedAuctions.createAuction(

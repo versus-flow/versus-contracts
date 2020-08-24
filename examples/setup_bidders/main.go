@@ -29,7 +29,7 @@ func main() {
 	flow.CreateAccount(buyer1)
 	flow.SendTransactionWithArguments("setup/actor", buyer1, ufix("100.0")) //tokens to mint
 
-	flow.CreateAccount(buyer2)
-	flow.SendTransactionWithArguments("setup/actor", buyer2, ufix("100.0")) //tokens to mint
+	//flow.CreateAccount(buyer2)
+	//flow.SendTransactionWithArguments("setup/actor", buyer2, ufix("100.0")) //tokens to mint
 
 }
