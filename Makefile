@@ -1,6 +1,8 @@
 all: setup-marketplace create-drop setup-bidders bid settle check
 
-webpage: setup-marketplace create-drop 
+demo: setup-marketplace create-drop setup-bidders bid
+
+demo-end: settle check
 
 .PHONY: setup-marketplace
 setup-marketplace:

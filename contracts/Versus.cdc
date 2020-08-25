@@ -28,6 +28,8 @@ pub contract Versus {
 
     pub event Settle(id: UInt64, winner: String, price:UFix64)
 
+
+    //sending in a reference to a editionMinter would be a nice enhancement here. So that the Art NFT is not coded in here at all. 
     pub fun createVersusDropCollection(
         marketplaceVault: Capability<&{FungibleToken.Receiver}>,
         marketplaceNFTTrash: Capability<&{NonFungibleToken.CollectionPublic}>,
@@ -256,6 +258,9 @@ pub contract Versus {
             while(currentEdition <= editions) {
                 metadata["edition"]= currentEdition.toString()
                 currentEdition=currentEdition+UInt64(1)
+
+                //A nice enhancement here would be that the art created is done through a minter so it is not art specific.
+                //It could even be a Cloner capability or maybe a editionMinter? 
                 editionedAuctions.createAuction(
                     token: <- Art.createArt(metadata), 
                     minimumBidIncrement: minimumBidIncrement, 
