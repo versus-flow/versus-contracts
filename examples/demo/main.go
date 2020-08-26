@@ -66,7 +66,6 @@ func main() {
 		cadence.NewString("Here's a lockdown painting I did of a super cool guy and pal, @jburrowsactor"),
 		cadence.NewUInt64(10), //number of editions to use for the editioned auction
 		ufix("5.0"))           //minimum bid increment
-	flow.RunScript("check_account", flow.FindAddress(marketplace), cadence.NewString("marketplace"))
 	flow.RunScript("get_active_auction", flow.FindAddress(marketplace))
 
 	fmt.Println()
@@ -75,6 +74,7 @@ func main() {
 	fmt.Scanln()
 	flow.CreateAccount(buyer1)
 	flow.SendTransactionWithArguments("setup/actor", buyer1, ufix("100.0")) //tokens to mint
+	flow.RunScript("check_account", flow.FindAddress(buyer1), cadence.NewString("buyer1"))
 	auctionID := 1
 	amount := "10.01"
 	flow.SendTransactionWithArguments("buy/bid", buyer1,
