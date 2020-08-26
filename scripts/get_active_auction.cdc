@@ -19,7 +19,7 @@ pub fun main(address:Address) : Versus.DropStatus?{
              let status = versusStatuses[s]!
              if status.uniqueStatus.active != false {
                log(status)
-               return status
+               return nil
              }
           }
         } 

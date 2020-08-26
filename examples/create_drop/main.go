@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/onflow/cadence"
 	"github.com/versus-flow/go-flow-tooling/tooling"
 )
@@ -26,6 +28,13 @@ func ufix(input string) cadence.UFix64 {
 
 func main() {
 	flow := tooling.NewFlowConfigLocalhost()
+
+	fmt.Println("Create artist FT wallet with 0 balance")
+	//The artist owns NFTs and sells in the marketplace
+	flow.CreateAccount(artist)
+	flow.SendTransactionWithArguments("setup/actor", artist, ufix("0.0"))
+
+	fmt.Println("Creat a drop with minimum price 10.01 that starts at tick 11 with 10 editions and the minimum bid increment of 5")
 	flow.SendTransactionWithArguments("setup/drop", marketplace,
 		flow.FindAddress(artist),          //marketplace locaion
 		ufix("10.01"),                     //start price

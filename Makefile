@@ -1,8 +1,8 @@
 all: setup-marketplace create-drop setup-bidders bid settle check
 
-demo: setup-marketplace create-drop setup-bidders bid
-
-demo-end: settle check
+.PHONY: demo
+demo:
+	go run ./examples/demo/main.go
 
 .PHONY: setup-marketplace
 setup-marketplace:

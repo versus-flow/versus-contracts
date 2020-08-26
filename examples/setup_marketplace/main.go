@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/onflow/cadence"
 	"github.com/versus-flow/go-flow-tooling/tooling"
 )
@@ -39,13 +41,14 @@ func main() {
 	//Marketplace will own a marketplace and get a cut for each sale, this account does not own any NFT
 	flow.CreateAccount(marketplace)
 	flow.SendTransactionWithArguments("setup/actor", marketplace, ufix("0.0"))
+
+	fmt.Scanln()
+
+	fmt.Println("MarketplaceCut: 15%, drop length: 5 ticks")
+
 	flow.SendTransactionWithArguments("setup/versus", marketplace,
 		ufix("0.15"),      //cut percentage,
 		cadence.UInt64(5), //drop length
 		cadence.UInt64(5)) //minimumBlockRemainingAfterBidOrTie
-
-	//The artist owns NFTs and sells in the marketplace
-	flow.CreateAccount(artist)
-	flow.SendTransactionWithArguments("setup/actor", artist, ufix("0.0"))
 
 }
