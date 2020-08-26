@@ -74,7 +74,6 @@ func main() {
 	fmt.Scanln()
 	flow.CreateAccount(buyer1)
 	flow.SendTransactionWithArguments("setup/actor", buyer1, ufix("100.0")) //tokens to mint
-	flow.RunScript("check_account", flow.FindAddress(buyer1), cadence.NewString("buyer1"))
 	auctionID := 1
 	amount := "10.01"
 	flow.SendTransactionWithArguments("buy/bid", buyer1,
@@ -82,7 +81,6 @@ func main() {
 		cadence.UInt64(1),         //id of drop
 		cadence.UInt64(auctionID), //id of auction to bid on
 		ufix(amount))              //amount to bid
-	flow.RunScript("check_account", flow.FindAddress(buyer1), cadence.NewString("buyer1"))
 
 	fmt.Println()
 	fmt.Println()
@@ -98,8 +96,8 @@ func main() {
 	flow.SendTransactionWithArguments("tick", marketplace, cadence.NewUInt64(1))
 	flow.SendTransactionWithArguments("buy/settle", marketplace, cadence.UInt64(1))
 
-	flow.RunScript("check_account", flow.FindAddress(marketplace), cadence.NewString("marketplace"))
 	flow.RunScript("check_account", flow.FindAddress(buyer1), cadence.NewString("buyer1"))
 	flow.RunScript("check_account", flow.FindAddress(buyer2), cadence.NewString("buyer2"))
 	flow.RunScript("check_account", flow.FindAddress(artist), cadence.NewString("artist"))
+	flow.RunScript("check_account", flow.FindAddress(marketplace), cadence.NewString("marketplace"))
 }
