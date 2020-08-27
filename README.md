@@ -13,8 +13,8 @@ This is a git repo for the cadence contrats for versus@flow. Follow the guide be
 ## How to run the sample
 
 Start two terminals. Both from the root directory.
-`flow emualator start -v --persist`
-`make demo`
+ - `flow emualator start -v --persist`
+- `make demo`
 
 ## What happends in the sample
 
