@@ -7,9 +7,7 @@ import Auction from 0xe03daebed8ca0615
 import Versus from 0x045a1763c93006ca
 
 
-
 /*
-
   Script used to get the first active drop in a versus 
  */
 pub fun main(address:Address) : Versus.DropStatus?{
