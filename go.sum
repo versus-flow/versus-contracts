@@ -171,6 +171,7 @@ github.com/tyler-smith/go-bip39 v1.0.1-0.20181017060643-dbb3b84ba2ef/go.mod h1:s
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/versus-flow/go-flow-tooling v0.13.0 h1:lzA/j0jzjVsJr2MDeb0aFyYrGQGPDM0Pw1FTJ43R8p8=
 github.com/versus-flow/go-flow-tooling v0.13.0/go.mod h1:LsmAjlrx5HCf4cYKsKWmyYBYKq6qON0HzuiVPWCpiUI=
+github.com/versus-flow/go-flow-tooling v0.16.0 h1:QNWsLJYeph8AnScjF3M3++t+DlOcOcOwGnSBJe6LBlg=
 github.com/wsddn/go-ecdh v0.0.0-20161211032359-48726bab9208/go.mod h1:IotVbo4F+mw0EzQ08zFqg7pK3FebNXpaMsRy2RT+Ees=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
