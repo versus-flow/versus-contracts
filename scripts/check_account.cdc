@@ -24,6 +24,9 @@ pub struct AddressStatus {
   }
 }
 
+/*
+  This script will check an address and print out its FT, NFT and Versus resources
+ */
 pub fun main(address:Address, name: String){
     // get the accounts' public address objects
     let account = getAccount(address)

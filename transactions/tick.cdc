@@ -1,6 +1,9 @@
 
 import Versus from 0x045a1763c93006ca
 
+/*
+Simulate that the clock is running
+ */
 transaction(dropID: UInt64) {
     prepare(account: AuthAccount) {    
       log("CurrentBlock")

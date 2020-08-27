@@ -1,11 +1,12 @@
-// This transaction will setup and actor in the voting system
-// And actor has a Vault with a certain amount of tokens and an empty NFTCollection linked
-
 import FungibleToken from 0xee82856bf20e2aa6
 import DemoToken from 0x179b6b1cb6755e31
 import Art from 0xf3fcd2c1a78f5eee
 import NonFungibleToken from 0x01cf0e2f2f715450
 
+/*
+Setup an address with an empty NFT collection and a FT vault with the given amount of tokens.
+Used purely for demo purposes    
+ */
 transaction(tokens:UFix64) {
 
     prepare(acct: AuthAccount) {

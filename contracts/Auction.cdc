@@ -11,7 +11,6 @@ pub contract Auction {
 
     // This struct aggreates status for the auction and is expoded in order to create websites using auction information
     pub struct AuctionStatus{
-
         pub let id: UInt64
         pub let price : UFix64
         pub let bidIncrement : UFix64
@@ -58,16 +57,12 @@ pub contract Auction {
 
     // Events
 
-    //And event that is emitted when a new AuctionCollection is started
+
     pub event CollectionCreated(owner: Address, cutPercentage: UFix64)
-
-    //And event when an item is put up for auction
     pub event Created(tokenID: UInt64, owner: Address, startPrice: UFix64, startBlock: UInt64)
-
     pub event Bid(tokenID: UInt64, bidderAddress: Address, bidPrice: UFix64)
     pub event Settled(tokenID: UInt64, price: UFix64)
     pub event Canceled(tokenID: UInt64)
-
     pub event MarketplaceEarned(amount:UFix64, owner: Address)
 
     // AuctionItem contains the Resources and metadata for a single auction
@@ -77,13 +72,14 @@ pub contract Auction {
         pub var numberOfBids: UInt64
 
         //The Item that is sold at this auction
+        //It would be really easy to extend this auction with using a NFTCollection here to be able to auction of several NFTs as a single
+        //Lets say if you want to auction of a pack of TopShot moments
         pub(set) var NFT: @NonFungibleToken.NFT?
 
         //This is the escrow vault that holds the tokens for the current largest bid
         pub let bidVault: @FungibleToken.Vault
 
-        //Should an auction know about its Id? It has to in order to send good events. But Then it is hard to move it to 
-        //another collection? Or should this be a pub(set) var?
+        //The id of this individual auction
         pub let auctionID: UInt64
 
         //The minimum increment for a bid. This is an english auction style system where bids increase
@@ -95,6 +91,7 @@ pub contract Auction {
         //The length in blocks for this auction
         pub var auctionLengthInBlocks: UInt64
 
+        //Right now the dropitem is not moved from the collection when it ends, it is just marked here that it has ended 
         pub(set) var auctionCompleted: Bool
 
         // Auction State
@@ -173,6 +170,7 @@ pub contract Auction {
  
 
 
+        //This method should probably use preconditions more 
         pub fun settleAuction(cutPercentage: UFix64, cutVault:Capability<&{FungibleToken.Receiver}> )  {
 
             if self.auctionCompleted {
@@ -260,9 +258,12 @@ pub contract Auction {
 
         }
 
+        //Extend an auction with a given set of blocks
         pub fun extendWith(_ amount: UInt64) {
             self.auctionLengthInBlocks = self.auctionLengthInBlocks + amount
         }
+
+        // This method should probably use preconditions more
         pub fun placeBid(bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>) {
 
 
@@ -285,6 +286,7 @@ pub contract Auction {
             // Update the auction item
             self.bidVault.deposit(from: <-bidTokens)
 
+            //update the capability of the wallet for the address with the current highest bid
             self.recipientVaultCap = vaultCap
 
             // Update the current price of the token

@@ -14,6 +14,7 @@ pub contract Versus {
     pub var totalDrops: UInt64
 
     //Events
+    //Versus marketplace is created
     pub event CollectionCreated(owner:Address, cutPercentage: UFix64)
 
     //When a drop is extended due to a late bid or bid after tie we emit and event
@@ -25,7 +26,7 @@ pub contract Versus {
     //When a drop is created we emit and event with its id, who owns the art, how many editions are sold vs the unique and the metadata
     pub event DropCreated(id: UInt64, owner: Address, editions: UInt64, metadata: {String: String} )
 
-
+    //Versus drop is settled
     pub event Settle(id: UInt64, winner: String, price:UFix64)
 
 
@@ -47,7 +48,12 @@ pub contract Versus {
         return <- collection
     }
 
+
+    //A Drop in versus represents a single auction vs an editioned auction
     pub resource Drop {
+
+        //It would be really simple here to support many vs many or even a many vs many vs many vs many type of auction here
+        //just convert these to a dictionary of key:AuctionCollection.
 
         pub let uniqueAuction: @Auction.AuctionItem
         pub let editionAuctions: @Auction.AuctionCollection
@@ -69,6 +75,8 @@ pub contract Versus {
             destroy self.editionAuctions
         }
 
+
+        //A method used in scripts to get drop status. Will aggregate information from all auctions into a single struct
         pub fun getDropStatus() : DropStatus {
 
             let uniqueRef = &self.uniqueAuction as &Auction.AuctionItem
@@ -81,6 +89,9 @@ pub contract Versus {
             }
             let uniqueStatus=uniqueRef.getAuctionStatus()
             var price= uniqueStatus.price
+
+
+            //Can has Enums.
             var winningStatus="UNIQUE"
             if(sum > price) {
                 winningStatus="EDITIONED"
@@ -98,6 +109,9 @@ pub contract Versus {
             )
         }
 
+
+        // This method will place a bid in a given auction and possibly extend the duration of all auctions if there is to little
+        // time left or if the auction is tied
         pub fun placeBid(
             auctionId:UInt64,
             bidTokens: @FungibleToken.Vault, 
@@ -120,6 +134,7 @@ pub contract Versus {
             let currentEndBlock = dropStatus.endBlock
             let bidEndBlock = currentBlockHeight + minimumBlockRemaining
 
+            //We need to extend the auction since there is too little time left. If we did not do this a late user could potentially win with a cheecky bid
             if currentEndBlock < bidEndBlock {
                 let extendWith=bidEndBlock - currentEndBlock
                 emit DropExtended(id: self.dropID, extendWith: extendWith, extendTo: bidEndBlock)
@@ -129,6 +144,7 @@ pub contract Versus {
             let bidPrice = bidTokens.balance
             let bidder=vaultCap.borrow()!.owner!.address
 
+            //Figure out what id to use
             if self.uniqueAuction.auctionID == auctionId {
                 let auctionRef = &self.uniqueAuction as &Auction.AuctionItem
                 auctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
@@ -148,6 +164,11 @@ pub contract Versus {
         
     }
 
+
+    //The struct that holds status information of a drop. 
+    //Some more data should proably be extracted from the uniqueStatus here. 
+    // - information used to show a drop (artist name, description, url aso)
+    // - blocks remaining
     pub struct DropStatus {
         pub let dropId: UInt64
         pub let uniquePrice: UFix64
@@ -179,6 +200,7 @@ pub contract Versus {
 
     pub resource interface PublicDrop {
          
+         //Versus is a currated auction so users cannot create a drop themselves. 
         pub fun getAllStatuses(): {UInt64: DropStatus}
         pub fun getStatus(dropId: UInt64): DropStatus
 
@@ -199,6 +221,7 @@ pub contract Versus {
         pub let marketplaceVault: Capability<&{FungibleToken.Receiver}>
         pub let marketplaceNFTTrash: Capability<&{NonFungibleToken.CollectionPublic}>
 
+        //naming things are hard...
         pub let minimumBlockRemainingAfterBidOrTie: UInt64
         pub let dropLength: UInt64
 
@@ -248,8 +271,7 @@ pub contract Versus {
                 vaultCap: vaultCap
             )
 
-            //create the editioned art
-
+            //Sending in a NFTEditioner capability here and using that instead of this loop would probably make sense. 
             let editionedAuctions <- Auction.createAuctionCollection( 
                 marketplaceVault: self.marketplaceVault , 
                 cutPercentage: self.cutPercentage)

@@ -8,6 +8,10 @@ import Versus from 0x045a1763c93006ca
 
 
 
+/*
+
+  Script used to get the first active drop in a versus 
+ */
 pub fun main(address:Address) : Versus.DropStatus?{
     // get the accounts' public address objects
     let account = getAccount(address)

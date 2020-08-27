@@ -44,6 +44,9 @@ Collection to complete the transfer.
 // The main NFT contract interface. Other NFT contracts will
 // import and implement this interface
 //
+
+//For versus this interface was extended with the metadata dictionary for convenience sake. 
+//When the metadata issue has been solved versus should move to the standard implementation
 pub contract interface NonFungibleToken {
 
     // The total number of tokens of this type in existence

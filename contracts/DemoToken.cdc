@@ -1,5 +1,6 @@
-// DemoToken is a fungible token used for testing
-// marketplace purchases
+// DemoToken is a fungible token used for testing marketplace purchases
+
+// This has been left really really simple since we expect the Flow token will replace this.
 
 // Import the Flow FungibleToken interface
 import FungibleToken from 0xee82856bf20e2aa6

@@ -16,7 +16,6 @@ Start two terminals. Both from the root directory.
 `flow emualator start -v --persist`
 `make demo`
 
-
 ## What happends in the sample
 
 1. install all the contracts
@@ -24,8 +23,8 @@ Start two terminals. Both from the root directory.
 2. setup a marketplace and put a single 1 vs 10 auction active. Marketplace cut is 15%
 3. setup bidder1 
 4. have bidder1 bid on the auction
-5. Investigate in the webpage if you want to
-5. tick the clock and settle the auction
-6. settle the auction
-7. check all the accounts
+5. if you want to you can now start the webpage from the https://github.com/versus-flow/versus-action-website repo to explore the web side 
+6. tick the clock and settle the auction
+7. settle the auction
+8. check all the accounts
 
