@@ -6,7 +6,7 @@ This is a git repo for the cadence contrats for versus@flow. Follow the guide be
 
 1. Ensure Go is [installed on your machine](https://golang.org/dl/) `recommended version 1.13^`
 2. [Install the Flow CLI](https://docs.onflow.org/docs/cli) 
-3. Run `$ git clone https://github.com/versu-flow/auction-flow-contract` in a terminal window
+3. Run `$ git clone https://github.com/versus-flow/auction-flow-contract` in a terminal window
 4. Change to the project directory `cd auction-flow-contract`
 5. Rename `flow.sample.json` to `flow.json`: `$ mv flow.sample.json flow.json`
 
