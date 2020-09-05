@@ -27,4 +27,3 @@ Start two terminals. Both from the root directory.
 6. tick the clock and settle the auction
 7. settle the auction
 8. check all the accounts
-
