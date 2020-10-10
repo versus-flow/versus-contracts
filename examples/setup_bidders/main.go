@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
-	"github.com/versus-flow/go-flow-tooling/tooling"
 )
 
 const nonFungibleToken = "NonFungibleToken"
@@ -25,8 +25,7 @@ func ufix(input string) cadence.UFix64 {
 }
 
 func main() {
-	flow := tooling.NewFlowConfigLocalhost()
-	flow.CreateAccount(buyer1)
-	flow.SendTransactionWithArguments("setup/actor", buyer1, ufix("100.0")) //tokens to mint
-
+	flow := gwtf.NewGoWithTheFlowEmulator()
+	flow.CreateAccount("buyer1")
+	flow.TransactionFromFile("setup/actor").SignProposeAndPayAs("buyer1").UFix64Argument("100.0").Run() //tokens to mint
 }

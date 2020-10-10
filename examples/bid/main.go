@@ -1,36 +1,19 @@
 package main
 
 import (
+	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
-	"github.com/versus-flow/go-flow-tooling/tooling"
 )
 
-const nonFungibleToken = "NonFungibleToken"
-const demoToken = "DemoToken"
-const art = "Art"
-const versus = "Versus"
-const auction = "Auction"
-
-const marketplace = "Marketplace"
-const artist = "Artist"
-const buyer1 = "Buyer1"
-const buyer2 = "Buyer2"
-
-func ufix(input string) cadence.UFix64 {
-	amount, err := cadence.NewUFix64(input)
-	if err != nil {
-		panic(err)
-	}
-	return amount
-}
-
 func main() {
-	flow := tooling.NewFlowConfigLocalhost()
 	auctionID := 1
 	amount := "10.01"
-	flow.SendTransactionWithArguments("buy/bid", buyer1,
-		flow.FindAddress(marketplace),
-		cadence.UInt64(1),         //id of drop
-		cadence.UInt64(auctionID), //id of auction to bid on
-		ufix(amount))              //amount to bid
+	flow := gwtf.NewGoWithTheFlowEmulator()
+	flow.TransactionFromFile("buy/bid").
+		SignProposeAndPayAs("buyer1").
+		AccountArgument("marketplace").
+		Argument(cadence.UInt64(1)).         //id of drop
+		Argument(cadence.UInt64(auctionID)). //id of auction to bid on
+		UFix64Argument(amount).              //amount to bid
+		Run()
 }

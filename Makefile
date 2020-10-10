@@ -32,3 +32,10 @@ check:
 tick:
 	go run ./examples/tick/main.go
 
+.PHONY: clean
+clean:
+	rm -Rf flowdb
+
+.PHONY: emulator
+emulator: clean
+	flow emulator start -v --persist

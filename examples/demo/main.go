@@ -3,84 +3,74 @@ package main
 import (
 	"fmt"
 
+	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
-	"github.com/versus-flow/go-flow-tooling/tooling"
 )
-
-const nonFungibleToken = "NonFungibleToken"
-const demoToken = "DemoToken"
-const art = "Art"
-const versus = "Versus"
-const auction = "Auction"
-
-const marketplace = "Marketplace"
-const artist = "Artist"
-const buyer1 = "Buyer1"
-const buyer2 = "Buyer2"
-
-func ufix(input string) cadence.UFix64 {
-	amount, err := cadence.NewUFix64(input)
-	if err != nil {
-		panic(err)
-	}
-	return amount
-}
 
 //NB! start from root dir with makefile
 func main() {
-	flow := tooling.NewFlowConfigLocalhost()
-
+	flow := gwtf.NewGoWithTheFlowEmulator()
 	fmt.Println("Demo of Versus@Flow")
 	fmt.Scanln()
-	flow.DeployContract(nonFungibleToken)
-	flow.DeployContract(demoToken)
-	flow.DeployContract(art)
-	flow.DeployContract(auction)
-	flow.DeployContract(versus)
+	flow.DeployContract("NonFungibleToken")
+	flow.DeployContract("DemoToken")
+	flow.DeployContract("Art")
+	flow.DeployContract("Auction")
+	flow.DeployContract("Versus")
 
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("MarketplaceCut: 15%, drop length: 5 ticks")
 	fmt.Scanln()
-	flow.CreateAccount(marketplace)
-	flow.SendTransactionWithArguments("setup/actor", marketplace, ufix("0.0"))
+	flow.CreateAccount("marketplace")
+	flow.TransactionFromFile("setup/actor").
+		SignProposeAndPayAs("marketplace").
+		UFix64Argument("0.0").
+		Run()
 
-	flow.SendTransactionWithArguments("setup/versus", marketplace,
-		ufix("0.15"),      //cut percentage,
-		cadence.UInt64(5), //drop length
-		cadence.UInt64(5)) //minimumBlockRemainingAfterBidOrTie
+	flow.TransactionFromFile("setup/versus").
+		SignProposeAndPayAs("marketplace").
+		UFix64Argument("0.15").      //cut percentage,
+		Argument(cadence.UInt64(5)). //drop length
+		Argument(cadence.UInt64(5)). //minimumBlockRemainingAfterBidOrTie
+		Run()
 
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Create a drop in versus that is already started with 10 editions")
 	fmt.Scanln()
-	flow.CreateAccount(artist)
-	flow.SendTransactionWithArguments("setup/actor", artist, ufix("0.0"))
-	flow.SendTransactionWithArguments("setup/drop", marketplace,
-		flow.FindAddress(artist),          //marketplace locaion
-		ufix("10.01"),                     //start price
-		cadence.NewUInt64(11),             //start block
-		cadence.NewString("Vincent Kamp"), //artist name
-		cadence.NewString("when?"),        //name of art
-		cadence.NewString("https://ipfs.io/ipfs/QmURySCXsDh5tZUVVVNSnV1L8nxjVAoyChShGkvZ9NWF9A"),
-		cadence.NewString("Here's a lockdown painting I did of a super cool guy and pal, @jburrowsactor"),
-		cadence.NewUInt64(10), //number of editions to use for the editioned auction
-		ufix("5.0"))           //minimum bid increment
-	flow.RunScript("get_active_auction", flow.FindAddress(marketplace))
+	flow.CreateAccount("artist")
+	flow.TransactionFromFile("setup/actor").SignProposeAndPayAs("artist").UFix64Argument("0.0").Run()
+
+	flow.TransactionFromFile("setup/drop").
+		SignProposeAndPayAs("marketplace").
+		AccountArgument("artist").                                                                      //marketplace location
+		UFix64Argument("10.01").                                                                        //start price
+		Argument(cadence.NewUInt64(11)).                                                                //start block
+		StringArgument("Vincent Kamp").                                                                 //artist name
+		StringArgument("when?").                                                                        //name of art
+		StringArgument("https://ipfs.io/ipfs/QmURySCXsDh5tZUVVVNSnV1L8nxjVAoyChShGkvZ9NWF9A").          //image
+		StringArgument("Here's a lockdown painting I did of a super cool guy and pal, @jburrowsactor"). //description
+		Argument(cadence.NewUInt64(10)).                                                                //number of editions to use for the editioned auction
+		UFix64Argument("5.0").                                                                          //min bid increment
+		Run()
+
+	flow.ScriptFromFile("get_active_auction").AccountArgument("marketplace").Run()
 
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Setup a buyer and make him bid on the unique auction")
 	fmt.Scanln()
-	flow.CreateAccount(buyer1)
-	flow.SendTransactionWithArguments("setup/actor", buyer1, ufix("100.0")) //tokens to mint
-	auctionID := 1
-	amount := "10.01"
-	flow.SendTransactionWithArguments("buy/bid", buyer1,
-		flow.FindAddress(marketplace),
-		cadence.UInt64(1),         //id of drop
-		cadence.UInt64(auctionID), //id of auction to bid on
-		ufix(amount))              //amount to bid
+	flow.CreateAccount("buyer1")
+
+	flow.TransactionFromFile("setup/actor").SignProposeAndPayAs("buyer1").UFix64Argument("100.0").Run() //tokens to mint
+	flow.TransactionFromFile("buy/bid").
+		SignProposeAndPayAs("buyer1").
+		AccountArgument("marketplace").
+		Argument(cadence.UInt64(1)). //id of drop
+		Argument(cadence.UInt64(1)). //id of auction to bid on
+		UFix64Argument("10.01").     //amount to bid
+		Run()
 
 	fmt.Println()
 	fmt.Println()
@@ -89,15 +79,16 @@ func main() {
 	fmt.Println("Tick the clock to make the auction end and settle it")
 	fmt.Scanln()
 
-	flow.SendTransactionWithArguments("tick", marketplace, cadence.NewUInt64(1))
-	flow.SendTransactionWithArguments("tick", marketplace, cadence.NewUInt64(1))
-	flow.SendTransactionWithArguments("tick", marketplace, cadence.NewUInt64(1))
-	flow.SendTransactionWithArguments("tick", marketplace, cadence.NewUInt64(1))
-	flow.SendTransactionWithArguments("tick", marketplace, cadence.NewUInt64(1))
-	flow.SendTransactionWithArguments("buy/settle", marketplace, cadence.UInt64(1))
+	flow.TransactionFromFile("tick").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run()
+	flow.TransactionFromFile("tick").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run()
+	flow.TransactionFromFile("tick").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run()
+	flow.TransactionFromFile("tick").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run()
+	flow.TransactionFromFile("tick").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run()
 
-	flow.RunScript("check_account", flow.FindAddress(buyer1), cadence.NewString("buyer1"))
-	flow.RunScript("check_account", flow.FindAddress(buyer2), cadence.NewString("buyer2"))
-	flow.RunScript("check_account", flow.FindAddress(artist), cadence.NewString("artist"))
-	flow.RunScript("check_account", flow.FindAddress(marketplace), cadence.NewString("marketplace"))
+	flow.TransactionFromFile("buy/settle").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run()
+
+	flow.ScriptFromFile("check_account").AccountArgument("buyer1").StringArgument("buyer1").Run()
+	flow.ScriptFromFile("check_account").AccountArgument("buyer2").StringArgument("buyer2").Run()
+	flow.ScriptFromFile("check_account").AccountArgument("artist").StringArgument("artist").Run()
+	flow.ScriptFromFile("check_account").AccountArgument("marketplace").StringArgument("marketplace").Run()
 }

@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
-	"github.com/versus-flow/go-flow-tooling/tooling"
 )
 
 const nonFungibleToken = "NonFungibleToken"
@@ -28,27 +28,30 @@ func ufix(input string) cadence.UFix64 {
 
 //NB! start from root dir with makefile
 func main() {
-	flow := tooling.NewFlowConfigLocalhost()
-
-	flow.DeployContract(nonFungibleToken)
-	flow.DeployContract(demoToken)
-	flow.DeployContract(art)
-	flow.DeployContract(auction)
-	flow.DeployContract(versus)
+	flow := gwtf.NewGoWithTheFlowEmulator()
+	flow.DeployContract("NonFungibleToken")
+	flow.DeployContract("DemoToken")
+	flow.DeployContract("Art")
+	flow.DeployContract("Auction")
+	flow.DeployContract("Versus")
 
 	//We create the accounts and set up the stakeholdres in our scenario
 
 	//Marketplace will own a marketplace and get a cut for each sale, this account does not own any NFT
-	flow.CreateAccount(marketplace)
-	flow.SendTransactionWithArguments("setup/actor", marketplace, ufix("0.0"))
-
+	flow.CreateAccount("marketplace")
+	flow.TransactionFromFile("setup/actor").
+		SignProposeAndPayAs("marketplace").
+		UFix64Argument("0.0").
+		Run()
 	fmt.Scanln()
 
 	fmt.Println("MarketplaceCut: 15%, drop length: 5 ticks")
 
-	flow.SendTransactionWithArguments("setup/versus", marketplace,
-		ufix("0.15"),      //cut percentage,
-		cadence.UInt64(5), //drop length
-		cadence.UInt64(5)) //minimumBlockRemainingAfterBidOrTie
+	flow.TransactionFromFile("setup/versus").
+		SignProposeAndPayAs("marketplace").
+		UFix64Argument("0.15").      //cut percentage,
+		Argument(cadence.UInt64(5)). //drop length
+		Argument(cadence.UInt64(5)). //minimumBlockRemainingAfterBidOrTie
+		Run()
 
 }
