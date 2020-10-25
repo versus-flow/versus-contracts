@@ -9,6 +9,8 @@ import (
 
 //NB! start from root dir with makefile
 func main() {
+	emptyMap := map[string][]string{}
+
 	flow := gwtf.NewGoWithTheFlowEmulator()
 	fmt.Println("Demo of Versus@Flow")
 	fmt.Scanln()
@@ -26,21 +28,21 @@ func main() {
 	gwtf.PrintEvents(flow.TransactionFromFile("setup/actor").
 		SignProposeAndPayAs("marketplace").
 		UFix64Argument("0.0").
-		Run())
+		Run(), emptyMap)
 
 	gwtf.PrintEvents(flow.TransactionFromFile("setup/versus").
 		SignProposeAndPayAs("marketplace").
 		UFix64Argument("0.15").      //cut percentage,
 		Argument(cadence.UInt64(5)). //drop length
 		Argument(cadence.UInt64(5)). //minimumBlockRemainingAfterBidOrTie
-		Run())
+		Run(), emptyMap)
 
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Create a drop in versus that is already started with 10 editions")
 	fmt.Scanln()
 	flow.CreateAccount("artist")
-	gwtf.PrintEvents(flow.TransactionFromFile("setup/actor").SignProposeAndPayAs("artist").UFix64Argument("0.0").Run())
+	gwtf.PrintEvents(flow.TransactionFromFile("setup/actor").SignProposeAndPayAs("artist").UFix64Argument("0.0").Run(), emptyMap)
 
 	gwtf.PrintEvents(flow.TransactionFromFile("setup/drop").
 		SignProposeAndPayAs("marketplace").
@@ -53,7 +55,7 @@ func main() {
 		StringArgument("Here's a lockdown painting I did of a super cool guy and pal, @jburrowsactor"). //description
 		Argument(cadence.NewUInt64(10)).                                                                //number of editions to use for the editioned auction
 		UFix64Argument("5.0").                                                                          //min bid increment
-		Run())
+		Run(), emptyMap)
 
 	flow.ScriptFromFile("get_active_auction").AccountArgument("marketplace").Run()
 
@@ -63,14 +65,15 @@ func main() {
 	fmt.Scanln()
 	flow.CreateAccount("buyer1")
 
-	gwtf.PrintEvents(flow.TransactionFromFile("setup/actor").SignProposeAndPayAs("buyer1").UFix64Argument("100.0").Run()) //tokens to mint
+	gwtf.PrintEvents(flow.TransactionFromFile("setup/actor").SignProposeAndPayAs("buyer1").UFix64Argument("100.0").Run(), emptyMap) //tokens to mint
+
 	gwtf.PrintEvents(flow.TransactionFromFile("buy/bid").
 		SignProposeAndPayAs("buyer1").
 		AccountArgument("marketplace").
 		Argument(cadence.UInt64(1)). //id of drop
 		Argument(cadence.UInt64(1)). //id of auction to bid on
 		UFix64Argument("10.01").     //amount to bid
-		Run())
+		Run(), emptyMap)
 
 	fmt.Println()
 	fmt.Println()
@@ -85,7 +88,7 @@ func main() {
 	flow.TransactionFromFile("tick").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run()
 	flow.TransactionFromFile("tick").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run()
 
-	gwtf.PrintEvents(flow.TransactionFromFile("buy/settle").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run())
+	gwtf.PrintEvents(flow.TransactionFromFile("buy/settle").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run(), emptyMap)
 
 	flow.ScriptFromFile("check_account").AccountArgument("buyer1").StringArgument("buyer1").Run()
 	flow.ScriptFromFile("check_account").AccountArgument("buyer2").StringArgument("buyer2").Run()
