@@ -21,6 +21,7 @@ pub contract Versus {
     pub event DropExtended(id: UInt64, extendWith: UInt64, extendTo: UInt64)
 
     //When somebody bids on a versus drop we emit and event with the  id of the drop and acution as well as who bid and how much
+    //TODO: timestamp
     pub event Bid(dropId: UInt64, auctionId: UInt64, bidderAddress: Address, bidPrice: UFix64, time: UFix64, blockHeight:UInt64)
 
     //When a drop is created we emit and event with its id, who owns the art, how many editions are sold vs the unique and the metadata

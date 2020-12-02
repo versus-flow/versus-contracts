@@ -15,6 +15,10 @@ pub contract Art: NonFungibleToken {
     pub resource NFT: NonFungibleToken.INFT {
         pub let id: UInt64
 
+        //TODO: use trait/mixin proposal for the below items
+        //TODO: StorageCapability, StorageItems
+        //TODO: item to getData()
+        //TODO: OriginalArtistRoyalty
         pub var metadata: {String: String}
 
         init(initID: UInt64, metadata: {String: String}) {

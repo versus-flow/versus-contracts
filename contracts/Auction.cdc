@@ -17,6 +17,7 @@ pub contract Auction {
         pub let bids : UInt64
         pub let active: Bool
         pub let blocksRemaining : Int64
+        //TODO: Timestamps
         pub let endBlock : UInt64
         pub let startBlock : UInt64
         pub let metadata : {String: String}
