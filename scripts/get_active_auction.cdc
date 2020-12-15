@@ -3,9 +3,7 @@
 // Account 0x01: DemoToken Vault Balance = 1050, No NFTs
 // Account 0x02: DemoToken Vault Balance = 10, NFT.id = 1
 
-import Auction from 0xe03daebed8ca0615
-import Versus from 0x045a1763c93006ca
-
+import Auction, Versus from 0x01cf0e2f2f715450
 
 /*
   Script used to get the first active drop in a versus 

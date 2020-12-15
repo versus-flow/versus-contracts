@@ -1,9 +1,5 @@
-import NonFungibleToken from 0x01cf0e2f2f715450
 import FungibleToken from 0xee82856bf20e2aa6
-import DemoToken from 0x179b6b1cb6755e31
-import Auction from 0xe03daebed8ca0615
-import Versus from 0x045a1763c93006ca
-import Art from 0xf3fcd2c1a78f5eee
+import NonFungibleToken, DemoToken, Art, Auction, Versus from 0x01cf0e2f2f715450
 
 //This transaction will setup a drop in a versus auction
 transaction(

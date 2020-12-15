@@ -1,10 +1,6 @@
 
 import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken from 0x01cf0e2f2f715450
-import DemoToken from 0x179b6b1cb6755e31
-import Art from 0xf3fcd2c1a78f5eee
-import Auction from 0xe03daebed8ca0615
-
+import NonFungibleToken, DemoToken, Art, Auction from 0x01cf0e2f2f715450
 
 pub contract Versus {
    init() {

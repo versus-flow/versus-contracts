@@ -14,11 +14,9 @@ func main() {
 	flow := gwtf.NewGoWithTheFlowEmulator()
 	fmt.Println("Demo of Versus@Flow")
 	fmt.Scanln()
-	flow.CreateAccountWithContracts("NonFungibleToken", "NonFungibleToken")
-	flow.CreateAccountWithContracts("DemoToken", "DemoToken")
-	flow.CreateAccountWithContracts("Art", "Art")
-	flow.CreateAccountWithContracts("Auction", "Auction")
-	flow.CreateAccountWithContracts("Versus", "Versus")
+	flow.CreateAccountWithContracts("accounts", "NonFungibleToken", "DemoToken", "Art", "Auction", "Versus")
+
+	flow.CreateAccount("marketplace", "artist", "buyer1", "buyer2")
 
 	fmt.Println()
 	fmt.Println()
@@ -41,7 +39,6 @@ func main() {
 	fmt.Println()
 	fmt.Println("Create a drop in versus that is already started with 10 editions")
 	fmt.Scanln()
-	flow.CreateAccount("artist")
 	gwtf.PrintEvents(flow.TransactionFromFile("setup/actor").SignProposeAndPayAs("artist").UFix64Argument("0.0").Run(), emptyMap)
 
 	gwtf.PrintEvents(flow.TransactionFromFile("setup/drop").
@@ -63,7 +60,6 @@ func main() {
 	fmt.Println()
 	fmt.Println("Setup a buyer and make him bid on the unique auction")
 	fmt.Scanln()
-	flow.CreateAccount("buyer1")
 
 	gwtf.PrintEvents(flow.TransactionFromFile("setup/actor").SignProposeAndPayAs("buyer1").UFix64Argument("100.0").Run(), emptyMap) //tokens to mint
 

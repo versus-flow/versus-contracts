@@ -11,16 +11,12 @@
 		}
 	}, 
 	"emulatorAccounts" : {
-		"NonFungibleToken" : "01cf0e2f2f715450",
-		"DemoToken" : "179b6b1cb6755e31",
-		"Art" : "f3fcd2c1a78f5eee",
-		"Auction" : "e03daebed8ca0615",
-		"Versus": "045a1763c93006ca",
-        "marketplace": "120e725050340cab",
-        "artist": "f669cb8d41ce0c74",
-        "buyer1":"192440c99cb17282",
-		"buyer2": "fd43f9148d4b725d",
-		"10" : "eb179c27144f783c"
+		"accounts" : "01cf0e2f2f715450",
+		"marketplace" : "179b6b1cb6755e31",
+		"artist" : "f3fcd2c1a78f5eee",
+		"buyer1" : "e03daebed8ca0615",
+		"buyer2": "045a1763c93006ca"
+        
 	}
 }
  

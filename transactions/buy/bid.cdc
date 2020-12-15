@@ -1,7 +1,5 @@
 import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken from 0x01cf0e2f2f715450
-import Auction from 0xe03daebed8ca0615
-import Versus from 0x045a1763c93006ca
+import NonFungibleToken, Auction, Versus from 0x01cf0e2f2f715450
 
 /*
     Transaction to make a bid in a marketplace for the given dropId and auctionId
