@@ -120,14 +120,14 @@ pub contract Auction {
             ownerVaultCap: Capability<&{FungibleToken.Receiver}>,
         ) {
 
-            Auction.totalAuctions = Auction.totalAuctions + UInt64(1)
+            Auction.totalAuctions = Auction.totalAuctions + (1 as UInt64)
             self.NFT <- NFT
             self.bidVault <- DemoToken.createEmptyVault()
             self.auctionID = Auction.totalAuctions
             self.minimumBidIncrement = minimumBidIncrement
             self.auctionLengthInBlocks = auctionLengthInBlocks
             self.startPrice = startPrice
-            self.currentPrice = UFix64(0)
+            self.currentPrice = 0.0
             self.auctionStartBlock = auctionStartBlock
             self.auctionCompleted = false
             self.recipientCollectionCap = nil
@@ -189,7 +189,7 @@ pub contract Auction {
             }
                 
             // return if there are no bids to settle
-            if self.currentPrice == UFix64(0){
+            if self.currentPrice == 0.0{
                 self.returnAuctionItemToOwner()
                 log("No bids. Nothing to settle")
                 return
@@ -231,7 +231,7 @@ pub contract Auction {
 
       
         pub fun isAuctionExpired(): Bool {
-            return self.blocksRemaining() < Int64(0)
+            return self.blocksRemaining() < (0 as Int64)
         }
 
         // exchangeTokens sends the purchased NFT to the buyer and the bidTokens to the seller
@@ -249,7 +249,7 @@ pub contract Auction {
 
         pub fun minNextBid() :UFix64{
             //If there are bids then the next min bid is the current price plus the increment
-            if self.currentPrice != UFix64(0) {
+            if self.currentPrice != 0.0 {
                 return self.currentPrice+self.minimumBidIncrement
             }
             //else start price
@@ -275,7 +275,7 @@ pub contract Auction {
                 panic("bid amount be larger or equal to the current price + minimum bid increment")
             }
             
-            if self.bidVault.balance != UFix64(0) {
+            if self.bidVault.balance != 0.0 {
                 if let vaultCap = self.recipientVaultCap {
                     self.sendBidTokens(self.recipientVaultCap!)
                 } else {
@@ -294,7 +294,7 @@ pub contract Auction {
 
             // Add the bidder's Vault and NFT receiver references
             self.recipientCollectionCap = collectionCap
-            self.numberOfBids=self.numberOfBids+UInt64(1)
+            self.numberOfBids=self.numberOfBids+(1 as UInt64)
 
             let bidderAddress=vaultCap.borrow()!.owner!.address
 
@@ -547,7 +547,7 @@ pub contract Auction {
     }
 
     init() {
-        self.totalAuctions = UInt64(0)
+        self.totalAuctions = (0 as UInt64)
     }   
 }
  

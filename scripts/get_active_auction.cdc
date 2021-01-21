@@ -12,17 +12,15 @@ pub fun main(address:Address) : Versus.DropStatus?{
     // get the accounts' public address objects
     let account = getAccount(address)
    
-    if let versusCap = account.getCapability(/public/Versus) {
-        if let versus = versusCap.borrow<&{Versus.PublicDrop}>() {
-          let versusStatuses=versus.getAllStatuses()
-          for s in versusStatuses.keys {
-             let status = versusStatuses[s]!
-             if status.uniqueStatus.active != false {
-               log(status)
-               return nil
-             }
+    if let versus = account.getCapability(/public/Versus).borrow<&{Versus.PublicDrop}>() {
+      let versusStatuses=versus.getAllStatuses()
+      for s in versusStatuses.keys {
+          let status = versusStatuses[s]!
+          if status.uniqueStatus.active != false {
+            log(status)
+            return nil
           }
-        } 
+      }
     } 
 
   return nil

@@ -60,7 +60,7 @@ pub contract Versus {
         init( uniqueAuction: @Auction.AuctionItem, 
             editionAuctions: @Auction.AuctionCollection) { 
 
-            Versus.totalDrops = Versus.totalDrops + UInt64(1)
+            Versus.totalDrops = Versus.totalDrops + 1 as UInt64
 
             self.dropID=Versus.totalDrops
             self.uniqueAuction <-uniqueAuction
@@ -373,3 +373,4 @@ pub contract Versus {
     }
      
 }
+ 

@@ -30,52 +30,49 @@ pub fun main(address:Address, name: String){
     log(name)
     log("=====================")
     
-    if let demoTokenCapability =account.getCapability(/public/DemoTokenBalance) {
-        if let demoTokens= demoTokenCapability.borrow<&{FungibleToken.Balance}>() {
-          log("Balance of DemoTokens")
-          log(demoTokens.balance)
-          status.balance=demoTokens.balance
-        }
+    if let demoTokens= account.getCapability(/public/DemoTokenBalance).borrow<&{FungibleToken.Balance}>() {
+       log("Balance of DemoTokens")
+       log(demoTokens.balance)
+       status.balance=demoTokens.balance
     }
-    if let versusCap = account.getCapability(/public/Versus) {
 
-        if let versus = versusCap.borrow<&{Versus.PublicDrop}>() {
-          log("Drops available")
-          log("=================")
-          let versusStatuses=versus.getAllStatuses()
-          for s in versusStatuses.keys {
-             let status = versusStatuses[s]!
-             if status.uniqueStatus.active != false {
-                log("dropid")
-                log(status.dropId)
-                log("Price unique")
-                log(status.uniquePrice)
-                log("Price editioned")
-                log(status.editionPrice)
-                log("Winning")
-                log(status.winning)
-                log(status.uniqueStatus)
-                for es in status.editionsStatuses.keys {
-                    let es = status.editionsStatuses[es]!
-                    log(es)
-                }
-             }
+
+    if let versus = account.getCapability(/public/Versus).borrow<&{Versus.PublicDrop}>() {
+      log("Drops available")
+      log("=================")
+      let versusStatuses=versus.getAllStatuses()
+      for s in versusStatuses.keys {
+          let status = versusStatuses[s]!
+          if status.uniqueStatus.active != false {
+            log("dropid")
+            log(status.dropId)
+            log("Price unique")
+            log(status.uniquePrice)
+            log("Price editioned")
+            log(status.editionPrice)
+            log("Winning")
+            log(status.winning)
+            log(status.uniqueStatus)
+            for es in status.editionsStatuses.keys {
+                let es = status.editionsStatuses[es]!
+                log(es)
+            }
           }
-          status.drops=versusStatuses
-          return
-        } 
+      }
+      status.drops=versusStatuses
+      return
     } 
 
-    if let artCap = account.getCapability(/public/ArtCollection) {
-       if let art= artCap.borrow<&{NonFungibleToken.CollectionPublic}>()  {
-           log("Art in collection") 
-           for id in art.getIDs() {
-             var metadata=art.borrowNFT(id: id).metadata
-             log(metadata)
-             status.art[id]=metadata
-           }
-       }
+
+    if let art= account.getCapability(/public/ArtCollection) .borrow<&{NonFungibleToken.CollectionPublic}>()  {
+        log("Art in collection") 
+        for id in art.getIDs() {
+          var metadata=art.borrowNFT(id: id).metadata
+          log(metadata)
+          status.art[id]=metadata
+        }
     }
+    
     
     log("=====================")
     //return status
