@@ -80,7 +80,7 @@ pub contract Versus {
             let editionRef= &self.editionAuctions as &Auction.AuctionCollection
 
             let editionStatuses= editionRef.getAuctionStatuses()
-            var sum:UFix64= UFix64(0)
+            var sum:UFix64= 0.0
             for es in editionStatuses.keys {
                 sum = sum + editionStatuses[es]!.price
             }
@@ -273,10 +273,10 @@ pub contract Versus {
                 marketplaceVault: self.marketplaceVault , 
                 cutPercentage: self.cutPercentage)
             metadata["maxEdition"]= editions.toString()
-            var currentEdition=UInt64(1)
+            var currentEdition=(1 as UInt64
             while(currentEdition <= editions) {
                 metadata["edition"]= currentEdition.toString()
-                currentEdition=currentEdition+UInt64(1)
+                currentEdition=currentEdition+(1 as UInt64)
 
                 //A nice enhancement here would be that the art created is done through a minter so it is not art specific.
                 //It could even be a Cloner capability or maybe a editionMinter? 
