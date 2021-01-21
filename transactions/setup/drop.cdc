@@ -20,7 +20,7 @@ transaction(
     prepare(account: AuthAccount) {
 
         self.versus= account.borrow<&Versus.DropCollection>(from: /storage/Versus)!
-        self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenReceiver)!
+        self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenReceiver)
     }
 
     execute {

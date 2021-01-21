@@ -15,12 +15,12 @@ transaction(cutPercentage: UFix64, dropLength: UInt64, minimumBlockRemainingAfte
 
 
         // Would this fail if the capability was not here? 
-        let marketplaceReceiver=account.getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenReceiver)!
+        let marketplaceReceiver=account.getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenReceiver)
         if !marketplaceReceiver.check() {
             panic("Cannot borrow vault receiver run the setup/actor transaction first")
         }
 
-         let marketplaceNFTTrash=account.getCapability<&{NonFungibleToken.CollectionPublic}>(/public/ArtCollection)!
+         let marketplaceNFTTrash=account.getCapability<&{NonFungibleToken.CollectionPublic}>(/public/ArtCollection)
 
         let versus <- Versus.createVersusDropCollection(
             marketplaceVault: marketplaceReceiver,

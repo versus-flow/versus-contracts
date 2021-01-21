@@ -18,9 +18,9 @@ transaction(marketplace: Address, dropId: UInt64, auctionId: UInt64, bidAmount: 
     prepare(account: AuthAccount) {
 
         // get the references to the buyer's Vault and NFT Collection receiver
-        self.collectionCap = account.getCapability<&{NonFungibleToken.CollectionPublic}>(/public/ArtCollection)!
+        self.collectionCap = account.getCapability<&{NonFungibleToken.CollectionPublic}>(/public/ArtCollection)
         
-        self.vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenReceiver)!
+        self.vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/DemoTokenReceiver)
                    
         let vaultRef = account.borrow<&FungibleToken.Vault>(from: /storage/DemoTokenVault)
             ?? panic("Could not borrow owner's Vault reference")
@@ -34,7 +34,7 @@ transaction(marketplace: Address, dropId: UInt64, auctionId: UInt64, bidAmount: 
         let seller = getAccount(marketplace)
 
         // get the reference to the seller's sale
-        let versusRef = seller.getCapability(/public/Versus)!
+        let versusRef = seller.getCapability(/public/Versus)
                          .borrow<&{Versus.PublicDrop}>()
                          ?? panic("Could not borrow seller's sale reference")
 
