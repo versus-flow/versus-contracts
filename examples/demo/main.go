@@ -1,13 +1,35 @@
 package main
 
 import (
+	"bufio"
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
 )
+
+func fileAsImageData(path string) string {
+	f, _ := os.Open("./" + path)
+
+	defer f.Close()
+
+	// Read entire JPG into byte slice.
+	reader := bufio.NewReader(f)
+	content, _ := ioutil.ReadAll(reader)
+
+	contentType := http.DetectContentType(content)
+
+	// Encode as base64.
+	encoded := base64.StdEncoding.EncodeToString(content)
+
+	return "data:" + contentType + ";base64, " + encoded
+}
 
 //NB! start from root dir with makefile
 func main() {
@@ -18,20 +40,20 @@ func main() {
 	timeString := strconv.FormatInt(t, 10) + ".0"
 
 	flow := gwtf.NewGoWithTheFlowEmulator()
+
 	fmt.Println("Demo of Versus@Flow")
-	flow.CreateAccountWithContracts("accounts", "NonFungibleToken", "DemoToken", "Art", "Auction", "Versus")
+	flow.CreateAccountWithContracts("accounts", "NonFungibleToken", "Content", "Art", "Auction", "Versus")
 
 	flow.CreateAccount("marketplace", "artist", "buyer1", "buyer2")
 
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("MarketplaceCut: 15%, drop length: 5 ticks")
-	fmt.Scanln()
+	//fmt.Scanln()
 	flow.CreateAccount("marketplace")
-	gwtf.PrintEvents(flow.TransactionFromFile("setup/actor").
-		SignProposeAndPayAs("marketplace").
-		UFix64Argument("0.0").
-		Run(), emptyMap)
+
+	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().AccountArgument("artist").UFix64Argument("100.0").RunPrintEventsFull()
+	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().AccountArgument("marketplace").UFix64Argument("100.0").RunPrintEventsFull()
 
 	gwtf.PrintEvents(flow.TransactionFromFile("setup/versus").
 		SignProposeAndPayAs("marketplace").
@@ -40,12 +62,11 @@ func main() {
 		UFix64Argument("5.0").  // bump on late bid
 		Run(), emptyMap)
 
+	image := fileAsImageData("bull.png")
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Create a drop in versus that is already started with 10 editions")
-	fmt.Scanln()
-	gwtf.PrintEvents(flow.TransactionFromFile("setup/actor").SignProposeAndPayAs("artist").UFix64Argument("0.0").Run(), emptyMap)
-
+	//fmt.Scanln()
 	gwtf.PrintEvents(flow.TransactionFromFile("setup/drop").
 		SignProposeAndPayAs("marketplace").
 		AccountArgument("artist").                                                                      //marketplace location
@@ -53,7 +74,7 @@ func main() {
 		UFix64Argument(timeString).                                                                     //start time
 		StringArgument("Vincent Kamp").                                                                 //artist name
 		StringArgument("when?").                                                                        //name of art
-		StringArgument("https://ipfs.io/ipfs/QmURySCXsDh5tZUVVVNSnV1L8nxjVAoyChShGkvZ9NWF9A").          //image
+		StringArgument(image).                                                                          //imaage
 		StringArgument("Here's a lockdown painting I did of a super cool guy and pal, @jburrowsactor"). //description
 		Argument(cadence.NewUInt64(10)).                                                                //number of editions to use for the editioned auction
 		UFix64Argument("5.0").                                                                          //min bid increment
@@ -66,9 +87,9 @@ func main() {
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Setup a buyer and make him bid on the unique auction")
-	fmt.Scanln()
+	//fmt.Scanln()
 
-	gwtf.PrintEvents(flow.TransactionFromFile("setup/actor").SignProposeAndPayAs("buyer1").UFix64Argument("100.0").Run(), emptyMap) //tokens to mint
+	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().AccountArgument("buyer1").UFix64Argument("1000.0").RunPrintEventsFull()
 
 	gwtf.PrintEvents(flow.TransactionFromFile("buy/bid").
 		SignProposeAndPayAs("buyer1").
@@ -81,7 +102,7 @@ func main() {
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Go to website to bid there")
-	fmt.Scanln()
+	//fmt.Scanln()
 	fmt.Println("Tick the clock to make the auction end and settle it")
 	time.Sleep(1 * time.Second)
 	flow.TransactionFromFile("tick").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run()

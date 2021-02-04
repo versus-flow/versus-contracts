@@ -4,7 +4,8 @@
 // can purchase these NFTs with fungible tokens.
 //
 import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken, DemoToken from 0x01cf0e2f2f715450
+import NonFungibleToken, Art from 0x01cf0e2f2f715450
+import FlowToken from 0x0ae53cb6e3f42a79
 
 pub contract Auction {
 
@@ -18,7 +19,8 @@ pub contract Auction {
         pub let timeRemaining : Fix64
         pub let endTime : Fix64
         pub let startTime : Fix64
-        pub let metadata : {String: String}
+        pub let metadata: Art.Metadata?
+        pub let art: String?
         pub let owner: Address
         pub let leader: Address?
         pub let minNextBid: UFix64
@@ -28,7 +30,8 @@ pub contract Auction {
             bids:UInt64, 
             active: Bool, 
             timeRemaining:Fix64, 
-            nftMetadata: {String: String}, 
+            metadata: Art.Metadata?,
+            art: String?,
             leader:Address?, 
             bidIncrement: UFix64,
             owner: Address, 
@@ -41,7 +44,8 @@ pub contract Auction {
             self.bids=bids
             self.active=active
             self.timeRemaining=timeRemaining
-            self.metadata=nftMetadata
+            self.metadata=metadata
+            self.art=art
             self.leader= leader
             self.bidIncrement=bidIncrement
             self.owner=owner
@@ -73,7 +77,7 @@ pub contract Auction {
         //The Item that is sold at this auction
         //It would be really easy to extend this auction with using a NFTCollection here to be able to auction of several NFTs as a single
         //Lets say if you want to auction of a pack of TopShot moments
-        pub(set) var NFT: @NonFungibleToken.NFT?
+        pub(set) var NFT: @Art.NFT?
 
         //This is the escrow vault that holds the tokens for the current largest bid
         pub let bidVault: @FungibleToken.Vault
@@ -98,30 +102,30 @@ pub contract Auction {
         pub(set) var currentPrice: UFix64
 
         //the capability that points to the resource wher  you want the NFT transfered to if you win this bid. 
-        pub(set) var recipientCollectionCap: Capability<&{NonFungibleToken.CollectionPublic}>?
+        pub(set) var recipientCollectionCap: Capability<&{Art.CollectionPublic}>?
 
         //the capablity to send the escrow bidVault to if you are outbid
         pub(set) var recipientVaultCap: Capability<&{FungibleToken.Receiver}>?
 
         //the capability for the owner of the NFT to return the item to if the auction is cancelled
-        pub let ownerCollectionCap: Capability<&{NonFungibleToken.CollectionPublic}>
+        pub let ownerCollectionCap: Capability<&{Art.CollectionPublic}>
 
         //the capability to pay the owner of the item when the auction is done
         pub let ownerVaultCap: Capability<&{FungibleToken.Receiver}>
 
         init(
-            NFT: @NonFungibleToken.NFT,
+            NFT: @Art.NFT,
             minimumBidIncrement: UFix64,
             auctionStartTime: UFix64,
             startPrice: UFix64, 
             auctionLength: UFix64,
-            ownerCollectionCap: Capability<&{NonFungibleToken.CollectionPublic}>,
+            ownerCollectionCap: Capability<&{Art.CollectionPublic}>,
             ownerVaultCap: Capability<&{FungibleToken.Receiver}>,
         ) {
 
             Auction.totalAuctions = Auction.totalAuctions + (1 as UInt64)
             self.NFT <- NFT
-            self.bidVault <- DemoToken.createEmptyVault()
+            self.bidVault <- FlowToken.createEmptyVault()
             self.auctionID = Auction.totalAuctions
             self.minimumBidIncrement = minimumBidIncrement
             self.auctionLength = auctionLength
@@ -137,7 +141,7 @@ pub contract Auction {
         }
         
         // sendNFT sends the NFT to the Collection belonging to the provided Capability
-        access(contract) fun sendNFT(_ capability: Capability<&{NonFungibleToken.CollectionPublic}>) {
+        access(contract) fun sendNFT(_ capability: Capability<&{Art.CollectionPublic}>) {
             if let collectionRef = capability.borrow() {
                 let NFT <- self.NFT <- nil
                 collectionRef.deposit(token: <-NFT!)
@@ -267,7 +271,7 @@ pub contract Auction {
         }
 
         // This method should probably use preconditions more
-        pub fun placeBid(bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>) {
+        pub fun placeBid(bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{Art.CollectionPublic}>) {
 
 
             if self.auctionCompleted {
@@ -317,7 +321,8 @@ pub contract Auction {
                 bids: self.numberOfBids,
                 active: !self.auctionCompleted  && !self.isAuctionExpired(),
                 timeRemaining: self.timeRemaining(),
-                nftMetadata: self.NFT?.metadata ?? {},
+                metadata: self.NFT?.metadata,
+                art: self.NFT?.content(),
                 leader: leader,
                 bidIncrement: self.minimumBidIncrement,
                 owner: self.ownerVaultCap.borrow()!.owner!.address,
@@ -355,12 +360,12 @@ pub contract Auction {
         //That way when you create an auction you chose if this is a curated auction or an auction where everybody can put their pieces up for sale
         
          pub fun createAuction(
-             token: @NonFungibleToken.NFT, 
+             token: @Art.NFT, 
              minimumBidIncrement: UFix64, 
              auctionLength: UFix64, 
              auctionStartTime: UFix64,
              startPrice: UFix64, 
-             collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>, 
+             collectionCap: Capability<&{Art.CollectionPublic}>, 
              vaultCap: Capability<&{FungibleToken.Receiver}>) 
 
         pub fun getAuctionStatuses(): {UInt64: AuctionStatus}
@@ -370,7 +375,7 @@ pub contract Auction {
             id: UInt64, 
             bidTokens: @FungibleToken.Vault, 
             vaultCap: Capability<&{FungibleToken.Receiver}>, 
-            collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>
+            collectionCap: Capability<&{Art.CollectionPublic}>
         )
     }
 
@@ -403,12 +408,12 @@ pub contract Auction {
         // addTokenToauctionItems adds an NFT to the auction items and sets the meta data
         // for the auction item
         pub fun createAuction(
-            token: @NonFungibleToken.NFT, 
+            token: @Art.NFT, 
             minimumBidIncrement: UFix64, 
             auctionLength: UFix64, 
             auctionStartTime: UFix64,
             startPrice: UFix64, 
-            collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>, 
+            collectionCap: Capability<&{Art.CollectionPublic}>, 
             vaultCap: Capability<&{FungibleToken.Receiver}>) {
             
             // create a new auction items resource container
@@ -496,7 +501,7 @@ pub contract Auction {
 
         // placeBid sends the bidder's tokens to the bid vault and updates the
         // currentPrice of the current auction item
-        pub fun placeBid(id: UInt64, bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>) {
+        pub fun placeBid(id: UInt64, bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{Art.CollectionPublic}>) {
             pre {
                 self.auctionItems[id] != nil:
                     "NFT doesn't exist"
@@ -519,12 +524,12 @@ pub contract Auction {
         // addTokenToauctionItems adds an NFT to the auction items and sets the meta data
         // for the auction item
         pub fun createStandaloneAuction(
-            token: @NonFungibleToken.NFT, 
+            token: @Art.NFT, 
             minimumBidIncrement: UFix64, 
             auctionLength: UFix64,
             auctionStartTime: UFix64,
             startPrice: UFix64, 
-            collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>, 
+            collectionCap: Capability<&{Art.CollectionPublic}>, 
             vaultCap: Capability<&{FungibleToken.Receiver}>) : @AuctionItem {
             
             // create a new auction items resource container

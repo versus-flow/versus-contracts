@@ -1,6 +1,6 @@
 
 import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken, DemoToken, Art, Auction from 0x01cf0e2f2f715450
+import NonFungibleToken, Art, Auction from 0x01cf0e2f2f715450
 
 pub contract Versus {
    init() {
@@ -17,11 +17,10 @@ pub contract Versus {
     pub event DropExtended(id: UInt64, extendWith: Fix64, extendTo: Fix64)
 
     //When somebody bids on a versus drop we emit and event with the  id of the drop and acution as well as who bid and how much
-    //TODO: timestamp
     pub event Bid(dropId: UInt64, auctionId: UInt64, bidderAddress: Address, bidPrice: UFix64, time: Fix64, blockHeight:UInt64)
 
     //When a drop is created we emit and event with its id, who owns the art, how many editions are sold vs the unique and the metadata
-    pub event DropCreated(id: UInt64, owner: Address, editions: UInt64, metadata: {String: String} )
+    pub event DropCreated(id: UInt64, owner: Address, editions: UInt64)
 
     //Versus drop is settled
     pub event Settle(id: UInt64, winner: String, price:UFix64)
@@ -30,7 +29,7 @@ pub contract Versus {
     //sending in a reference to a editionMinter would be a nice enhancement here. So that the Art NFT is not coded in here at all. 
     pub fun createVersusDropCollection(
         marketplaceVault: Capability<&{FungibleToken.Receiver}>,
-        marketplaceNFTTrash: Capability<&{NonFungibleToken.CollectionPublic}>,
+        marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>,
         cutPercentage: UFix64,
         dropLength: UFix64, 
         minimumTimeRemainingAfterBidOrTie: UFix64): @DropCollection {
@@ -55,6 +54,7 @@ pub contract Versus {
         pub let uniqueAuction: @Auction.AuctionItem
         pub let editionAuctions: @Auction.AuctionCollection
         pub let dropID: UInt64
+        pub var firstBidBlock: UInt64?
 
 
         init( uniqueAuction: @Auction.AuctionItem, 
@@ -65,6 +65,7 @@ pub contract Versus {
             self.dropID=Versus.totalDrops
             self.uniqueAuction <-uniqueAuction
             self.editionAuctions <- editionAuctions
+            self.firstBidBlock=nil
         }
             
         destroy(){
@@ -88,8 +89,6 @@ pub contract Versus {
             var price= uniqueStatus.price
 
 
-            //TODO ENUM!
-            //Can has Enums.
             var winningStatus="UNIQUE"
             if(sum > price) {
                 winningStatus="EDITIONED"
@@ -103,7 +102,8 @@ pub contract Versus {
                 editionsStatuses: editionStatuses, 
                 editionPrice: sum,
                 price: price, 
-                status: winningStatus
+                status: winningStatus,
+                firstBidBlock: self.firstBidBlock
             )
         }
 
@@ -114,7 +114,7 @@ pub contract Versus {
             auctionId:UInt64,
             bidTokens: @FungibleToken.Vault, 
             vaultCap: Capability<&{FungibleToken.Receiver}>, 
-            collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>, 
+            collectionCap: Capability<&{Art.CollectionPublic}>, 
             minimumTimeRemaining: UFix64) {
 
             let dropStatus = self.getDropStatus()
@@ -128,6 +128,7 @@ pub contract Versus {
                 panic("This drop has ended")
             }
            
+            //TODO: save time of first bid
             let bidEndTime = time + Fix64(minimumTimeRemaining)
 
             //We need to extend the auction since there is too little time left. If we did not do this a late user could potentially win with a cheecky bid
@@ -176,6 +177,7 @@ pub contract Versus {
         pub let winning: String
         pub let active: Bool
         pub let timeRemaining: Fix64
+        pub let firstBidBlock:UInt64?
 
         init(
             dropId: UInt64,
@@ -183,7 +185,8 @@ pub contract Versus {
             editionsStatuses: {UInt64: Auction.AuctionStatus},
             editionPrice: UFix64, 
             price: UFix64,
-            status: String //can has enum!
+            status: String,
+            firstBidBlock:UInt64? //can has enum!
             ) {
                 self.dropId=dropId
                 self.uniqueStatus=uniqueStatus
@@ -196,6 +199,7 @@ pub contract Versus {
                 self.active=uniqueStatus.active
                 self.price=price
                 self.winning=status
+                self.firstBidBlock=firstBidBlock
             }
     }
 
@@ -210,7 +214,7 @@ pub contract Versus {
             auctionId:UInt64,
             bidTokens: @FungibleToken.Vault, 
             vaultCap: Capability<&{FungibleToken.Receiver}>, 
-            collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>
+            collectionCap: Capability<&{Art.CollectionPublic}>
         )
 
     }
@@ -220,7 +224,7 @@ pub contract Versus {
         pub var drops: @{UInt64: Drop}
         pub var cutPercentage:UFix64 
         pub let marketplaceVault: Capability<&{FungibleToken.Receiver}>
-        pub let marketplaceNFTTrash: Capability<&{NonFungibleToken.CollectionPublic}>
+        pub let marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>
 
         //naming things are hard...
         pub let minimumTimeRemainingAfterBidOrTie: UFix64
@@ -230,7 +234,7 @@ pub contract Versus {
 
         init(
             marketplaceVault: Capability<&{FungibleToken.Receiver}>, 
-            marketplaceNFTTrash: Capability<&{NonFungibleToken.CollectionPublic}>,
+            marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>,
             cutPercentage: UFix64,
             dropLength: UFix64,
             minimumTimeRemainingAfterBidOrTie:UFix64
@@ -243,7 +247,6 @@ pub contract Versus {
             self.drops <- {}
         }
 
-        //TODO: different start price for unique and editioned, different bid increment aswell?
 
         // When creating a drop you send in an NFT and the number of editions you want to sell vs the unique one
         // There will then be minted edition number of extra copies and put into the editions auction
@@ -256,15 +259,36 @@ pub contract Versus {
              startPrice: UFix64,  
              vaultCap: Capability<&{FungibleToken.Receiver}>) {
 
+
             pre {
                 vaultCap.check() == true : "Vault capability should exist"
             }
 
-            //copy the metadata of the previous art since that is used to mint the copies
-            var metadata=nft.metadata
-            let originalMetadata=nft.metadata
+            let art <- nft as! @Art.NFT
+
+            //Sending in a NFTEditioner capability here and using that instead of this loop would probably make sense. 
+            let editionedAuctions <- Auction.createAuctionCollection( 
+                marketplaceVault: self.marketplaceVault , 
+                cutPercentage: self.cutPercentage)
+
+            var currentEdition=(1 as UInt64)
+            while(currentEdition <= editions) {
+                //A nice enhancement here would be that the art created is done through a minter so it is not art specific.
+                //It could even be a Cloner capability or maybe a editionMinter? 
+                editionedAuctions.createAuction(
+                    token: <- art.makeEdition(edition: currentEdition, maxEdition: editions),
+                    minimumBidIncrement: minimumBidIncrement, 
+                    auctionLength: self.dropLength,
+                    auctionStartTime:startTime,
+                    startPrice: startPrice, 
+                    collectionCap: self.marketplaceNFTTrash, 
+                    vaultCap: vaultCap)
+                currentEdition=currentEdition+(1 as UInt64)
+            }
+
+                //copy the metadata of the previous art since that is used to mint the copies
             let item <- Auction.createStandaloneAuction(
-                token: <- nft,
+                token: <- art,
                 minimumBidIncrement: minimumBidIncrement,
                 auctionLength: self.dropLength,
                 auctionStartTime: startTime,
@@ -272,31 +296,9 @@ pub contract Versus {
                 collectionCap: self.marketplaceNFTTrash,
                 vaultCap: vaultCap
             )
-
-            //Sending in a NFTEditioner capability here and using that instead of this loop would probably make sense. 
-            let editionedAuctions <- Auction.createAuctionCollection( 
-                marketplaceVault: self.marketplaceVault , 
-                cutPercentage: self.cutPercentage)
-            metadata["maxEdition"]= editions.toString()
-            var currentEdition=(1 as UInt64)
-            while(currentEdition <= editions) {
-                metadata["edition"]= currentEdition.toString()
-                currentEdition=currentEdition+(1 as UInt64)
-
-                //A nice enhancement here would be that the art created is done through a minter so it is not art specific.
-                //It could even be a Cloner capability or maybe a editionMinter? 
-                editionedAuctions.createAuction(
-                    token: <- Art.createArt(metadata), 
-                    minimumBidIncrement: minimumBidIncrement, 
-                    auctionLength: self.dropLength,
-                    auctionStartTime:startTime,
-                    startPrice: startPrice, 
-                    collectionCap: self.marketplaceNFTTrash, 
-                    vaultCap: vaultCap)
-            }
             
             let drop  <- create Drop(uniqueAuction: <- item, editionAuctions:  <- editionedAuctions)
-            emit DropCreated(id: drop.dropID, owner: vaultCap.borrow()!.owner!.address, editions: editions,  metadata: originalMetadata )
+            emit DropCreated(id: drop.dropID, owner: vaultCap.borrow()!.owner!.address, editions: editions)
 
             let oldDrop <- self.drops[drop.dropID] <- drop
             destroy oldDrop
@@ -356,7 +358,7 @@ pub contract Versus {
             auctionId:UInt64,
             bidTokens: @FungibleToken.Vault, 
             vaultCap: Capability<&{FungibleToken.Receiver}>, 
-            collectionCap: Capability<&{NonFungibleToken.CollectionPublic}>
+            collectionCap: Capability<&{Art.CollectionPublic}>
         ) {
             pre {
                 self.drops[dropId] != nil:
