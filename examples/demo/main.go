@@ -94,9 +94,9 @@ func main() {
 	gwtf.PrintEvents(flow.TransactionFromFile("buy/bid").
 		SignProposeAndPayAs("buyer1").
 		AccountArgument("marketplace").
-		Argument(cadence.UInt64(1)). //id of drop
-		Argument(cadence.UInt64(1)). //id of auction to bid on
-		UFix64Argument("10.01").     //amount to bid
+		Argument(cadence.UInt64(1)).  //id of drop
+		Argument(cadence.UInt64(11)). //id of unique auction auction to bid on
+		UFix64Argument("10.01").      //amount to bid
 		Run(), emptyMap)
 
 	fmt.Println()

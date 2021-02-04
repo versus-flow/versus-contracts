@@ -131,6 +131,9 @@ pub contract Versus {
             //TODO: save time of first bid
             let bidEndTime = time + Fix64(minimumTimeRemaining)
 
+            if self.firstBidBlock == nil {
+                self.firstBidBlock=block.height
+            }
             //We need to extend the auction since there is too little time left. If we did not do this a late user could potentially win with a cheecky bid
             if dropStatus.endTime < bidEndTime {
                 let extendWith=bidEndTime - dropStatus.endTime
