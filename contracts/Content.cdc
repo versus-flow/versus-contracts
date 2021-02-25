@@ -1,11 +1,14 @@
 //This contract is on purpose pretty simple, it does not have a minter on anything
 //It should probably not be as loose permission wise at it is now.
 
-import NonFungibleToken from 0x01cf0e2f2f715450
+import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 
 pub contract Content: NonFungibleToken {
 
     pub var totalSupply: UInt64
+
+    pub let CollectionStoragePath: StoragePath
+    pub let CollectionPrivatePath: PrivatePath
 
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
@@ -15,7 +18,7 @@ pub contract Content: NonFungibleToken {
     pub resource NFT: NonFungibleToken.INFT {
         pub let id: UInt64
 
-        pub var content: String
+        access(contract) var content: String
 
         init(initID: UInt64, content: String) {
             self.id = initID
@@ -106,6 +109,8 @@ pub contract Content: NonFungibleToken {
 	init() {
         // Initialize the total supply
         self.totalSupply = 0
+        self.CollectionPrivatePath=/private/VersusContentCollection
+        self.CollectionStoragePath=/storage/VersusContentCollection
         emit ContractInitialized()
 	}
 }

@@ -1,9 +1,13 @@
 //This contract is on purpose pretty simple, it does not have a minter on anything
 //It should probably not be as loose permission wise at it is now.
 
-import NonFungibleToken, Content from 0x01cf0e2f2f715450
+import NonFungibleToken from "./standard/NonFungibleToken.cdc"
+import Content from "./Content.cdc"
 
 pub contract Art: NonFungibleToken {
+
+    pub let CollectionStoragePath: StoragePath
+    pub let CollectionPublicPath: PublicPath
 
     pub var totalSupply: UInt64
 
@@ -231,9 +235,39 @@ pub contract Art: NonFungibleToken {
 
     }
 
+    pub struct ArtData {
+        pub let metadata: Art.Metadata
+        pub let id: UInt64
+        init(metadata: Art.Metadata, id: UInt64) {
+            self.metadata= metadata
+            self.id=id
+        }
+    }
+
+
+    // We cannot return the art here since it will be too big to run in a script
+    pub fun getArt(address:Address) : [ArtData] {
+
+        var artData: [ArtData] = []
+        let account=getAccount(address)
+
+        if let artCollection= account.getCapability(self.CollectionPublicPath).borrow<&{Art.CollectionPublic}>()  {
+            for id in artCollection.getIDs() {
+                var art=artCollection.borrowArt(id: id) 
+                artData.append(ArtData(
+                    metadata: art!.metadata,
+                    id: id))
+            }
+        }
+        return artData
+    } 
+
 	init() {
         // Initialize the total supply
         self.totalSupply = 0
+        self.CollectionPublicPath=/public/VersusArtCollection
+        self.CollectionStoragePath=/storage/VersusArtCollection
+
         emit ContractInitialized()
 	}
 }

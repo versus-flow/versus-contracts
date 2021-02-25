@@ -1,26 +1,16 @@
 // This script checks that the accounts are set up correctly for the marketplace tutorial.
 //
 
-import Auction, Versus from 0x01cf0e2f2f715450
+//emulator
+import NonFungibleToken, Content, Art, Auction, Versus from 0xf8d6e0586b0a20c7
+
+//testnet
+//import Auction, Versus from 0x1ff7e32d71183db0
 
 /*
   Script used to get the first active drop in a versus 
  */
 pub fun main(address:Address) : Versus.DropStatus?{
-    // get the accounts' public address objects
-    let account = getAccount(address)
 
-    let versusCap=account.getCapability<&{Versus.PublicDrop}>(/public/Versus)
-    if let versus = versusCap.borrow() {
-      let versusStatuses=versus.getAllStatuses()
-      for s in versusStatuses.keys {
-          let status = versusStatuses[s]!
-          if status.uniqueStatus.active != false {
-            log(status)
-            return nil
-          }
-      } 
-    } 
-  return nil
-
+    return Versus.getActiveDrop(address: address)
 }

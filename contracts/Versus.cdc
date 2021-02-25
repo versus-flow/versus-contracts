@@ -1,12 +1,14 @@
 
-import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken, Art, Auction from 0x01cf0e2f2f715450
+import FungibleToken from "./standard/FungibleToken.cdc"
+import NonFungibleToken from "./standard/NonFungibleToken.cdc"
+import Art from "./Art.cdc"
+import Auction from "./Auction.cdc"
 
 pub contract Versus {
-   init() {
-        self.totalDrops = (0 as UInt64)
-    }
 
+   
+    pub let CollectionStoragePath: StoragePath
+    pub let CollectionPublicPath: PublicPath
     pub var totalDrops: UInt64
 
     //Events
@@ -16,6 +18,7 @@ pub contract Versus {
     //When a drop is extended due to a late bid or bid after tie we emit and event
     pub event DropExtended(id: UInt64, extendWith: Fix64, extendTo: Fix64)
 
+    //TODO: businessEvent and technicalEvent
     //When somebody bids on a versus drop we emit and event with the  id of the drop and acution as well as who bid and how much
     pub event Bid(dropId: UInt64, auctionId: UInt64, bidderAddress: Address, bidPrice: UFix64, time: Fix64, blockHeight:UInt64)
 
@@ -51,10 +54,10 @@ pub contract Versus {
         //It would be really simple here to support many vs many or even a many vs many vs many vs many type of auction here
         //just convert these to a dictionary of key:AuctionCollection.
 
-        pub let uniqueAuction: @Auction.AuctionItem
-        pub let editionAuctions: @Auction.AuctionCollection
+        access(contract) let uniqueAuction: @Auction.AuctionItem
+        access(contract) let editionAuctions: @Auction.AuctionCollection
         pub let dropID: UInt64
-        pub var firstBidBlock: UInt64?
+        access(contract) var firstBidBlock: UInt64?
 
 
         init( uniqueAuction: @Auction.AuctionItem, 
@@ -90,7 +93,7 @@ pub contract Versus {
 
 
             var winningStatus="UNIQUE"
-            if(sum > price) {
+            if sum > price {
                 winningStatus="EDITIONED"
                 price=sum
             } else if (sum == price) {
@@ -103,7 +106,8 @@ pub contract Versus {
                 editionPrice: sum,
                 price: price, 
                 status: winningStatus,
-                firstBidBlock: self.firstBidBlock
+                firstBidBlock: self.firstBidBlock,
+                art: uniqueRef.content()
             )
         }
 
@@ -121,7 +125,7 @@ pub contract Versus {
             let block=getCurrentBlock()
             let time=Fix64(block.timestamp)
 
-            if(dropStatus.startTime > time) {
+            if dropStatus.startTime > time {
                 panic("The drop has not started")
             }
             if dropStatus.endTime < time && dropStatus.winning != "TIE" {
@@ -181,6 +185,7 @@ pub contract Versus {
         pub let active: Bool
         pub let timeRemaining: Fix64
         pub let firstBidBlock:UInt64?
+        pub let art: String?
 
         init(
             dropId: UInt64,
@@ -189,7 +194,8 @@ pub contract Versus {
             editionPrice: UFix64, 
             price: UFix64,
             status: String,
-            firstBidBlock:UInt64? //can has enum!
+            firstBidBlock:UInt64?,
+            art:String? //can has enum!
             ) {
                 self.dropId=dropId
                 self.uniqueStatus=uniqueStatus
@@ -203,6 +209,7 @@ pub contract Versus {
                 self.price=price
                 self.winning=status
                 self.firstBidBlock=firstBidBlock
+                self.art=art
             }
     }
 
@@ -275,7 +282,7 @@ pub contract Versus {
                 cutPercentage: self.cutPercentage)
 
             var currentEdition=(1 as UInt64)
-            while(currentEdition <= editions) {
+            while currentEdition <= editions {
                 //A nice enhancement here would be that the art created is done through a minter so it is not art specific.
                 //It could even be a Cloner capability or maybe a editionMinter? 
                 editionedAuctions.createAuction(
@@ -365,7 +372,7 @@ pub contract Versus {
         ) {
             pre {
                 self.drops[dropId] != nil:
-                    "NFT doesn't exist"
+                    "Drop does not exist"
 
                 collectionCap.check() == true : "Collection capability must be linked"
 
@@ -382,6 +389,36 @@ pub contract Versus {
         destroy() {            
             destroy self.drops
         }
+    }
+
+
+    /*
+     Get an active drop in the versus marketplace with the given address
+     
+     */
+    pub fun getActiveDrop(address:Address) : Versus.DropStatus?{
+        // get the accounts' public address objects
+        let account = getAccount(address)
+
+        let versusCap=account.getCapability<&{Versus.PublicDrop}>(self.CollectionPublicPath)
+        if let versus = versusCap.borrow() {
+            let versusStatuses=versus.getAllStatuses()
+            for s in versusStatuses.keys {
+                let status = versusStatuses[s]!
+                if status.uniqueStatus.active != false {
+                    return status
+                }
+            } 
+        } 
+        return nil
+    }
+
+    init() {
+
+        self.CollectionPublicPath= /public/versusCollection
+        self.CollectionStoragePath= /storage/versusCollection
+
+        self.totalDrops = (0 as UInt64)
     }
      
 }

@@ -3,9 +3,10 @@
 // This contract allows users to put their NFTs up for sale. Other users
 // can purchase these NFTs with fungible tokens.
 //
-import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken, Art from 0x01cf0e2f2f715450
-import FlowToken from 0x0ae53cb6e3f42a79
+import FungibleToken from "./standard/FungibleToken.cdc"
+import FlowToken from "./standard/FlowToken.cdc"
+import Art from "./Art.cdc"
+import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 
 pub contract Auction {
 
@@ -20,7 +21,6 @@ pub contract Auction {
         pub let endTime : Fix64
         pub let startTime : Fix64
         pub let metadata: Art.Metadata?
-        pub let art: String?
         pub let owner: Address
         pub let leader: Address?
         pub let minNextBid: UFix64
@@ -31,7 +31,6 @@ pub contract Auction {
             active: Bool, 
             timeRemaining:Fix64, 
             metadata: Art.Metadata?,
-            art: String?,
             leader:Address?, 
             bidIncrement: UFix64,
             owner: Address, 
@@ -45,7 +44,6 @@ pub contract Auction {
             self.active=active
             self.timeRemaining=timeRemaining
             self.metadata=metadata
-            self.art=art
             self.leader= leader
             self.bidIncrement=bidIncrement
             self.owner=owner
@@ -72,46 +70,46 @@ pub contract Auction {
     pub resource AuctionItem {
         
         //Number of bids made, that is aggregated to the status struct
-        pub var numberOfBids: UInt64
+        priv var numberOfBids: UInt64
 
         //The Item that is sold at this auction
         //It would be really easy to extend this auction with using a NFTCollection here to be able to auction of several NFTs as a single
         //Lets say if you want to auction of a pack of TopShot moments
-        pub(set) var NFT: @Art.NFT?
+        priv var NFT: @Art.NFT?
 
         //This is the escrow vault that holds the tokens for the current largest bid
-        pub let bidVault: @FungibleToken.Vault
+        priv let bidVault: @FungibleToken.Vault
 
         //The id of this individual auction
         pub let auctionID: UInt64
 
         //The minimum increment for a bid. This is an english auction style system where bids increase
-        pub let minimumBidIncrement: UFix64
+        priv let minimumBidIncrement: UFix64
 
         //the time the acution should start at
-        pub(set) var auctionStartTime: UFix64
+        priv var auctionStartTime: UFix64
 
         //The length in seconsd for this auction
-        pub var auctionLength: UFix64
+        priv var auctionLength: UFix64
 
         //Right now the dropitem is not moved from the collection when it ends, it is just marked here that it has ended 
-        pub(set) var auctionCompleted: Bool
+        priv var auctionCompleted: Bool
 
         // Auction State
-        pub(set) var startPrice: UFix64
-        pub(set) var currentPrice: UFix64
+        priv var startPrice: UFix64
+        priv var currentPrice: UFix64
 
         //the capability that points to the resource wher  you want the NFT transfered to if you win this bid. 
-        pub(set) var recipientCollectionCap: Capability<&{Art.CollectionPublic}>?
+        priv var recipientCollectionCap: Capability<&{Art.CollectionPublic}>?
 
         //the capablity to send the escrow bidVault to if you are outbid
-        pub(set) var recipientVaultCap: Capability<&{FungibleToken.Receiver}>?
+        priv var recipientVaultCap: Capability<&{FungibleToken.Receiver}>?
 
         //the capability for the owner of the NFT to return the item to if the auction is cancelled
-        pub let ownerCollectionCap: Capability<&{Art.CollectionPublic}>
+        priv let ownerCollectionCap: Capability<&{Art.CollectionPublic}>
 
         //the capability to pay the owner of the item when the auction is done
-        pub let ownerVaultCap: Capability<&{FungibleToken.Receiver}>
+        priv let ownerVaultCap: Capability<&{FungibleToken.Receiver}>
 
         init(
             NFT: @Art.NFT,
@@ -140,6 +138,11 @@ pub contract Auction {
             self.numberOfBids=0
         }
         
+
+        pub fun content() : String? {
+            return self.NFT?.content()
+        }
+
         // sendNFT sends the NFT to the Collection belonging to the provided Capability
         access(contract) fun sendNFT(_ capability: Capability<&{Art.CollectionPublic}>) {
             if let collectionRef = capability.borrow() {
@@ -274,6 +277,7 @@ pub contract Auction {
         pub fun placeBid(bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{Art.CollectionPublic}>) {
 
 
+            //TODO: use pre
             if self.auctionCompleted {
                 panic("auction has already completed")
             }
@@ -322,7 +326,6 @@ pub contract Auction {
                 active: !self.auctionCompleted  && !self.isAuctionExpired(),
                 timeRemaining: self.timeRemaining(),
                 metadata: self.NFT?.metadata,
-                art: self.NFT?.content(),
                 leader: leader,
                 bidIncrement: self.minimumBidIncrement,
                 owner: self.ownerVaultCap.borrow()!.owner!.address,
@@ -504,7 +507,7 @@ pub contract Auction {
         pub fun placeBid(id: UInt64, bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{Art.CollectionPublic}>) {
             pre {
                 self.auctionItems[id] != nil:
-                    "NFT doesn't exist"
+                    "Auction does not exist in this drop"
             }
 
             // Get the auction item resources
