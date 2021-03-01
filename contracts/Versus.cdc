@@ -18,16 +18,22 @@ pub contract Versus {
     //When a drop is extended due to a late bid or bid after tie we emit and event
     pub event DropExtended(id: UInt64, extendWith: Fix64, extendTo: Fix64)
 
-    //TODO: businessEvent and technicalEvent
     //When somebody bids on a versus drop we emit and event with the  id of the drop and acution as well as who bid and how much
-    pub event Bid(dropId: UInt64, auctionId: UInt64, bidderAddress: Address, bidPrice: UFix64, time: Fix64, blockHeight:UInt64)
+    pub event TBid(dropId: UInt64, auctionId: UInt64, bidderAddress: Address, bidPrice: UFix64, time: Fix64, blockHeight:UInt64)
+
 
     //When a drop is created we emit and event with its id, who owns the art, how many editions are sold vs the unique and the metadata
     pub event DropCreated(id: UInt64, owner: Address, editions: UInt64)
 
+
+    //Business events
     //Versus drop is settled
     pub event Settle(id: UInt64, winner: String, price:UFix64)
 
+    //bid maked
+    pub event Bid(name: String, edition:UInt64, bidderAddress: Address, bidPrice: UFix64)
+
+    pub event LeaderChanged(name: String, winning: String)
 
     //sending in a reference to a editionMinter would be a nice enhancement here. So that the Art NFT is not coded in here at all. 
     pub fun createVersusDropCollection(
@@ -148,15 +154,27 @@ pub contract Versus {
             let bidPrice = bidTokens.balance
             let bidder=vaultCap.borrow()!.owner!.address
 
+            var edition:UInt64=0
             //Figure out what id to use
             if self.uniqueAuction.auctionID == auctionId {
                 let auctionRef = &self.uniqueAuction as &Auction.AuctionItem
                 auctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
             } else {
+                edition=dropStatus.editionsStatuses[auctionId]!.metadata!.edition
                 let editionsRef = &self.editionAuctions as &Auction.AuctionCollection 
                 editionsRef.placeBid(id: auctionId, bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
             }
-            emit Bid(dropId: self.dropID, auctionId: auctionId, bidderAddress: bidder , bidPrice: bidPrice, time: time, blockHeight: block.height)
+            
+            let metadata=dropStatus.uniqueStatus.metadata!
+
+            let desc=metadata.name.concat( " by ").concat(metadata.artist)
+            emit TBid(dropId: self.dropID, auctionId: auctionId, bidderAddress: bidder , bidPrice: bidPrice, time: time, blockHeight: block.height)
+            emit Bid(name: desc, edition: edition, bidderAddress:bidder, bidPrice:bidPrice)
+
+            let dropStatusAfter = self.getDropStatus()
+            if dropStatus.winning != dropStatusAfter.winning {
+                emit LeaderChanged(name:desc, winning:dropStatusAfter.winning)
+            }
         }
 
         pub fun extendDropWith(_ time: UFix64) {
