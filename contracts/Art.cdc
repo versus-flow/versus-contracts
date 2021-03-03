@@ -245,6 +245,16 @@ pub contract Art: NonFungibleToken {
     }
 
 
+
+    pub fun getContentForArt(address:Address, artId:UInt64) : String? {
+
+        let account=getAccount(address)
+        if let artCollection= account.getCapability(self.CollectionPublicPath).borrow<&{Art.CollectionPublic}>()  {
+            return artCollection.borrowArt(id: artId)!.content()
+        }
+        return nil
+    }
+
     // We cannot return the art here since it will be too big to run in a script
     pub fun getArt(address:Address) : [ArtData] {
 

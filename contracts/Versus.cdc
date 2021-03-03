@@ -207,8 +207,11 @@ pub contract Versus {
 
         init(
             dropId: UInt64,
+            //TODO: transform Auctionstatus to DropItemStatus simpler
             uniqueStatus: Auction.AuctionStatus,
+            //TODO: transform Auctionstatus to DropItemStatus simpler
             editionsStatuses: {UInt64: Auction.AuctionStatus},
+            //TODO: add uniquePrice
             editionPrice: UFix64, 
             price: UFix64,
             status: String,

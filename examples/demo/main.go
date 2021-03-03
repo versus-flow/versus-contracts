@@ -50,7 +50,7 @@ func main() {
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("MarketplaceCut: 15%, drop length: 5 ticks")
-	fmt.Scanln()
+	//fmt.Scanln()
 
 	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().AccountArgument("artist").UFix64Argument("100.0").RunPrintEventsFull()
 	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().AccountArgument("marketplace").UFix64Argument("100.0").RunPrintEventsFull()
@@ -81,7 +81,7 @@ func main() {
 		Run(), emptyMap)
 
 	fmt.Println("Get active auctions")
-	fmt.Scanln()
+	//fmt.Scanln()
 	flow.ScriptFromFile("get_active_auction").AccountArgument("marketplace").Run()
 
 	fmt.Println()
@@ -102,7 +102,7 @@ func main() {
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Go to website to bid there")
-	//fmt.Scanln()
+	fmt.Scanln()
 	fmt.Println("Tick the clock to make the auction end and settle it")
 	time.Sleep(1 * time.Second)
 	flow.TransactionFromFile("tick").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run()
