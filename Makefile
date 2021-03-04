@@ -23,3 +23,7 @@ testnet:
 .PHONY: deploy
 deploy:
 	flow project deploy 
+
+.PHONY: transfer
+transfer:
+	go run ./examples/transfer/main.go

@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func fileAsImageData(path string) string {
@@ -31,9 +30,9 @@ func fileAsImageData(path string) string {
 func main() {
 
 	flow := gwtf.NewGoWithTheFlowDevNet()
-	value := flow.ScriptFromFile("get_active_auction").AccountArgument("versus").RunReturns()
+	//value := flow.ScriptFromFile("get_active_auction").AccountArgument("versus").RunReturns()
 	//value := flow.ScriptFromFile("check_account").AccountArgument("buyer1").RunReturns()
-	spew.Dump(value)
+	///	spew.Dump(value)
 
 	//	flow.TransactionFromFile("buy/settle").SignProposeAndPayAs("versus").Argument(cadence.UInt64(1)).RunPrintEventsFull()
 
@@ -41,7 +40,7 @@ func main() {
 	//spew.Dump(result)
 
 	//accountArg := cadence.String("adf")
-	//	flow.TransactionFromFile("setup/transfer_flow").SignProposeAndPayAsService().UFix64Argument("1000.0").RawAccountArgument("6f2dc70deed7b20d").RunPrintEventsFull()
+	//flow.TransactionFromFile("setup/transfer_flow").SignProposeAndPayAsService().UFix64Argument("1000.0").RawAccountArgument("bcfd4d4868a916e5").RunPrintEventsFull()
 
 	//setup buyer1
 	//flow.CreateAccountPrintEvents("buyer1")
@@ -58,32 +57,32 @@ func main() {
 	//flow.TransactionFromFile("setup/transfer_flow").SignProposeAndPayAsService().UFix64Argument("1000.0").AccountArgument("artist").RunPrintEventsFull()
 
 	/*
-				flow.TransactionFromFile("setup/versus").
-					SignProposeAndPayAs("versus").
-					UFix64Argument("0.15").    //cut percentage,
-					UFix64Argument("86400.0"). //length
-					UFix64Argument("300.0").   // bump on late bid
-					RunPrintEventsFull()
-
-			now := time.Now()
-			t := now.Unix()
-			timeString := strconv.FormatInt(t, 10) + ".0"
-
-			image := fileAsImageData("bull.png")
-			flow.TransactionFromFile("setup/drop").
+			flow.TransactionFromFile("setup/versus").
 				SignProposeAndPayAs("versus").
-				AccountArgument("artist").                                                                      //marketplace location
-				UFix64Argument("10.01").                                                                        //start price
-				UFix64Argument(timeString).                                                                     //start time
-				StringArgument("Vincent Kamp").                                                                 //artist name
-				StringArgument("when?").                                                                        //name of art
-				StringArgument(image).                                                                          //imaage
-				StringArgument("Here's a lockdown painting I did of a super cool guy and pal, @jburrowsactor"). //description
-				Argument(cadence.NewUInt64(10)).                                                                //number of editions to use for the editioned auction
-				UFix64Argument("5.0").                                                                          //min bid increment
+				UFix64Argument("0.15").    //cut percentage,
+				UFix64Argument("86400.0"). //length
+				UFix64Argument("300.0").   // bump on late bid
 				RunPrintEventsFull()
 
+		now := time.Now()
+		t := now.Unix()
+		timeString := strconv.FormatInt(t, 10) + ".0"
 
+
+	*/
+
+
+	image := fileAsImageData("bull.png")
+	flow.TransactionFromFile("setup/mint_art").
+		SignProposeAndPayAs("versus").
+		RawAccountArgument("0x42de7e7e48d17e2a").
+		StringArgument("Kinger9999").    //artist name
+		StringArgument("CryptoBull0").   //name of art
+		StringArgument(image).           //imaage
+		StringArgument("An angry bull"). //description
+		RunPrintEventsFull()
+
+	/*
 		flow.TransactionFromFile("buy/bid").
 			SignProposeAndPayAs("buyer1").
 			AccountArgument("versus").
@@ -93,4 +92,5 @@ func main() {
 			RunPrintEventsFull()
 
 	*/
+
 }
