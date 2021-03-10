@@ -21,8 +21,8 @@ transaction(dropId: UInt64) {
     }
 
     execute {
-        
-            self.versusRef.settle(dropId)
-        }
+        self.versusRef.settle(dropId)
+          //should maybe consider to delete the trash here
     }
+}
  

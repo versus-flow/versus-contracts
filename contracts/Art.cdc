@@ -186,6 +186,7 @@ pub contract Art: NonFungibleToken {
     }
 
 
+    //TODO: consider putting this behind a minter resource that only some can use
     pub fun createArtWithPointer(name: String, artist: String, artistAddress:String, description: String, type: String, contentCapability:Capability<&Content.Collection>, contentId: UInt64) : @Art.NFT{
         
         var newNFT <- create NFT(

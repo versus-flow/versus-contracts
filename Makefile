@@ -27,3 +27,12 @@ deploy:
 .PHONY: transfer
 transfer:
 	go run ./examples/transfer/main.go
+
+.PHONY: settle
+settle:
+	go run ./examples/settle/main.go
+
+.PHONY: drop
+drop:
+	go run ./examples/drop/main.go
+

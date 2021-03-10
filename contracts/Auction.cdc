@@ -24,6 +24,8 @@ pub contract Auction {
         pub let owner: Address
         pub let leader: Address?
         pub let minNextBid: UFix64
+        pub let completed: Bool
+        pub let expired: Bool
     
         init(id:UInt64, 
             currentPrice: UFix64, 
@@ -36,7 +38,9 @@ pub contract Auction {
             owner: Address, 
             startTime: Fix64,
             endTime: Fix64,
-            minNextBid:UFix64
+            minNextBid:UFix64,
+            completed: Bool,
+            expired:Bool
         ) {
             self.id=id
             self.price= currentPrice
@@ -50,6 +54,8 @@ pub contract Auction {
             self.startTime=startTime
             self.endTime=endTime
             self.minNextBid=minNextBid
+            self.completed=completed
+            self.expired=expired
         }
     }
 
@@ -319,6 +325,7 @@ pub contract Auction {
                 leader=recipient.borrow()!.owner!.address
             }
 
+            //TODO: need to know if the has been settled and if it can be bid upon
             return AuctionStatus(
                 id:self.auctionID,
                 currentPrice: self.currentPrice, 
@@ -331,7 +338,9 @@ pub contract Auction {
                 owner: self.ownerVaultCap.borrow()!.owner!.address,
                 startTime: Fix64(self.auctionStartTime),
                 endTime: Fix64(self.auctionStartTime+self.auctionLength),
-                minNextBid: self.minNextBid()
+                minNextBid: self.minNextBid(),
+                completed: self.auctionCompleted,
+                expired: self.isAuctionExpired()
             )
         }
 
@@ -399,7 +408,6 @@ pub contract Auction {
             self.marketplaceVault = marketplaceVault
             self.auctionItems <- {}
         }
-
 
         pub fun extendAllAuctionsWith(_ amount: UFix64) {
             for id in self.auctionItems.keys {
@@ -474,7 +482,6 @@ pub contract Auction {
         // and deposits the FungibleTokens into the auction owner's account
         pub fun settleAuction(_ id: UInt64) {
             let itemRef = &self.auctionItems[id] as &AuctionItem
-
             itemRef.settleAuction(cutPercentage: self.cutPercentage, cutVault: self.marketplaceVault)
 
         }

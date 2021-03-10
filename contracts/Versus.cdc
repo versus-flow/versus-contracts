@@ -4,66 +4,68 @@ import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 import Art from "./Art.cdc"
 import Auction from "./Auction.cdc"
 
+/*
+
+ The main contract in the Versus auction system.
+
+ A versions auction constsint of a single auction and a group of auctions and either of them will be fulfilled while the other will be cancelled
+ Currently this is modeled as 1 vs x, but It could easily be modeled as x vs y  so you could have 5 editions vs 10 editions if you want to
+
+ The auctions themselves are not implemented in this contract but rather in the Auction contract. The goal here is to be able to
+ reuse the Auction contract for other things if somebody would want that.  
+
+ */
 pub contract Versus {
 
-   
+    //A set of capability and storage paths used in this contract
+    pub let VersusAdministratorPrivatePath: PrivatePath
+    pub let VersusAdministratorStoragePath: StoragePath
+    pub let VersusAdminClientPublicPath: PublicPath
+    pub let VersusAdminClientStoragePath: StoragePath
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
+
+
+    //counter for drops that is incremented every time there is a new versus drop made
     pub var totalDrops: UInt64
 
-    //Events
-    //Versus marketplace is created
-    pub event CollectionCreated(owner:Address, cutPercentage: UFix64)
+    //All the events that start with a T are more technical in nature while the other events are there to be distributed to Discord or similar social media
 
-    //When a drop is extended due to a late bid or bid after tie we emit and event
-    pub event DropExtended(id: UInt64, extendWith: Fix64, extendTo: Fix64)
+    //emitted when a drop is extended
+    pub event TDropExtended(id: UInt64, extendWith: Fix64, extendTo: Fix64)
+    pub event DropExtended(name: String, artist: String)
 
-    //When somebody bids on a versus drop we emit and event with the  id of the drop and acution as well as who bid and how much
+    //emitted when a bid is made
     pub event TBid(dropId: UInt64, auctionId: UInt64, bidderAddress: Address, bidPrice: UFix64, time: Fix64, blockHeight:UInt64)
+    pub event Bid(name: String, artist: String, edition:String, bidder: Address, price: UFix64)
 
+    //emitted when a drop is created
+    pub event TDropCreated(id: UInt64, owner: Address, editions: UInt64)
+    pub event DropCreated(name: String, artist: String, editions: UInt64)
 
-    //When a drop is created we emit and event with its id, who owns the art, how many editions are sold vs the unique and the metadata
-    pub event DropCreated(id: UInt64, owner: Address, editions: UInt64)
+    //emitted when a drop is settled, that is it ends and either the uniqe or the edition side wins
+    pub event TSettle(id: UInt64, winner: String, price:UFix64)
+    pub event Settle(name: String, artist: String, winner: String, price:UFix64)
 
+    //emitted when the winning side in the auction changes 
+    pub event LeaderChanged(name: String, artist: String, winning: String)
 
-    //Business events
-    //Versus drop is settled
-    pub event Settle(id: UInt64, winner: String, price:UFix64)
-
-    //bid maked
-    pub event Bid(name: String, edition:UInt64, bidderAddress: Address, bidPrice: UFix64)
-
-    pub event LeaderChanged(name: String, winning: String)
-
-    //sending in a reference to a editionMinter would be a nice enhancement here. So that the Art NFT is not coded in here at all. 
-    pub fun createVersusDropCollection(
-        marketplaceVault: Capability<&{FungibleToken.Receiver}>,
-        marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>,
-        cutPercentage: UFix64,
-        dropLength: UFix64, 
-        minimumTimeRemainingAfterBidOrTie: UFix64): @DropCollection {
-        let collection <- create DropCollection(
-            marketplaceVault: marketplaceVault, 
-            marketplaceNFTTrash: marketplaceNFTTrash,
-            cutPercentage: cutPercentage,
-            dropLength: dropLength,
-            minimumTimeRemainingAfterBidOrTie:minimumTimeRemainingAfterBidOrTie
-        )
-        emit CollectionCreated(owner: marketplaceVault.borrow()!.owner!.address, cutPercentage:cutPercentage)
-        return <- collection
-    }
-
-
-    //A Drop in versus represents a single auction vs an editioned auction
+   //A Drop in versus represents a single auction vs an editioned auction
     pub resource Drop {
 
-        //It would be really simple here to support many vs many or even a many vs many vs many vs many type of auction here
-        //just convert these to a dictionary of key:AuctionCollection.
+
+        //We store the art image blob and the metadata for the art NFT here so that 
+        //we can show that after the auction ends aswell
+        pub let content: String
+        pub let metadata: Art.Metadata
 
         access(contract) let uniqueAuction: @Auction.AuctionItem
         access(contract) let editionAuctions: @Auction.AuctionCollection
         pub let dropID: UInt64
+
+        //this is used to be able to query events for a drop from a given start point
         access(contract) var firstBidBlock: UInt64?
+        access(contract) var settledAt: UInt64?
 
 
         init( uniqueAuction: @Auction.AuctionItem, 
@@ -75,6 +77,9 @@ pub contract Versus {
             self.uniqueAuction <-uniqueAuction
             self.editionAuctions <- editionAuctions
             self.firstBidBlock=nil
+            self.settledAt=nil
+            self.content=self.uniqueAuction.content()!
+            self.metadata=self.uniqueAuction.getAuctionStatus().metadata!
         }
             
         destroy(){
@@ -83,49 +88,91 @@ pub contract Versus {
         }
 
 
-        //A method used in scripts to get drop status. Will aggregate information from all auctions into a single struct
+        //Returns a DropStatus struct that could be used in a script to show information about the drop
         pub fun getDropStatus() : DropStatus {
-
             let uniqueRef = &self.uniqueAuction as &Auction.AuctionItem
             let editionRef= &self.editionAuctions as &Auction.AuctionCollection
 
             let editionStatuses= editionRef.getAuctionStatuses()
-            var sum:UFix64= 0.0
+            var editionPrice:UFix64= 0.0
+
+            let editionDropAcutionStatus: {UInt64:DropAuctionStatus} = {}
             for es in editionStatuses.keys {
-                sum = sum + editionStatuses[es]!.price
+                var status=editionStatuses[es]!
+                editionDropAcutionStatus[es] = DropAuctionStatus(status)
+                editionPrice = editionPrice + status.price
             }
+
             let uniqueStatus=uniqueRef.getAuctionStatus()
-            var price= uniqueStatus.price
 
-
-            var winningStatus="UNIQUE"
-            if sum > price {
+            var winningStatus=""
+            var difference=0.0
+            if editionPrice > uniqueStatus.price {
                 winningStatus="EDITIONED"
-                price=sum
-            } else if (sum == price) {
+                difference = editionPrice - uniqueStatus.price 
+            } else if (editionPrice == uniqueStatus.price) {
                 winningStatus="TIE"
+                difference=0.0
+            } else {
+                difference=uniqueStatus.price - editionPrice
+                winningStatus="UNIQUE"
             }
+            
             return DropStatus(
                 dropId: self.dropID,
                 uniqueStatus: uniqueStatus,
-                editionsStatuses: editionStatuses, 
-                editionPrice: sum,
-                price: price, 
+                editionsStatuses: editionDropAcutionStatus, 
+                editionPrice: editionPrice,
                 status: winningStatus,
                 firstBidBlock: self.firstBidBlock,
-                art: uniqueRef.content()
+                difference: difference,
+                metadata: self.metadata,
+                settledAt: self.settledAt
             )
         }
 
+        pub fun settle(cutPercentage:UFix64, vault: Capability<&{FungibleToken.Receiver}> ) {
+            let status=self.getDropStatus()
 
-        // This method will place a bid in a given auction and possibly extend the duration of all auctions if there is to little
-        // time left or if the auction is tied
+            if status.settled {
+                panic("Drop has already been settled")
+            }
+
+            if status.expired == false {
+                panic("Auction has not completed yet")
+            }
+
+            let winning=status.winning
+            var price=0.0
+            if winning == "UNIQUE" {
+                self.uniqueAuction.settleAuction(cutPercentage: cutPercentage, cutVault: vault)
+                self.editionAuctions.cancelAllAuctions()
+                price=status.uniquePrice
+            } else if winning == "EDITIONED" {
+                self.uniqueAuction.returnAuctionItemToOwner()
+                self.editionAuctions.settleAllAuctions()
+                price=status.editionPrice
+            } else {
+                panic("tie")
+            }
+
+            self.settledAt=getCurrentBlock().height
+            emit TSettle(id: self.dropID, winner: winning, price: price )
+            emit Settle(name: status.metadata.name, artist: status.metadata.artist, winner: winning, price: price )
+        }
+
+        //place a bid on a given auction
         pub fun placeBid(
             auctionId:UInt64,
             bidTokens: @FungibleToken.Vault, 
             vaultCap: Capability<&{FungibleToken.Receiver}>, 
             collectionCap: Capability<&{Art.CollectionPublic}>, 
             minimumTimeRemaining: UFix64) {
+
+            pre {
+                collectionCap.check() == true : "Collection capability must be linked"
+                vaultCap.check() == true : "Vault capability must be linked"
+            }
 
             let dropStatus = self.getDropStatus()
             let block=getCurrentBlock()
@@ -134,49 +181,56 @@ pub contract Versus {
             if dropStatus.startTime > time {
                 panic("The drop has not started")
             }
+
+            //TODO: Not sure if this is the correct way of doing this
             if dropStatus.endTime < time && dropStatus.winning != "TIE" {
                 panic("This drop has ended")
             }
            
-            //TODO: save time of first bid
             let bidEndTime = time + Fix64(minimumTimeRemaining)
 
+            //we save the time of the first bid so that it can be used to fetch events from that given block
             if self.firstBidBlock == nil {
                 self.firstBidBlock=block.height
             }
+
             //We need to extend the auction since there is too little time left. If we did not do this a late user could potentially win with a cheecky bid
             if dropStatus.endTime < bidEndTime {
                 let extendWith=bidEndTime - dropStatus.endTime
-                emit DropExtended(id: self.dropID, extendWith: extendWith, extendTo: bidEndTime)
+                emit TDropExtended(id: self.dropID, extendWith: extendWith, extendTo: bidEndTime)
+                emit DropExtended(name: dropStatus.metadata.name, artist: dropStatus.metadata.artist)
                 self.extendDropWith(UFix64(extendWith))
             }
 
             let bidPrice = bidTokens.balance
             let bidder=vaultCap.borrow()!.owner!.address
 
-            var edition:UInt64=0
-            //Figure out what id to use
+            var edition:String="1 of 1"
+
+            var price:UFix64=0.0
+            //the bid is on a unique auction so we place the bid there
             if self.uniqueAuction.auctionID == auctionId {
                 let auctionRef = &self.uniqueAuction as &Auction.AuctionItem
                 auctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
             } else {
-                edition=dropStatus.editionsStatuses[auctionId]!.metadata!.edition
+                let editionStatus=dropStatus.editionsStatuses[auctionId]!
+                edition=editionStatus.edition.toString().concat( " of ").concat(editionStatus.maxEdition.toString())
                 let editionsRef = &self.editionAuctions as &Auction.AuctionCollection 
                 editionsRef.placeBid(id: auctionId, bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
             }
             
-            let metadata=dropStatus.uniqueStatus.metadata!
 
-            let desc=metadata.name.concat( " by ").concat(metadata.artist)
             emit TBid(dropId: self.dropID, auctionId: auctionId, bidderAddress: bidder , bidPrice: bidPrice, time: time, blockHeight: block.height)
-            emit Bid(name: desc, edition: edition, bidderAddress:bidder, bidPrice:bidPrice)
+            emit Bid(name: dropStatus.metadata.name, artist:dropStatus.metadata.artist, edition: edition, bidder:bidder, price:bidPrice)
 
             let dropStatusAfter = self.getDropStatus()
             if dropStatus.winning != dropStatusAfter.winning {
-                emit LeaderChanged(name:desc, winning:dropStatusAfter.winning)
+                emit LeaderChanged(name:dropStatus.metadata.name, artist: dropStatus.metadata.artist, winning:dropStatusAfter.winning)
             }
         }
 
+        //This would make it possible to extend the drop with more time from an admin interface
+        //here we just delegate to the auctions and extend them all
         pub fun extendDropWith(_ time: UFix64) {
             log("Drop extended with duration")
             self.uniqueAuction.extendWith(time)
@@ -186,40 +240,61 @@ pub contract Versus {
     }
 
 
+    //this is a simpler version of the Acution status since we do not need to duplicate all the fields
+    pub struct DropAuctionStatus {
+        pub let price : UFix64
+        pub let bidIncrement : UFix64
+        pub let bids : UInt64
+        pub let edition: UInt64
+        pub let maxEdition: UInt64
+        pub let leader: Address?
+        pub let minNextBid: UFix64
+        init(_ auctionStatus: Auction.AuctionStatus) {
+                self.price=auctionStatus.price
+                self.bidIncrement=auctionStatus.bidIncrement
+                self.bids=auctionStatus.bids
+                self.edition=auctionStatus.metadata?.edition  ?? (0 as UInt64)
+                self.maxEdition=auctionStatus.metadata?.maxEdition ?? (0 as UInt64)
+                self.leader=auctionStatus.leader
+                self.minNextBid=auctionStatus.minNextBid
+            }
+    }
+
     //The struct that holds status information of a drop. 
     //Some more data should proably be extracted from the uniqueStatus here. 
     // - information used to show a drop (artist name, description, url aso)
-    // - blocks remaining
+    // - time remaining
     pub struct DropStatus {
         pub let dropId: UInt64
         pub let uniquePrice: UFix64
         pub let editionPrice: UFix64
+        pub let difference: UFix64
         pub let endTime: Fix64
         pub let startTime: Fix64
-        pub let uniqueStatus: Auction.AuctionStatus
-        pub let editionsStatuses: {UInt64: Auction.AuctionStatus}
-        pub let price: UFix64
+        pub let uniqueStatus: DropAuctionStatus
+        pub let editionsStatuses: {UInt64: DropAuctionStatus}
         pub let winning: String
         pub let active: Bool
         pub let timeRemaining: Fix64
         pub let firstBidBlock:UInt64?
-        pub let art: String?
+        pub let metadata: Art.Metadata
+        pub let settled: Bool
+        pub let expired: Bool
+        pub let settledAt: UInt64?
 
         init(
             dropId: UInt64,
-            //TODO: transform Auctionstatus to DropItemStatus simpler
             uniqueStatus: Auction.AuctionStatus,
-            //TODO: transform Auctionstatus to DropItemStatus simpler
-            editionsStatuses: {UInt64: Auction.AuctionStatus},
-            //TODO: add uniquePrice
+            editionsStatuses: {UInt64: DropAuctionStatus},
             editionPrice: UFix64, 
-            price: UFix64,
             status: String,
             firstBidBlock:UInt64?,
-            art:String? //can has enum!
+            difference:UFix64,
+            metadata: Art.Metadata,
+            settledAt: UInt64?
             ) {
                 self.dropId=dropId
-                self.uniqueStatus=uniqueStatus
+                self.uniqueStatus=DropAuctionStatus(uniqueStatus)
                 self.editionsStatuses=editionsStatuses
                 self.uniquePrice= uniqueStatus.price
                 self.editionPrice= editionPrice
@@ -227,18 +302,25 @@ pub contract Versus {
                 self.startTime=uniqueStatus.startTime
                 self.timeRemaining=uniqueStatus.timeRemaining
                 self.active=uniqueStatus.active
-                self.price=price
                 self.winning=status
                 self.firstBidBlock=firstBidBlock
-                self.art=art
+                self.difference=difference
+                self.metadata=metadata
+                self.settled=uniqueStatus.completed
+                self.expired=uniqueStatus.expired
+                self.settledAt=settledAt
+
             }
     }
 
+    //An resource interface that everybody can access through a public capability.
     pub resource interface PublicDrop {
-         
-         //Versus is a currated auction so users cannot create a drop themselves. 
+
         pub fun getAllStatuses(): {UInt64: DropStatus}
         pub fun getStatus(dropId: UInt64): DropStatus
+
+        //return the data url that is the image for a drop
+        pub fun getContent(dropId: UInt64): String
 
         pub fun placeBid(
             dropId: UInt64, 
@@ -253,15 +335,20 @@ pub contract Versus {
     pub resource DropCollection: PublicDrop {
 
         pub var drops: @{UInt64: Drop}
-        pub var cutPercentage:UFix64 
+
+        //it is possible to adjust the cutPercentage if you own a Versus.DropCollection
+        pub(set) var cutPercentage:UFix64 
+
         pub let marketplaceVault: Capability<&{FungibleToken.Receiver}>
+
+        //NFTs that are not sold are put here when a bid is settled.  
         pub let marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>
 
         //naming things are hard...
-        pub let minimumTimeRemainingAfterBidOrTie: UFix64
-        //seconds
-        pub let dropLength: UFix64
+        pub(set) var minimumTimeRemainingAfterBidOrTie: UFix64
 
+        //make it possible to change the standard drop length from the admin gui
+        pub(set) var dropLength: UFix64
 
         init(
             marketplaceVault: Capability<&{FungibleToken.Receiver}>, 
@@ -281,15 +368,13 @@ pub contract Versus {
 
         // When creating a drop you send in an NFT and the number of editions you want to sell vs the unique one
         // There will then be minted edition number of extra copies and put into the editions auction
-        // When the auction is settled all NFTs that are not sold will be destroyed.
         pub fun createDrop(
              nft: @NonFungibleToken.NFT,
              editions: UInt64,
-             minimumBidIncrement: UFix64, 
+             minimumBidIncrement: UFix64, //TODO seperate minimumBidForUnique an edition
              startTime: UFix64, 
-             startPrice: UFix64,  
+             startPrice: UFix64,  //TODO: seperate startPrice for unique and edition
              vaultCap: Capability<&{FungibleToken.Receiver}>) {
-
 
             pre {
                 vaultCap.check() == true : "Vault capability should exist"
@@ -297,6 +382,7 @@ pub contract Versus {
 
             let art <- nft as! @Art.NFT
 
+            let metadata= art.metadata
             //Sending in a NFTEditioner capability here and using that instead of this loop would probably make sense. 
             let editionedAuctions <- Auction.createAuctionCollection( 
                 marketplaceVault: self.marketplaceVault , 
@@ -317,7 +403,7 @@ pub contract Versus {
                 currentEdition=currentEdition+(1 as UInt64)
             }
 
-                //copy the metadata of the previous art since that is used to mint the copies
+            //copy the metadata of the previous art since that is used to mint the copies
             let item <- Auction.createStandaloneAuction(
                 token: <- art,
                 minimumBidIncrement: minimumBidIncrement,
@@ -329,7 +415,8 @@ pub contract Versus {
             )
             
             let drop  <- create Drop(uniqueAuction: <- item, editionAuctions:  <- editionedAuctions)
-            emit DropCreated(id: drop.dropID, owner: vaultCap.borrow()!.owner!.address, editions: editions)
+            emit TDropCreated(id: drop.dropID, owner: vaultCap.borrow()!.owner!.address, editions: editions)
+            emit DropCreated(name: metadata.name, artist: metadata.artist,  editions: editions)
 
             let oldDrop <- self.drops[drop.dropID] <- drop
             destroy oldDrop
@@ -337,6 +424,7 @@ pub contract Versus {
 
 
 
+        //Get all the drop statuses
         pub fun getAllStatuses(): {UInt64: DropStatus} {
             var dropStatus: {UInt64: DropStatus }= {}
             for id in self.drops.keys {
@@ -346,44 +434,30 @@ pub contract Versus {
             return dropStatus
 
         }
+
+        access(contract) fun getDrop(_ dropId:UInt64) : &Drop {
+            pre {
+                self.drops[dropId] != nil:
+                    "drop doesn't exist"
+            }
+            return &self.drops[dropId] as &Drop
+        }
+
         pub fun getStatus(dropId:UInt64): DropStatus {
-             pre {
-                self.drops[dropId] != nil:
-                    "drop doesn't exist"
-            }
-
-            // Get the auction item resources
-            let itemRef = &self.drops[dropId] as &Drop
-            return itemRef.getDropStatus()
+            return self.getDrop(dropId).getDropStatus()
         }
 
+        //get the art content for this drop
+        pub fun getContent(dropId:UInt64) : String {
+            return self.getDrop(dropId).content
+        }
+
+        //settle a drop
         pub fun settle(_ dropId: UInt64) {
-           pre {
-                self.drops[dropId] != nil:
-                    "drop doesn't exist"
-            }
-            let itemRef = &self.drops[dropId] as &Drop
+            self.getDrop(dropId).settle(cutPercentage: self.cutPercentage, vault: self.marketplaceVault)
+       }
 
-            let status=itemRef.getDropStatus()
-
-            if itemRef.uniqueAuction.isAuctionExpired() == false {
-                panic("Auction has not completed yet")
-            }
-
-            let winning=status.winning
-            if winning == "UNIQUE" {
-                itemRef.uniqueAuction.settleAuction(cutPercentage: self.cutPercentage, cutVault: self.marketplaceVault)
-                itemRef.editionAuctions.cancelAllAuctions()
-            } else if winning == "EDITIONED" {
-                itemRef.uniqueAuction.returnAuctionItemToOwner()
-                itemRef.editionAuctions.settleAllAuctions()
-            } else {
-                panic("tie")
-            }
-            emit Settle(id: dropId, winner: winning, price: status.price )
-
-        }
-
+        //place a bid, will just delegate to the method in the drop collection
         pub fun placeBid(
             dropId: UInt64, 
             auctionId:UInt64,
@@ -391,22 +465,15 @@ pub contract Versus {
             vaultCap: Capability<&{FungibleToken.Receiver}>, 
             collectionCap: Capability<&{Art.CollectionPublic}>
         ) {
-            pre {
-                self.drops[dropId] != nil:
-                    "Drop does not exist"
-
-                collectionCap.check() == true : "Collection capability must be linked"
-
-                vaultCap.check() == true : "Vault capability must be linked"
-
-            }
-            let drop = &self.drops[dropId] as &Drop
-            let minimumTimeRemainingAfterBidOrTie=self.minimumTimeRemainingAfterBidOrTie
-
-
-            drop.placeBid(auctionId: auctionId, bidTokens: <- bidTokens, vaultCap: vaultCap, collectionCap:collectionCap, minimumTimeRemaining: minimumTimeRemainingAfterBidOrTie)
-
+            self.getDrop(dropId).placeBid(
+                auctionId: auctionId, 
+                bidTokens: <- bidTokens, 
+                vaultCap: vaultCap, 
+                collectionCap:collectionCap, 
+                minimumTimeRemaining: self.minimumTimeRemainingAfterBidOrTie
+            )
         }
+
         destroy() {            
             destroy self.drops
         }
@@ -415,7 +482,6 @@ pub contract Versus {
 
     /*
      Get an active drop in the versus marketplace with the given address
-     
      */
     pub fun getActiveDrop(address:Address) : Versus.DropStatus?{
         // get the accounts' public address objects
@@ -426,7 +492,7 @@ pub contract Versus {
             let versusStatuses=versus.getAllStatuses()
             for s in versusStatuses.keys {
                 let status = versusStatuses[s]!
-                if status.uniqueStatus.active != false {
+                if status.active != false {
                     return status
                 }
             } 
@@ -434,12 +500,91 @@ pub contract Versus {
         return nil
     }
 
+ 
+    //An Administrator resource that is stored as a private capability. That capability will be given to another account using a capability receiver
+    pub resource Administrator {
+        pub fun createVersusDropCollection(
+            marketplaceVault: Capability<&{FungibleToken.Receiver}>,
+            marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>,
+            cutPercentage: UFix64,
+            dropLength: UFix64, 
+            minimumTimeRemainingAfterBidOrTie: UFix64): @DropCollection {
+            let collection <- create DropCollection(
+                marketplaceVault: marketplaceVault, 
+                marketplaceNFTTrash: marketplaceNFTTrash,
+                cutPercentage: cutPercentage,
+                dropLength: dropLength,
+                minimumTimeRemainingAfterBidOrTie:minimumTimeRemainingAfterBidOrTie
+            )
+            return <- collection
+        }
+    }
+
+
+    //The interface used to add a Administrator capability to a client
+    pub resource interface VersusAdminClient {
+        pub fun addCapability(_ cap: Capability<&Administrator>)
+    }
+
+    //The versus admin resource that a client will create and store, then link up a public VersusAdminClient
+    pub resource VersusAdmin: VersusAdminClient {
+
+        access(self) var server: Capability<&Administrator>?
+
+        init() {
+            self.server = nil
+        }
+
+         pub fun addCapability(_ cap: Capability<&Administrator>) {
+            pre {
+                cap.check() : "Invalid server capablity"
+                self.server == nil : "Server already set"
+            }
+            self.server = cap
+        }
+
+        //make it possible to create a versus marketplace. Will just delegate to the administrator
+        pub fun createVersusMarketplace(
+            marketplaceVault: Capability<&{FungibleToken.Receiver}>,
+            marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>,
+            cutPercentage: UFix64,
+            dropLength: UFix64, 
+            minimumTimeRemainingAfterBidOrTie: UFix64) :@DropCollection {
+
+            pre {
+                self.server != nil: 
+                    "Cannot create versus marketplace if server is not set"
+            }
+            return <- self.server!.borrow()!.createVersusDropCollection(
+                marketplaceVault: marketplaceVault, 
+                marketplaceNFTTrash: marketplaceNFTTrash, 
+                cutPercentage: cutPercentage, 
+                dropLength: dropLength, 
+                minimumTimeRemainingAfterBidOrTie: minimumTimeRemainingAfterBidOrTie
+            )
+        }
+    }
+
+    //make it possible for a user that wants to be a versus admin to create the client
+    pub fun createAdminClient(): @VersusAdmin {
+        return <- create VersusAdmin()
+    }
+    
+
+
+    //initialize all the paths and create and link up the admin proxy
     init() {
+        self.totalDrops = (0 as UInt64)
 
         self.CollectionPublicPath= /public/versusCollection
         self.CollectionStoragePath= /storage/versusCollection
+        self.VersusAdminClientPublicPath= /public/versusAdminClient
+        self.VersusAdminClientStoragePath=/storage/versusAdminClient
+        self.VersusAdministratorStoragePath=/storage/versusAdmin
+        self.VersusAdministratorPrivatePath=/private/versusAdmin
 
-        self.totalDrops = (0 as UInt64)
+        self.account.save(<- create Administrator(), to: self.VersusAdministratorStoragePath)
+        self.account.link<&Administrator>(self.VersusAdministratorPrivatePath, target: self.VersusAdministratorStoragePath)
     }
      
 }
