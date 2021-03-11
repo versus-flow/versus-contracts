@@ -54,9 +54,6 @@ pub contract Versus {
     pub resource Drop {
 
 
-        //We store the art image blob and the metadata for the art NFT here so that 
-        //we can show that after the auction ends aswell
-        pub let content: String
         pub let metadata: Art.Metadata
 
         access(contract) let uniqueAuction: @Auction.AuctionItem
@@ -78,7 +75,6 @@ pub contract Versus {
             self.editionAuctions <- editionAuctions
             self.firstBidBlock=nil
             self.settledAt=nil
-            self.content=self.uniqueAuction.content()!
             self.metadata=self.uniqueAuction.getAuctionStatus().metadata!
         }
             
@@ -241,6 +237,8 @@ pub contract Versus {
 
 
     //this is a simpler version of the Acution status since we do not need to duplicate all the fields
+    //edition and maxEidtion will not be kept here after the auction has been settled.
+    //Really not sure on how to handle showing historic drops so for now I will just leave it as it is
     pub struct DropAuctionStatus {
         pub let price : UFix64
         pub let bidIncrement : UFix64
@@ -261,9 +259,7 @@ pub contract Versus {
     }
 
     //The struct that holds status information of a drop. 
-    //Some more data should proably be extracted from the uniqueStatus here. 
-    // - information used to show a drop (artist name, description, url aso)
-    // - time remaining
+    //this probably has some duplicated data that could go away. like do you need both a settled and settledAt? and active?
     pub struct DropStatus {
         pub let dropId: UInt64
         pub let uniquePrice: UFix64
@@ -319,8 +315,7 @@ pub contract Versus {
         pub fun getAllStatuses(): {UInt64: DropStatus}
         pub fun getStatus(dropId: UInt64): DropStatus
 
-        //return the data url that is the image for a drop
-        pub fun getContent(dropId: UInt64): String
+        pub fun getArt(dropId: UInt64): String
 
         pub fun placeBid(
             dropId: UInt64, 
@@ -447,9 +442,11 @@ pub contract Versus {
             return self.getDrop(dropId).getDropStatus()
         }
 
-        //get the art content for this drop
-        pub fun getContent(dropId:UInt64) : String {
-            return self.getDrop(dropId).content
+        //get the art for this drop
+        pub fun getArt(dropId:UInt64) : String {
+            let drop= self.getDrop(dropId)
+            let uniqueRef = &drop.uniqueAuction as &Auction.AuctionItem
+            return uniqueRef.content()!
         }
 
         //settle a drop
@@ -482,6 +479,7 @@ pub contract Versus {
 
     /*
      Get an active drop in the versus marketplace with the given address
+     
      */
     pub fun getActiveDrop(address:Address) : Versus.DropStatus?{
         // get the accounts' public address objects
