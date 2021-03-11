@@ -39,7 +39,8 @@ func main() {
 	timeString := strconv.FormatInt(t, 10) + ".0"
 
 	//GWTF has no future anymore?
-	flow := gwtf.NewGoWithTheFlow("./versus-flow.json")
+	//flow := gwtf.NewGoWithTheFlow("./versus-flow.json")
+	flow := gwtf.NewGoWithTheFlowEmulator()
 	fmt.Scanln()
 	fmt.Println("Demo of Versus@Flow")
 	//flow.CreateAccountWithContracts("accounts", "NonFungibleToken", "Content", "Art", "Auction", "Versus")
