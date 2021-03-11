@@ -1,13 +1,12 @@
-// The Auction contract is an implementation of an NFT Auction on Flow.
-//
 // This contract allows users to put their NFTs up for sale. Other users
 // can purchase these NFTs with fungible tokens.
-//
+
 import FungibleToken from "./standard/FungibleToken.cdc"
 import FlowToken from "./standard/FlowToken.cdc"
 import Art from "./Art.cdc"
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 
+//This contract was made during OWB so the code here is some of the first cadence code we (0xAlchemist and 0xBjartek wrote)
 pub contract Auction {
 
     // This struct aggreates status for the auction and is expoded in order to create websites using auction information
@@ -16,6 +15,7 @@ pub contract Auction {
         pub let price : UFix64
         pub let bidIncrement : UFix64
         pub let bids : UInt64
+        //Active is probably not needed when we have completed and expired above, consider removing it
         pub let active: Bool
         pub let timeRemaining : Fix64
         pub let endTime : Fix64
@@ -154,10 +154,9 @@ pub contract Auction {
             if let collectionRef = capability.borrow() {
                 let NFT <- self.NFT <- nil
                 collectionRef.deposit(token: <-NFT!)
-            } else {
-                log("sendNFT(): unable to borrow collection ref")
-                log(capability)
-            }
+                return
+            } 
+            panic("Could not send NFT to non existing capability")
         }
 
         // sendBidTokens sends the bid tokens to the Vault Receiver belonging to the provided Capability
@@ -165,45 +164,37 @@ pub contract Auction {
             // borrow a reference to the owner's NFT receiver
             if let vaultRef = capability.borrow() {
                 let bidVaultRef = &self.bidVault as &FungibleToken.Vault
-                log("Paid out money")
-                log(bidVaultRef.balance)
                 vaultRef.deposit(from: <-bidVaultRef.withdraw(amount: bidVaultRef.balance))
-            } else {
-                log("sendBidTokens(): couldn't get vault ref")
-                log(capability)
+                return
             }
+            panic("Could not send tokens to non existant receiver")
         }
 
         pub fun releasePreviousBid() {
             if let vaultCap = self.recipientVaultCap {
                 self.sendBidTokens(self.recipientVaultCap!)
+                return
             } 
         }
- 
-
 
         //This method should probably use preconditions more 
         pub fun settleAuction(cutPercentage: UFix64, cutVault:Capability<&{FungibleToken.Receiver}> )  {
 
             if self.auctionCompleted {
-                log("this auction is already settled")
-                return 
+                panic("The auction is already settled")
             }
             if self.NFT == nil {
-                log("auction doesn't exist")
-                return 
+                panic("NFT in auction does not exist")
             }
 
             // check if the auction has expired
             if self.isAuctionExpired() == false {
-                log("Auction has not completed yet")
-                return
+                panic("Auction has not completed yet")
             }
                 
             // return if there are no bids to settle
             if self.currentPrice == 0.0{
                 self.returnAuctionItemToOwner()
-                log("No bids. Nothing to settle")
                 return
             }            
 
@@ -215,7 +206,8 @@ pub contract Auction {
             emit MarketplaceEarned(amount: amount, owner: cutVault.owner!.address)
             cutVault.deposit(from: <- beneficiaryCut)
 
-            self.exchangeTokens()
+            self.sendNFT(self.recipientCollectionCap!)
+            self.sendBidTokens(self.ownerVaultCap)
 
             self.auctionCompleted = true
             
@@ -239,28 +231,13 @@ pub contract Auction {
             let currentTime = getCurrentBlock().timestamp
 
             let remaining= Fix64(startTime+auctionLength) - Fix64(currentTime)
-        //    log("timeRemaining=".concat(remaining.toString()))
             return remaining
         }
 
       
         pub fun isAuctionExpired(): Bool {
             let timeRemaining= self.timeRemaining()
-            //log("timeRemaining=".concat(timeRemaining.toString()))
             return timeRemaining < Fix64(0.0)
-        }
-
-        // exchangeTokens sends the purchased NFT to the buyer and the bidTokens to the seller
-        pub fun exchangeTokens() {
-            
-            if self.NFT == nil {
-                log("auction doesn't exist")
-                return
-            }
-            
-
-            self.sendNFT(self.recipientCollectionCap!)
-            self.sendBidTokens(self.ownerVaultCap)
         }
 
         pub fun minNextBid() :UFix64{
@@ -270,8 +247,6 @@ pub contract Auction {
             }
             //else start price
             return self.startPrice
-
-
         }
 
         //Extend an auction with a given set of blocks
@@ -282,8 +257,6 @@ pub contract Auction {
         // This method should probably use preconditions more
         pub fun placeBid(bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{Art.CollectionPublic}>) {
 
-
-            //TODO: use pre
             if self.auctionCompleted {
                 panic("auction has already completed")
             }
@@ -325,7 +298,6 @@ pub contract Auction {
                 leader=recipient.borrow()!.owner!.address
             }
 
-            //TODO: need to know if the has been settled and if it can be bid upon
             return AuctionStatus(
                 id:self.auctionID,
                 currentPrice: self.currentPrice, 
@@ -367,10 +339,8 @@ pub contract Auction {
 
         pub fun extendAllAuctionsWith(_ amount: UFix64)
 
-
         //It could be argued that this method should not be here in the public contract. I guss it could be an interface of its own
         //That way when you create an auction you chose if this is a curated auction or an auction where everybody can put their pieces up for sale
-        
          pub fun createAuction(
              token: @Art.NFT, 
              minimumBidIncrement: UFix64, 
@@ -531,8 +501,8 @@ pub contract Auction {
         }
     }
 
-        // addTokenToauctionItems adds an NFT to the auction items and sets the meta data
-        // for the auction item
+        //this method is used to create a standalone auction that is not part of a collection
+        //we use this to create the unique part of the Versus contract
         pub fun createStandaloneAuction(
             token: @Art.NFT, 
             minimumBidIncrement: UFix64, 

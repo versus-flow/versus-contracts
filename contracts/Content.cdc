@@ -1,8 +1,6 @@
-//This contract is on purpose pretty simple, it does not have a minter on anything
-//It should probably not be as loose permission wise at it is now.
-
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 
+//A simple NFT that is used to store a binary data url image on chain
 pub contract Content: NonFungibleToken {
 
     pub var totalSupply: UInt64
@@ -26,6 +24,7 @@ pub contract Content: NonFungibleToken {
         }
     }
 
+    //return the content for this NFT
     pub resource interface PublicContent {
 
         pub fun content(_ id: UInt64): String? 
@@ -75,14 +74,14 @@ pub contract Content: NonFungibleToken {
             return &self.ownedNFTs[id] as &NonFungibleToken.NFT
         }
 
-        pub fun content(_ id: UInt64) : String? {
+        pub fun content(_ id: UInt64) : String {
             if self.ownedNFTs[id] != nil {
                 let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
                 let nft= ref as! &Content.NFT
                 return nft.content
-            } else {
-                return nil
-            }
+            } 
+            panic("Content NFT does not exist")
+            
         }
 
         destroy() {
@@ -97,6 +96,7 @@ pub contract Content: NonFungibleToken {
 
 
 	// mintNFT mints a new NFT with a new ID
+    //consider putting this behind a minter
 	pub fun createContent(_ content: String) : @Content.NFT {
 
         var newNFT <- create NFT(initID: Content.totalSupply, content:content)

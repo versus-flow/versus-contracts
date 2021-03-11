@@ -1,6 +1,7 @@
 import FungibleToken from 0x9a0766d93b6608b7
 import FlowToken from 0x7e60df042a9c0868
 
+//This transactions transfers flow on testnet from one account to another
 transaction(amount: UFix64, to: Address) {
   let sentVault: @FungibleToken.Vault
 

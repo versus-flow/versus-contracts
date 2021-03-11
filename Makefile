@@ -1,38 +1,34 @@
 all: demo
 
+#run the demo script on devnet
 .PHONY: demo
 demo: deploy
-	go run ./examples/demo/main.go
+	go run ./tasks/demo/main.go
 
-.PHONY: clean
-clean:
-	rm -Rf flowdb
-
-.PHONY:mint
-mint:
-	go run ./examples/mint/main.go
-
-.PHONY: emulator
-emulator: clean
-	flow emulator start -v --persist
-
-.PHONY: testnet
-testnet:
-	go run ./examples/testnet/main.go
-
+#this goal deployes all the contracts to emulator
 .PHONY: deploy
 deploy:
 	flow project deploy 
 
+
+#this goal mints new flow tokens on emulator takes an account(Addres) env and can take an amount(int:100) env
+.PHONY:mint
+mint:
+	go run ./tasks/mint/main.go
+
+
+#this goal transfers funds on testnet required an account(Address) env and can take an amount(int:100) env
 .PHONY: transfer
 transfer:
-	go run ./examples/transfer/main.go
+	go run ./tasks/transfer/main.go
 
+#this goal settles and drop on testnet requires a drop(int) argument
 .PHONY: settle
 settle:
-	go run ./examples/settle/main.go
+	go run ./tasks/settle/main.go
 
+#this goal creates and example drop on testnet, requires drop(string) env that will be used as NFT name suffix
 .PHONY: drop
 drop:
-	go run ./examples/drop/main.go
+	go run ./tasks/drop/main.go
 

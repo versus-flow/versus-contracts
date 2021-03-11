@@ -46,7 +46,7 @@ func main() {
 
 	image := fileAsImageData("bull.png")
 
-	flow.TransactionFromFile("setup/drop").
+	flow.TransactionFromFile("setup/drop_testnet").
 		SignProposeAndPayAs("versus").
 		AccountArgument("artist").             //marketplace location
 		UFix64Argument("10.01").               //start price

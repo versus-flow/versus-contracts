@@ -1,9 +1,8 @@
-//This contract is on purpose pretty simple, it does not have a minter on anything
-//It should probably not be as loose permission wise at it is now.
 
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 import Content from "./Content.cdc"
 
+//A NFT contract to store art
 pub contract Art: NonFungibleToken {
 
     pub let CollectionStoragePath: StoragePath
@@ -16,6 +15,7 @@ pub contract Art: NonFungibleToken {
     pub event Deposit(id: UInt64, to: Address?)
     pub event Created(id: UInt64, metadata: Metadata)
 
+    //The public interface can show metadata and the content for the Art piece
     pub resource interface Public {
         pub let id: UInt64
         pub let metadata: Metadata
@@ -53,10 +53,13 @@ pub contract Art: NonFungibleToken {
 
     pub resource NFT: NonFungibleToken.INFT, Public {
         pub let id: UInt64
-        //move all metadata to a struct except content including editions
+
+        //content can either be embedded in the NFT as and URL or a pointer to a Content collection to be stored onChain
+        //a pointer will be used for all editions of the same Art when it is editioned 
         pub let contentCapability:Capability<&Content.Collection>?
         pub let contentId: UInt64?
         pub let url: String?
+
         pub let metadata: Metadata
 
         init(
@@ -73,6 +76,7 @@ pub contract Art: NonFungibleToken {
             self.url=url
         }
 
+        //return the content for this NFT
         pub fun content() : String {
             if self.url != nil {
                 return self.url!
@@ -83,6 +87,9 @@ pub contract Art: NonFungibleToken {
             return contentCollection.content(self.contentId!)!
         }
 
+        //make a new NFT that is an editioned piece of this NFT, 
+        //note that this method is not returned in the public interface
+        //only the owner can edition this NFT
         pub fun makeEdition(edition: UInt64, maxEdition:UInt64) : @Art.NFT {
             var newNFT <- create NFT(
             initID: Art.totalSupply,
@@ -107,6 +114,7 @@ pub contract Art: NonFungibleToken {
     }
 
  
+    //Standard NFT collectionPublic interface that can also borrowArt as the correct type
     pub resource interface CollectionPublic {
 
         pub fun deposit(token: @NonFungibleToken.NFT)
@@ -212,6 +220,7 @@ pub contract Art: NonFungibleToken {
 
          
 
+    //TODO consider putting this behind a minter.
     pub fun createArtWithContent(name: String, artist:String, artistAddress:String, description: String, url: String, type: String) : @Art.NFT {
          var newNFT <- create NFT(
             initID: Art.totalSupply,
@@ -256,7 +265,7 @@ pub contract Art: NonFungibleToken {
         return nil
     }
 
-    // We cannot return the art here since it will be too big to run in a script
+    // We cannot return the content here since it will be too big to run in a script
     pub fun getArt(address:Address) : [ArtData] {
 
         var artData: [ArtData] = []
