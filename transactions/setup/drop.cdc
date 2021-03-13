@@ -24,11 +24,13 @@ transaction(
     let artistWallet: Capability<&{FungibleToken.Receiver}>
     let versus: &Versus.DropCollection
     let contentCapability: Capability<&Content.Collection>
+    let artAdmin:&Art.Administrator
 
     prepare(account: AuthAccount) {
 
         self.versus= account.borrow<&Versus.DropCollection>(from: Versus.CollectionStoragePath)!
         self.contentCapability=account.getCapability<&Content.Collection>(Content.CollectionPrivatePath)
+        self.artAdmin=account.borrow<&Art.Administrator>(from: Art.AdministratorStoragePath)!
 
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
     }
@@ -39,7 +41,7 @@ transaction(
         let contentId= contentItem.id
         self.contentCapability.borrow()!.deposit(token: <- contentItem)
 
-        let art <- Art.createArtWithPointer(
+        let art <- self.artAdmin.createArtWithPointer(
             name: artName,
             artist:artistName,
             artistAddress : artist.toString(),
@@ -55,7 +57,8 @@ transaction(
            minimumBidIncrement: minimumBidIncrement,
            startTime: startTime,
            startPrice: startPrice,
-           vaultCap: self.artistWallet
+           vaultCap: self.artistWallet,
+           artAdmin: self.artAdmin
        )
     }
 }

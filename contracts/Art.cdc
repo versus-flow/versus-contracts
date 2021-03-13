@@ -7,6 +7,10 @@ pub contract Art: NonFungibleToken {
 
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
+    pub let MinterStoragePath: StoragePath
+    pub let MinterPrivatePath: PrivatePath
+    pub let AdministratorPublicPath: PublicPath
+    pub let AdministratorStoragePath:StoragePath
 
     pub var totalSupply: UInt64
 
@@ -14,6 +18,7 @@ pub contract Art: NonFungibleToken {
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
     pub event Created(id: UInt64, metadata: Metadata)
+    pub event Editioned(id: UInt64, from: UInt64, edition: UInt64, maxEdition: UInt64)
 
     //The public interface can show metadata and the content for the Art piece
     pub resource interface Public {
@@ -85,31 +90,6 @@ pub contract Art: NonFungibleToken {
             let contentCollection= self.contentCapability!.borrow()!
             //not sure banging it here will work but we can try
             return contentCollection.content(self.contentId!)!
-        }
-
-        //make a new NFT that is an editioned piece of this NFT, 
-        //note that this method is not returned in the public interface
-        //only the owner can edition this NFT
-        pub fun makeEdition(edition: UInt64, maxEdition:UInt64) : @Art.NFT {
-            var newNFT <- create NFT(
-            initID: Art.totalSupply,
-            metadata: Metadata(
-                name: self.metadata.name,
-                artist:self.metadata.artist,
-                artistAddress:self.metadata.artistAddress,
-                description:self.metadata.description,
-                type:self.metadata.type,
-                edition: edition,
-                maxEdition:maxEdition
-            ),
-            contentCapability: self.contentCapability,
-            contentId:self.contentId,
-            url:self.url,
-            )
-            emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
-
-            Art.totalSupply = Art.totalSupply + UInt64(1)
-            return <- newNFT
         }
     }
 
@@ -183,6 +163,7 @@ pub contract Art: NonFungibleToken {
             }
         }
 
+         
         destroy() {
             destroy self.ownedNFTs
         }
@@ -193,57 +174,7 @@ pub contract Art: NonFungibleToken {
         return <- create Collection()
     }
 
-
-    //TODO: consider putting this behind a minter resource that only some can use
-    pub fun createArtWithPointer(name: String, artist: String, artistAddress:String, description: String, type: String, contentCapability:Capability<&Content.Collection>, contentId: UInt64) : @Art.NFT{
-        
-        var newNFT <- create NFT(
-            initID: Art.totalSupply,
-            metadata: Metadata(
-              name: name, 
-              artist: artist,
-              artistAddress: artistAddress, 
-              description:description,
-              type:type,
-              edition:1,
-              maxEdition:1
-            ),
-            contentCapability:contentCapability, 
-            contentId:contentId,
-            url:nil,
-        )
-        emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
-
-        Art.totalSupply = Art.totalSupply + UInt64(1)
-        return <- newNFT
-    }
-
-         
-
-    //TODO consider putting this behind a minter.
-    pub fun createArtWithContent(name: String, artist:String, artistAddress:String, description: String, url: String, type: String) : @Art.NFT {
-         var newNFT <- create NFT(
-            initID: Art.totalSupply,
-            metadata: Metadata(
-              name: name, 
-              artist: artist,
-              artistAddress: artistAddress, 
-              description:description,
-              type:type,
-              edition:1,
-              maxEdition:1
-            ),
-            contentCapability:nil,
-            contentId:nil,
-            url:url, 
-        )
-        emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
-
-        Art.totalSupply = Art.totalSupply + UInt64(1)
-        return <- newNFT
-
-
-    }
+ 
 
     pub struct ArtData {
         pub let metadata: Art.Metadata
@@ -282,11 +213,177 @@ pub contract Art: NonFungibleToken {
         return artData
     } 
 
+    pub resource Minter {
+        pub fun createArtWithContent(name: String, artist:String, artistAddress:String, description: String, url: String, type: String) : @Art.NFT {
+            var newNFT <- create NFT(
+                initID: Art.totalSupply,
+                metadata: Metadata(
+                name: name, 
+                artist: artist,
+                artistAddress: artistAddress, 
+                description:description,
+                type:type,
+                edition:1,
+                maxEdition:1
+                ),
+                contentCapability:nil,
+                contentId:nil,
+                url:url, 
+            )
+            emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
+
+            Art.totalSupply = Art.totalSupply + UInt64(1)
+            return <- newNFT
+
+
+        }
+
+
+        pub fun createArtWithPointer(name: String, artist: String, artistAddress:String, description: String, type: String, contentCapability:Capability<&Content.Collection>, contentId: UInt64) : @Art.NFT{
+            
+            var newNFT <- create NFT(
+                initID: Art.totalSupply,
+                metadata: Metadata(
+                name: name, 
+                artist: artist,
+                artistAddress: artistAddress, 
+                description:description,
+                type:type,
+                edition:1,
+                maxEdition:1
+                ),
+                contentCapability:contentCapability, 
+                contentId:contentId,
+                url:nil,
+            )
+            emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
+
+            Art.totalSupply = Art.totalSupply + UInt64(1)
+            return <- newNFT
+        }
+
+        pub fun makeEdition(original: &NFT, edition: UInt64, maxEdition:UInt64) : @Art.NFT {
+            var newNFT <- create NFT(
+            initID: Art.totalSupply,
+            metadata: Metadata(
+                name: original.metadata.name,
+                artist:original.metadata.artist,
+                artistAddress:original.metadata.artistAddress,
+                description:original.metadata.description,
+                type:original.metadata.type,
+                edition: edition,
+                maxEdition:maxEdition
+            ),
+            contentCapability: original.contentCapability,
+            contentId:original.contentId,
+            url:original.url,
+            )
+            //TODO: Editioned event
+            emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
+            emit Editioned(id: Art.totalSupply, from: original.id, edition:edition, maxEdition:maxEdition)
+
+            Art.totalSupply = Art.totalSupply + UInt64(1)
+            return <- newNFT
+        }
+ 
+         
+    }
+
+     //The interface used to add a Administrator capability to a client
+    pub resource interface AdministratorClient {
+        pub fun addCapability(_ cap: Capability<&Minter>)
+    }
+
+    //The versus admin resource that a client will create and store, then link up a public VersusAdminClient
+    pub resource Administrator: AdministratorClient {
+
+        access(self) var server: Capability<&Minter>?
+
+        init() {
+            self.server = nil
+        }
+
+         pub fun addCapability(_ cap: Capability<&Minter>) {
+            pre {
+                cap.check() : "Invalid server capablity"
+                self.server == nil : "Server already set"
+            }
+            self.server = cap
+        }
+
+        pub fun createArtWithContent(
+            name: String, 
+            artist:String, 
+            artistAddress:String, 
+            description: String, 
+            url: String, 
+            type: String) : @Art.NFT {
+
+            pre {
+                self.server != nil: 
+                    "Cannot create art if server is not set"
+            }
+            return <- self.server!.borrow()!.createArtWithContent(
+                name: name, 
+                artist: artist, 
+                artistAddress: artistAddress, 
+                description: description,
+                url: url, 
+                type: type)
+           
+
+        }
+        pub fun createArtWithPointer(
+            name: String, 
+            artist: String, 
+            artistAddress:String, 
+            description: String, 
+            type: String, 
+            contentCapability:Capability<&Content.Collection>, 
+            contentId: UInt64) : @Art.NFT{
+
+            pre {
+                self.server != nil: 
+                    "Cannot create art if server is not set"
+            }
+            return <- self.server!.borrow()!.createArtWithPointer(
+                name: name, 
+                artist: artist, 
+                artistAddress: artistAddress, 
+                description: description,
+                type: type,
+                contentCapability:contentCapability, 
+                contentId:contentId
+            )
+        }
+
+        pub fun makeEdition(original: &NFT, edition: UInt64, maxEdition:UInt64) : @Art.NFT {
+            pre {
+                self.server != nil: 
+                    "Cannot create art if server is not set"
+            }
+            return <- self.server!.borrow()!.makeEdition(original: original, edition:edition, maxEdition:maxEdition)
+        }
+    }
+
+    //make it possible for a user that wants to be a versus admin to create the client
+    pub fun createAdminClient(): @Administrator {
+        return <- create Administrator()
+    }
+    
+
 	init() {
         // Initialize the total supply
         self.totalSupply = 0
         self.CollectionPublicPath=/public/VersusArtCollection
         self.CollectionStoragePath=/storage/VersusArtCollection
+        self.AdministratorPublicPath= /public/artAdminClient
+        self.AdministratorStoragePath=/storage/artAdminClient
+        self.MinterStoragePath=/storage/artAdmin
+        self.MinterPrivatePath=/private/artAdmin
+
+        self.account.save(<- create Minter(), to: self.MinterStoragePath)
+        self.account.link<&Minter>(self.MinterPrivatePath, target: self.MinterStoragePath)
 
         emit ContractInitialized()
 	}

@@ -19,6 +19,10 @@ transaction() {
         account.save<@NonFungibleToken.Collection>(<- Art.createEmptyCollection(), to: Art.CollectionStoragePath)
         account.link<&{Art.CollectionPublic}>(Art.CollectionPublicPath, target: Art.CollectionStoragePath)
 
+        //create an Art admin client
+        account.save(<- Art.createAdminClient(), to:Art.AdministratorStoragePath)
+        account.link<&{Art.AdministratorClient}>(Art.AdministratorPublicPath, target: Art.AdministratorStoragePath)
+
         //create empty content collection
         account.save(<- Content.createEmptyCollection(), to: Content.CollectionStoragePath)
         account.link<&Content.Collection>(Content.CollectionPrivatePath, target: Content.CollectionStoragePath)
@@ -26,6 +30,7 @@ transaction() {
         //create versus admin client
         account.save(<- Versus.createAdminClient(), to:Versus.VersusAdminClientStoragePath)
         account.link<&{Versus.VersusAdminClient}>(Versus.VersusAdminClientPublicPath, target: Versus.VersusAdminClientStoragePath)
+
 
     }
 }

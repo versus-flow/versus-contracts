@@ -22,6 +22,13 @@ transaction(ownerAddress: Address) {
 
         let versusAdminCap=account.getCapability<&Versus.Administrator>(Versus.VersusAdministratorPrivatePath)
         client.addCapability(versusAdminCap)
+
+
+        let artClient=owner.getCapability<&{Art.AdministratorClient}>(Art.AdministratorPublicPath)
+            .borrow() ?? panic("Could not borrow art admin client")
+        let minter=account.getCapability<&Art.Minter>(Art.MinterPrivatePath)
+        artClient.addCapability(minter)
+
     }
 }
  

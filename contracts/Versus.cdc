@@ -369,7 +369,8 @@ pub contract Versus {
              minimumBidIncrement: UFix64, //TODO seperate minimumBidForUnique an edition
              startTime: UFix64, 
              startPrice: UFix64,  //TODO: seperate startPrice for unique and edition
-             vaultCap: Capability<&{FungibleToken.Receiver}>) {
+             vaultCap: Capability<&{FungibleToken.Receiver}>, 
+             artAdmin: &Art.Administrator) {
 
             pre {
                 vaultCap.check() == true : "Vault capability should exist"
@@ -388,7 +389,7 @@ pub contract Versus {
                 //A nice enhancement here would be that the art created is done through a minter so it is not art specific.
                 //It could even be a Cloner capability or maybe a editionMinter? 
                 editionedAuctions.createAuction(
-                    token: <- art.makeEdition(edition: currentEdition, maxEdition: editions),
+                    token: <- artAdmin.makeEdition(original: &art as &Art.NFT, edition: currentEdition, maxEdition: editions),
                     minimumBidIncrement: minimumBidIncrement, 
                     auctionLength: self.dropLength,
                     auctionStartTime:startTime,
