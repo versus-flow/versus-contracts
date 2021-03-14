@@ -1,5 +1,6 @@
 
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
+import FungibleToken from "./standard/FungibleToken.cdc"
 import Content from "./Content.cdc"
 
 //A NFT contract to store art
@@ -55,6 +56,15 @@ pub contract Art: NonFungibleToken {
 
     }
 
+     pub struct Royalty{
+        pub let wallet:Capability<&{FungibleToken.Receiver}> 
+        pub let cut: UFix64
+
+        init(wallet:Capability<&{FungibleToken.Receiver}>, cut: UFix64 ){
+           self.wallet=wallet
+           self.cut=cut
+        }
+    }
 
     pub resource NFT: NonFungibleToken.INFT, Public {
         pub let id: UInt64
@@ -64,21 +74,23 @@ pub contract Art: NonFungibleToken {
         pub let contentCapability:Capability<&Content.Collection>?
         pub let contentId: UInt64?
         pub let url: String?
-
         pub let metadata: Metadata
+        pub let royalty: {String: Royalty}
 
         init(
             initID: UInt64, 
             metadata: Metadata,
             contentCapability:Capability<&Content.Collection>?, 
             contentId: UInt64?, 
-            url: String?) {
+            url: String?,
+            royalty:{String: Royalty}) {
 
             self.id = initID
             self.metadata=metadata
             self.contentCapability=contentCapability
             self.contentId=contentId
             self.url=url
+            self.royalty=royalty
         }
 
         //return the content for this NFT
@@ -214,21 +226,29 @@ pub contract Art: NonFungibleToken {
     } 
 
     pub resource Minter {
-        pub fun createArtWithContent(name: String, artist:String, artistAddress:String, description: String, url: String, type: String) : @Art.NFT {
+        pub fun createArtWithContent(
+            name: String, 
+            artist:String, 
+            artistAddress:String,
+            description: String, 
+            url: String, 
+            type: String,
+            royalty: {String: Royalty}) : @Art.NFT {
             var newNFT <- create NFT(
                 initID: Art.totalSupply,
                 metadata: Metadata(
-                name: name, 
-                artist: artist,
-                artistAddress: artistAddress, 
-                description:description,
-                type:type,
-                edition:1,
-                maxEdition:1
+                    name: name, 
+                    artist: artist,
+                    artistAddress: artistAddress, 
+                    description:description,
+                    type:type,
+                    edition:1,
+                    maxEdition:1
                 ),
                 contentCapability:nil,
                 contentId:nil,
                 url:url, 
+                royalty:royalty
             )
             emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
 
@@ -239,22 +259,31 @@ pub contract Art: NonFungibleToken {
         }
 
 
-        pub fun createArtWithPointer(name: String, artist: String, artistAddress:String, description: String, type: String, contentCapability:Capability<&Content.Collection>, contentId: UInt64) : @Art.NFT{
+        pub fun createArtWithPointer(
+            name: String, 
+            artist: String, 
+            artistAddress:String, 
+            description: String, 
+            type: String, 
+            contentCapability:Capability<&Content.Collection>, 
+            contentId: UInt64,
+            royalty: {String: Royalty}) : @Art.NFT{
             
             var newNFT <- create NFT(
                 initID: Art.totalSupply,
                 metadata: Metadata(
-                name: name, 
-                artist: artist,
-                artistAddress: artistAddress, 
-                description:description,
-                type:type,
-                edition:1,
-                maxEdition:1
+                    name: name, 
+                    artist: artist,
+                    artistAddress: artistAddress, 
+                    description:description,
+                    type:type,
+                    edition:1,
+                    maxEdition:1
                 ),
                 contentCapability:contentCapability, 
                 contentId:contentId,
                 url:nil,
+                royalty:royalty
             )
             emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
 
@@ -277,8 +306,8 @@ pub contract Art: NonFungibleToken {
             contentCapability: original.contentCapability,
             contentId:original.contentId,
             url:original.url,
+            royalty:original.royalty
             )
-            //TODO: Editioned event
             emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
             emit Editioned(id: Art.totalSupply, from: original.id, edition:edition, maxEdition:maxEdition)
 
@@ -294,6 +323,7 @@ pub contract Art: NonFungibleToken {
         pub fun addCapability(_ cap: Capability<&Minter>)
     }
 
+   
     //The versus admin resource that a client will create and store, then link up a public VersusAdminClient
     pub resource Administrator: AdministratorClient {
 
@@ -317,7 +347,8 @@ pub contract Art: NonFungibleToken {
             artistAddress:String, 
             description: String, 
             url: String, 
-            type: String) : @Art.NFT {
+            type: String,
+            royalty: {String: Royalty}) : @Art.NFT {
 
             pre {
                 self.server != nil: 
@@ -329,7 +360,8 @@ pub contract Art: NonFungibleToken {
                 artistAddress: artistAddress, 
                 description: description,
                 url: url, 
-                type: type)
+                type: type,
+                royalty:royalty)
            
 
         }
@@ -340,7 +372,8 @@ pub contract Art: NonFungibleToken {
             description: String, 
             type: String, 
             contentCapability:Capability<&Content.Collection>, 
-            contentId: UInt64) : @Art.NFT{
+            contentId: UInt64,
+            royalty: {String: Royalty}) : @Art.NFT{
 
             pre {
                 self.server != nil: 
@@ -353,7 +386,8 @@ pub contract Art: NonFungibleToken {
                 description: description,
                 type: type,
                 contentCapability:contentCapability, 
-                contentId:contentId
+                contentId:contentId,
+                royalty:royalty
             )
         }
 

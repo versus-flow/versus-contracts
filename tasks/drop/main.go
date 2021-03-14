@@ -49,7 +49,7 @@ func main() {
 	flow.TransactionFromFile("setup/drop_testnet").
 		SignProposeAndPayAs("versus").
 		AccountArgument("artist").             //marketplace location
-		UFix64Argument("10.01").               //start price
+		UFix64Argument("1.00").               //start price
 		UFix64Argument(timeString).            //start time
 		StringArgument("Kinger9999").          //artist name
 		StringArgument("CryptoBull" + number). //name of art

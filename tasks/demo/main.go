@@ -84,7 +84,7 @@ func main() {
 	flow.TransactionFromFile("setup/drop").
 		SignProposeAndPayAs("marketplace").
 		AccountArgument("artist").                                                                      //marketplace location
-		UFix64Argument("10.01").                                                                        //start price
+		UFix64Argument("10.00").                                                                        //start price
 		UFix64Argument(timeString).                                                                     //start time
 		StringArgument("Vincent Kamp").                                                                 //artist name
 		StringArgument("when?").                                                                        //name of art
@@ -92,6 +92,7 @@ func main() {
 		StringArgument("Here's a lockdown painting I did of a super cool guy and pal, @jburrowsactor"). //description
 		Argument(cadence.NewUInt64(10)).                                                                //number of editions to use for the editioned auction
 		UFix64Argument("5.0").                                                                          //min bid increment
+		UFix64Argument("10.0").                                                                         //min bid increment unique
 		RunPrintEventsFull()
 
 	fmt.Println("Get active auctions")
@@ -110,7 +111,7 @@ func main() {
 		AccountArgument("marketplace").
 		Argument(cadence.UInt64(1)).  //id of drop
 		Argument(cadence.UInt64(11)). //id of unique auction auction to bid on
-		UFix64Argument("10.01").      //amount to bid
+		UFix64Argument("10.00").      //amount to bid
 		RunPrintEventsFull()
 
 	fmt.Println()

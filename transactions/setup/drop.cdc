@@ -18,7 +18,9 @@ transaction(
     url: String, 
     description: String, 
     editions: UInt64,
-    minimumBidIncrement: UFix64) {
+    minimumBidIncrement: UFix64, 
+    minimumBidUniqueIncrement:UFix64
+    ) {
 
 
     let artistWallet: Capability<&{FungibleToken.Receiver}>
@@ -41,6 +43,10 @@ transaction(
         let contentId= contentItem.id
         self.contentCapability.borrow()!.deposit(token: <- contentItem)
 
+        
+        let royalty = {
+            "artist" : Art.Royalty(wallet: self.artistWallet, cut: 0.01)
+        }
         let art <- self.artAdmin.createArtWithPointer(
             name: artName,
             artist:artistName,
@@ -49,12 +55,14 @@ transaction(
             type: "png",
             contentCapability: self.contentCapability,
             contentId: contentId,
+            royalty: royalty
         )
 
        self.versus.createDrop(
            nft:  <- art,
            editions: editions,
            minimumBidIncrement: minimumBidIncrement,
+           minimumBidUniqueIncrement: minimumBidUniqueIncrement,
            startTime: startTime,
            startPrice: startPrice,
            vaultCap: self.artistWallet,

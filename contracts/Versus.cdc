@@ -366,7 +366,8 @@ pub contract Versus {
         pub fun createDrop(
              nft: @NonFungibleToken.NFT,
              editions: UInt64,
-             minimumBidIncrement: UFix64, //TODO seperate minimumBidForUnique an edition
+             minimumBidIncrement: UFix64, 
+             minimumBidUniqueIncrement: UFix64,
              startTime: UFix64, 
              startPrice: UFix64,  //TODO: seperate startPrice for unique and edition
              vaultCap: Capability<&{FungibleToken.Receiver}>, 
@@ -386,8 +387,6 @@ pub contract Versus {
 
             var currentEdition=(1 as UInt64)
             while currentEdition <= editions {
-                //A nice enhancement here would be that the art created is done through a minter so it is not art specific.
-                //It could even be a Cloner capability or maybe a editionMinter? 
                 editionedAuctions.createAuction(
                     token: <- artAdmin.makeEdition(original: &art as &Art.NFT, edition: currentEdition, maxEdition: editions),
                     minimumBidIncrement: minimumBidIncrement, 
@@ -402,7 +401,7 @@ pub contract Versus {
             //copy the metadata of the previous art since that is used to mint the copies
             let item <- Auction.createStandaloneAuction(
                 token: <- art,
-                minimumBidIncrement: minimumBidIncrement,
+                minimumBidIncrement: minimumBidUniqueIncrement,
                 auctionLength: self.dropLength,
                 auctionStartTime: startTime,
                 startPrice: startPrice,
