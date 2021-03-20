@@ -366,9 +366,9 @@ pub contract Auction {
     pub resource AuctionCollection: AuctionPublic {
 
         // Auction Items
-        pub var auctionItems: @{UInt64: AuctionItem}
-        pub var cutPercentage:UFix64 
-        pub let marketplaceVault: Capability<&{FungibleToken.Receiver}>
+        access(contract) var auctionItems: @{UInt64: AuctionItem}
+        access(contract) var cutPercentage:UFix64 
+        access(contract) let marketplaceVault: Capability<&{FungibleToken.Receiver}>
 
         init(
             marketplaceVault: Capability<&{FungibleToken.Receiver}>, 
