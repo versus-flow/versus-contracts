@@ -317,8 +317,11 @@ pub contract Auction {
         }
 
         destroy() {
+            log("destroy auction")
             // send the NFT back to auction owner
-            self.sendNFT(self.ownerCollectionCap)
+            if self.NFT != nil {
+                self.sendNFT(self.ownerCollectionCap)
+            }
             
             // if there's a bidder...
             if let vaultCap = self.recipientVaultCap {
@@ -496,6 +499,7 @@ pub contract Auction {
         }
 
         destroy() {
+            log("destroy auction collection")
             // destroy the empty resources
             destroy self.auctionItems
         }

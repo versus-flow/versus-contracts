@@ -139,4 +139,5 @@ func main() {
 	flow.ScriptFromFile("check_account").AccountArgument("artist").Run()
 	flow.ScriptFromFile("check_account").AccountArgument("marketplace").Run()
 
+	flow.TransactionFromFile("setup/destroy_versus").SignProposeAndPayAs("marketplace").Argument(cadence.NewUInt64(1)).RunPrintEventsFull()
 }

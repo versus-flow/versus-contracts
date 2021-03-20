@@ -79,6 +79,7 @@ pub contract Versus {
         }
             
         destroy(){
+            log("Destroy versus")
             destroy self.uniqueAuction
             destroy self.editionAuctions
         }
