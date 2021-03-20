@@ -8,7 +8,7 @@ import Auction from "./Auction.cdc"
 
  The main contract in the Versus auction system.
 
- A versions auction constsint of a single auction and a group of auctions and either of them will be fulfilled while the other will be cancelled
+ A versions auction contains a single auction and a group of auctions and either of them will be fulfilled while the other will be cancelled
  Currently this is modeled as 1 vs x, but It could easily be modeled as x vs y  so you could have 5 editions vs 10 editions if you want to
 
  The auctions themselves are not implemented in this contract but rather in the Auction contract. The goal here is to be able to
@@ -143,11 +143,11 @@ pub contract Versus {
             var price=0.0
             if winning == "UNIQUE" {
                 self.uniqueAuction.settleAuction(cutPercentage: cutPercentage, cutVault: vault)
-                self.editionAuctions.cancelAllAuctions()
+                self.cancelAllEditionedAuctions()
                 price=status.uniquePrice
             } else if winning == "EDITIONED" {
                 self.uniqueAuction.returnAuctionItemToOwner()
-                self.editionAuctions.settleAllAuctions()
+                self.settleAllEditionedAuctions()
                 price=status.editionPrice
             } else {
                 panic("tie")
@@ -158,6 +158,19 @@ pub contract Versus {
             emit Settle(name: status.metadata.name, artist: status.metadata.artist, winner: winning, price: price )
         }
 
+
+        pub fun settleAllEditionedAuctions() {
+           for id in self.editionAuctions.keys() {
+               self.editionAuctions.settleAuction(id)
+           } 
+        }
+
+        pub fun cancelAllEditionedAuctions() {
+           for id in self.editionAuctions.keys() {
+               self.editionAuctions.cancelAuction(id)
+           } 
+        }
+        
         //place a bid on a given auction
         pub fun placeBid(
             auctionId:UInt64,
@@ -179,7 +192,6 @@ pub contract Versus {
                 panic("The drop has not started")
             }
 
-            //TODO: Not sure if this is the correct way of doing this
             if dropStatus.endTime < time && dropStatus.winning != "TIE" {
                 panic("This drop has ended")
             }
@@ -328,7 +340,22 @@ pub contract Versus {
 
     }
 
-    pub resource DropCollection: PublicDrop {
+    pub resource interface AdminDrop {
+
+        pub fun createDrop(
+             nft: @NonFungibleToken.NFT,
+             editions: UInt64,
+             minimumBidIncrement: UFix64, 
+             minimumBidUniqueIncrement: UFix64,
+             startTime: UFix64, 
+             startPrice: UFix64,  //TODO: seperate startPrice for unique and edition
+             vaultCap: Capability<&{FungibleToken.Receiver}>, 
+             artAdmin: &Art.Administrator)
+
+        pub fun settle(_ dropId: UInt64)
+    }
+
+    pub resource DropCollection: PublicDrop, AdminDrop {
 
         pub var drops: @{UInt64: Drop}
 

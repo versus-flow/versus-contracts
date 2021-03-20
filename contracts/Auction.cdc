@@ -9,7 +9,7 @@ import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 //This contract was made during OWB so the code here is some of the first cadence code we (0xAlchemist and 0xBjartek wrote)
 pub contract Auction {
 
-    // This struct aggreates status for the auction and is expoded in order to create websites using auction information
+    // This struct aggreates status for the auction and is exposed in order to create websites using auction information
     pub struct AuctionStatus{
         pub let id: UInt64
         pub let price : UFix64
@@ -95,7 +95,7 @@ pub contract Auction {
         //the time the acution should start at
         priv var auctionStartTime: UFix64
 
-        //The length in seconsd for this auction
+        //The length in seconds for this auction
         priv var auctionLength: UFix64
 
         //Right now the dropitem is not moved from the collection when it ends, it is just marked here that it has ended 
@@ -105,7 +105,7 @@ pub contract Auction {
         priv var startPrice: UFix64
         priv var currentPrice: UFix64
 
-        //the capability that points to the resource wher  you want the NFT transfered to if you win this bid. 
+        //the capability that points to the resource where you want the NFT transfered to if you win this bid. 
         priv var recipientCollectionCap: Capability<&{Art.CollectionPublic}>?
 
         //the capablity to send the escrow bidVault to if you are outbid
@@ -180,18 +180,13 @@ pub contract Auction {
         //This method should probably use preconditions more 
         pub fun settleAuction(cutPercentage: UFix64, cutVault:Capability<&{FungibleToken.Receiver}> )  {
 
-            if self.auctionCompleted {
-                panic("The auction is already settled")
-            }
-            if self.NFT == nil {
-                panic("NFT in auction does not exist")
+
+            pre {
+                !self.auctionCompleted : "The auction is already settled"
+                self.NFT != nil: "NFT in auction does not exist"
+                self.isAuctionExpired() : "Auction has not completed yet"
             }
 
-            // check if the auction has expired
-            if self.isAuctionExpired() == false {
-                panic("Auction has not completed yet")
-            }
-                
             // return if there are no bids to settle
             if self.currentPrice == 0.0{
                 self.returnAuctionItemToOwner()
@@ -257,14 +252,12 @@ pub contract Auction {
         // This method should probably use preconditions more
         pub fun placeBid(bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{Art.CollectionPublic}>) {
 
-            if self.auctionCompleted {
-                panic("auction has already completed")
+            pre {
+                !self.auctionCompleted : "The auction is already settled"
+                self.NFT != nil: "NFT in auction does not exist"
+                bidTokens.balance >= self.minNextBid() : "bid amount must be larger or equal to the current price + minimum bid increment"
             }
-
-            if bidTokens.balance < self.minNextBid() {
-                panic("bid amount be larger or equal to the current price + minimum bid increment")
-            }
-            
+           
             if self.bidVault.balance != 0.0 {
                 if let vaultCap = self.recipientVaultCap {
                     self.sendBidTokens(self.recipientVaultCap!)
@@ -389,6 +382,11 @@ pub contract Auction {
             }
             
         }
+
+        pub fun keys() : [UInt64] {
+            return self.auctionItems.keys
+        }
+
         // addTokenToauctionItems adds an NFT to the auction items and sets the meta data
         // for the auction item
         pub fun createAuction(
@@ -459,19 +457,6 @@ pub contract Auction {
 
         }
 
-        pub fun settleAllAuctions() {
-           for id in self.auctionItems.keys {
-               self.settleAuction(id)
-           } 
-            
-        }
-
-        pub fun cancelAllAuctions() {
-            for id in self.auctionItems.keys {
-                self.cancelAuction(id)
-            }
-        }
-        
         pub fun cancelAuction(_ id: UInt64) {
             pre {
                 self.auctionItems[id] != nil:
