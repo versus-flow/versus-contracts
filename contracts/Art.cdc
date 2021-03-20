@@ -31,7 +31,7 @@ pub contract Art: NonFungibleToken {
     pub struct Metadata {
         pub let name: String
         pub let artist: String
-        pub let artistAddress:String
+        pub let artistAddress:Address
         pub let description: String
         pub let type: String
         pub let edition: UInt64
@@ -40,7 +40,7 @@ pub contract Art: NonFungibleToken {
 
         init(name: String, 
             artist: String,
-            artistAddress:String, 
+            artistAddress:Address, 
             description: String, 
             type: String, 
             edition: UInt64,
@@ -229,7 +229,7 @@ pub contract Art: NonFungibleToken {
         pub fun createArtWithContent(
             name: String, 
             artist:String, 
-            artistAddress:String,
+            artistAddress:Address,
             description: String, 
             url: String, 
             type: String,
@@ -262,7 +262,7 @@ pub contract Art: NonFungibleToken {
         pub fun createArtWithPointer(
             name: String, 
             artist: String, 
-            artistAddress:String, 
+            artistAddress:Address, 
             description: String, 
             type: String, 
             contentCapability:Capability<&Content.Collection>, 
@@ -344,7 +344,7 @@ pub contract Art: NonFungibleToken {
         pub fun createArtWithContent(
             name: String, 
             artist:String, 
-            artistAddress:String, 
+            artistAddress:Address, 
             description: String, 
             url: String, 
             type: String,
@@ -368,7 +368,7 @@ pub contract Art: NonFungibleToken {
         pub fun createArtWithPointer(
             name: String, 
             artist: String, 
-            artistAddress:String, 
+            artistAddress:Address, 
             description: String, 
             type: String, 
             contentCapability:Capability<&Content.Collection>, 

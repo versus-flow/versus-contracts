@@ -36,7 +36,7 @@ transaction(
 
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
     }
-
+    
     execute {
 
         var contentItem  <- Content.createContent(url)
@@ -50,7 +50,7 @@ transaction(
         let art <- self.artAdmin.createArtWithPointer(
             name: artName,
             artist:artistName,
-            artistAddress : artist.toString(),
+            artistAddress : artist,
             description: description,
             type: "png",
             contentCapability: self.contentCapability,
@@ -58,7 +58,7 @@ transaction(
             royalty: royalty
         )
 
-       self.versus.createDrop(
+        self.versus.createDrop(
            nft:  <- art,
            editions: editions,
            minimumBidIncrement: minimumBidIncrement,

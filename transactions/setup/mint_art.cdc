@@ -38,7 +38,7 @@ transaction(
         let art <- Art.createArtWithPointer(
             name: artName,
             artist:artistName,
-            artistAddress : artist.toString(),
+            artistAddress : artist,
             description: description,
             type: "png",
             contentCapability: self.contentCapability,
