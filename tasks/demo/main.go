@@ -41,7 +41,7 @@ func main() {
 	//GWTF has no future anymore?
 	//flow := gwtf.NewGoWithTheFlow("./versus-flow.json")
 	flow := gwtf.NewGoWithTheFlowEmulator()
-	fmt.Scanln()
+	//fmt.Scanln()
 	fmt.Println("Demo of Versus@Flow")
 	//flow.CreateAccountWithContracts("accounts", "NonFungibleToken", "Content", "Art", "Auction", "Versus")
 

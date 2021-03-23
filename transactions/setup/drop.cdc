@@ -15,6 +15,7 @@ transaction(
     startTime: UFix64,
     artistName: String, 
     artName: String, 
+    //TODO: change to content
     url: String, 
     description: String, 
     editions: UInt64,
