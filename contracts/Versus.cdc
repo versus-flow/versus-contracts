@@ -32,23 +32,21 @@ pub contract Versus {
     //All the events that start with a T are more technical in nature while the other events are there to be distributed to Discord or similar social media
 
     //emitted when a drop is extended
-    pub event TDropExtended(id: UInt64, extendWith: Fix64, extendTo: Fix64)
-    pub event DropExtended(name: String, artist: String)
+    pub event DropExtended(name: String, artist: String, dropId: UInt64, extendWith: Fix64, extendTo: Fix64)
 
     //emitted when a bid is made
-    pub event TBid(dropId: UInt64, auctionId: UInt64, bidderAddress: Address, bidPrice: UFix64, time: Fix64, blockHeight:UInt64)
-    pub event Bid(name: String, artist: String, edition:String, bidder: Address, price: UFix64)
+    pub event Bid(name: String, artist: String, edition:String, bidder: Address, price: UFix64, dropId: UInt64, auctionId:UInt64)
 
     //emitted when a drop is created
-    pub event TDropCreated(id: UInt64, owner: Address, editions: UInt64)
-    pub event DropCreated(name: String, artist: String, editions: UInt64)
+    pub event DropCreated(name: String, artist: String, editions: UInt64, owner:Address, dropId: UInt64)
+
+    pub event DropDestroyed(dropId:UInt64)
 
     //emitted when a drop is settled, that is it ends and either the uniqe or the edition side wins
-    pub event TSettle(id: UInt64, winner: String, price:UFix64)
-    pub event Settle(name: String, artist: String, winner: String, price:UFix64)
+    pub event Settle(name: String, artist: String, winner: String, price:UFix64, dropId: UInt64)
 
     //emitted when the winning side in the auction changes 
-    pub event LeaderChanged(name: String, artist: String, winning: String)
+    pub event LeaderChanged(name: String, artist: String, winning: String, dropId:UInt64)
 
    //A Drop in versus represents a single auction vs an editioned auction
     pub resource Drop {
@@ -82,6 +80,7 @@ pub contract Versus {
             log("Destroy versus")
             destroy self.uniqueAuction
             destroy self.editionAuctions
+            emit DropDestroyed(dropId: self.dropID)
         }
 
 
@@ -154,8 +153,7 @@ pub contract Versus {
             }
 
             self.settledAt=getCurrentBlock().height
-            emit TSettle(id: self.dropID, winner: winning, price: price )
-            emit Settle(name: status.metadata.name, artist: status.metadata.artist, winner: winning, price: price )
+            emit Settle(name: status.metadata.name, artist: status.metadata.artist, winner: winning, price: price, dropId: self.dropID )
         }
 
 
@@ -206,8 +204,7 @@ pub contract Versus {
             //We need to extend the auction since there is too little time left. If we did not do this a late user could potentially win with a cheecky bid
             if dropStatus.endTime < bidEndTime {
                 let extendWith=bidEndTime - dropStatus.endTime
-                emit TDropExtended(id: self.dropID, extendWith: extendWith, extendTo: bidEndTime)
-                emit DropExtended(name: dropStatus.metadata.name, artist: dropStatus.metadata.artist)
+                emit DropExtended(name: dropStatus.metadata.name, artist: dropStatus.metadata.artist, dropId:self.dropID, extendWith: extendWith, extendTo: bidEndTime)
                 self.extendDropWith(UFix64(extendWith))
             }
 
@@ -228,13 +225,11 @@ pub contract Versus {
                 editionsRef.placeBid(id: auctionId, bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
             }
             
-
-            emit TBid(dropId: self.dropID, auctionId: auctionId, bidderAddress: bidder , bidPrice: bidPrice, time: time, blockHeight: block.height)
-            emit Bid(name: dropStatus.metadata.name, artist:dropStatus.metadata.artist, edition: edition, bidder:bidder, price:bidPrice)
+            emit Bid(name: dropStatus.metadata.name, artist:dropStatus.metadata.artist, edition: edition, bidder:bidder, price:bidPrice, dropId:self.dropID, auctionId:auctionId)
 
             let dropStatusAfter = self.getDropStatus()
             if dropStatus.winning != dropStatusAfter.winning {
-                emit LeaderChanged(name:dropStatus.metadata.name, artist: dropStatus.metadata.artist, winning:dropStatusAfter.winning)
+                emit LeaderChanged(name:dropStatus.metadata.name, artist: dropStatus.metadata.artist, winning:dropStatusAfter.winning, dropId: self.dropID)
             }
         }
 
@@ -438,8 +433,7 @@ pub contract Versus {
             )
             
             let drop  <- create Drop(uniqueAuction: <- item, editionAuctions:  <- editionedAuctions)
-            emit TDropCreated(id: drop.dropID, owner: vaultCap.borrow()!.owner!.address, editions: editions)
-            emit DropCreated(name: metadata.name, artist: metadata.artist,  editions: editions)
+            emit DropCreated(name: metadata.name, artist: metadata.artist,  editions: editions, owner: vaultCap.borrow()!.owner!.address, dropId: drop.dropID)
 
             let oldDrop <- self.drops[drop.dropID] <- drop
             destroy oldDrop

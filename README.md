@@ -30,6 +30,10 @@ Start two terminals. Both from the root directory.
 
 ## Deploy to testnet
 
-create a file flow-dev.json
-put your service account into the service field. account created with faucet
+ 1. `flow keys generate`
+ 2. `flow accounts create --host access.devnet.nodes.onflow.org:9000 --results --config-path ~/.flow-dev.json --key <pk from step 1>`
+ 3. edit flow-testnet.json add an testnet-account with pk from step 1 and account from step 4
+ 4. transfer flow to account
+ 5. flow project deploy -f ~/.flow-testnet.json
+
 
