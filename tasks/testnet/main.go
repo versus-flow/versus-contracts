@@ -17,7 +17,7 @@ func main() {
 
 	//link in the server in the versus client
 	flow.TransactionFromFile("setup/versus2_testnet").
-		SignProposeAndPayAsService().
+		SignProposeAndPayAs("testnet-account").
 		AccountArgument("versus").
 		RunPrintEventsFull()
 
