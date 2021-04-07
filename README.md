@@ -36,4 +36,6 @@ Start two terminals. Both from the root directory.
  4. transfer flow to account
  5. flow project deploy -f ~/.flow-testnet.json
 
+ Repeat step 1-4 for the versus account that is going to hold the marketplace
+
 

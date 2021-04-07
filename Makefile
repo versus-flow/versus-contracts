@@ -32,3 +32,7 @@ settle:
 drop:
 	go run ./tasks/drop/main.go
 
+#set up the marketplace on testnet
+.PHONY: testnet
+testnet:
+	go run ./tasks/testnet/main.go
