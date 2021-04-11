@@ -1,0 +1,53 @@
+package main
+
+import (
+	"bufio"
+	"encoding/base64"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+
+	"github.com/bjartek/go-with-the-flow/gwtf"
+)
+
+func fileAsImageData(path string) string {
+	f, _ := os.Open("./" + path)
+
+	defer f.Close()
+
+	// Read entire JPG into byte slice.
+	reader := bufio.NewReader(f)
+	content, _ := ioutil.ReadAll(reader)
+
+	contentType := http.DetectContentType(content)
+
+	// Encode as base64.
+	encoded := base64.StdEncoding.EncodeToString(content)
+
+	return "data:" + contentType + ";base64, " + encoded
+}
+
+//NB! start from root dir with makefile
+func main() {
+
+	//GWTF has no future anymore?
+	//flow := gwtf.NewGoWithTheFlow("./versus-flow.json")
+	flow := gwtf.NewGoWithTheFlowEmulator()
+	//fmt.Scanln()
+	fmt.Println("Demo of Versus@Flow")
+	//flow.CreateAccountWithContracts("accounts", "NonFungibleToken", "Content", "Art", "Auction", "Versus")
+
+	flow.CreateAccount("marketplace", "artist", "buyer1", "buyer2")
+	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().AccountArgument("artist").UFix64Argument("100.0").RunPrintEventsFull()
+
+	image := fileAsImageData("bull.png")
+	flow.TransactionFromFile("setup/setup_marketplace_with_art").
+		SignProposeAndPayAs("artist").
+		StringArgument("Vincent Kamp").                                                                 //artist name
+		StringArgument("when?").                                                                        //name of art
+		StringArgument(image).                                                                          //imaage
+		StringArgument("Here's a lockdown painting I did of a super cool guy and pal, @jburrowsactor"). //description
+		UFix64Argument("10.00").                                                                        //start price
+		RunPrintEventsFull()
+}

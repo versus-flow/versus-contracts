@@ -34,7 +34,6 @@ transaction(
         self.versus= account.borrow<&Versus.DropCollection>(from: Versus.CollectionStoragePath)!
         self.contentCapability=account.getCapability<&Content.Collection>(Content.CollectionPrivatePath)
         self.artAdmin=account.borrow<&Art.Administrator>(from: Art.AdministratorStoragePath)!
-
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
     }
     

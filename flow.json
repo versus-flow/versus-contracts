@@ -24,7 +24,8 @@
 		"Content": "./contracts/Content.cdc",
 		"Art": "./contracts/Art.cdc",
 		"Auction": "./contracts/Auction.cdc",
-		"Versus": "./contracts/Versus.cdc"
+		"Versus": "./contracts/Versus.cdc",
+		"Marketplace": "./contracts/Marketplace.cdc"
 	},
 	"deployments": {
 		"emulator": {
@@ -33,7 +34,8 @@
 				"Content",
 				"Art", 
 				"Auction", 
-				"Versus"
+				"Versus",
+				"Marketplace"
 			]
 		}
 	},
@@ -46,7 +48,7 @@
 	"accounts": {
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
-			"keys": "bf9db4706c2fdb9011ee7e170ccac492f05427b96ab41d8bf2d8c58443704b76",
+			"keys": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8",
 			"chain": "flow-emulator"
 		}
 	},
