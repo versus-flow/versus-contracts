@@ -8,7 +8,7 @@ demo: deploy
 #this goal deployes all the contracts to emulator
 .PHONY: deploy
 deploy:
-	flow project deploy 
+	flow project deploy  -n emulator
 
 
 #this goal mints new flow tokens on emulator takes an account(Addres) env and can take an amount(int:100) env

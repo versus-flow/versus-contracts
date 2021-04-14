@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/onflow/cadence"
 )
 
@@ -117,6 +118,8 @@ func main() {
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Go to website to bid there")
+	value := flow.ScriptFromFile("drop_status").AccountArgument("marketplace").UInt64Argument(1).RunReturns()
+	spew.Dump(value)
 	fmt.Scanln()
 	fmt.Println("Tick the clock to make the auction end and settle it")
 	time.Sleep(1 * time.Second)
