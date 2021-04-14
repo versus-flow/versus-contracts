@@ -39,7 +39,7 @@ transaction(
     }
 
     execute {
-        let art <- self.artCollection.withdraw(id: artId) as @Art.NFT
+        let art <- self.artCollection.withdraw(withdrawID: artId) as! @Art.NFT
         self.marketplace.listForSale(token: <- art, price: price)
     }
 }

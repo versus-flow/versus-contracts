@@ -5,6 +5,10 @@ all: demo
 demo: deploy
 	go run ./tasks/demo/main.go
 
+.PHONY: marketplace
+marketplace: deploy
+	go run ./tasks/marketplace/main.go
+
 #this goal deployes all the contracts to emulator
 .PHONY: deploy
 deploy:

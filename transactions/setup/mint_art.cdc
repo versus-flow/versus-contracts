@@ -10,7 +10,7 @@ import FungibleToken from 0xee82856bf20e2aa6
 import NonFungibleToken, Content, Art, Auction, Versus from 0xf8d6e0586b0a20c7
 //This transaction will setup a drop in a versus auction
 transaction(
-    artist: Address, 
+    artist: Address,
     artistName: String, 
     artName: String, 
     url: String, 
