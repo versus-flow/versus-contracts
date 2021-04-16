@@ -16,7 +16,7 @@ transaction(
     artistName: String, 
     artName: String, 
     //TODO: change to content
-    url: String, 
+    content: String, 
     description: String, 
     editions: UInt64,
     minimumBidIncrement: UFix64, 
@@ -25,6 +25,7 @@ transaction(
 
 
     let artistWallet: Capability<&{FungibleToken.Receiver}>
+    let versusWallet: Capability<&{FungibleToken.Receiver}>
     let versus: &Versus.DropCollection
     let contentCapability: Capability<&Content.Collection>
     let artAdmin:&Art.Administrator
@@ -34,18 +35,20 @@ transaction(
         self.versus= account.borrow<&Versus.DropCollection>(from: Versus.CollectionStoragePath)!
         self.contentCapability=account.getCapability<&Content.Collection>(Content.CollectionPrivatePath)
         self.artAdmin=account.borrow<&Art.Administrator>(from: Art.AdministratorStoragePath)!
+        self.versusWallet=  account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
     }
     
     execute {
 
-        var contentItem  <- Content.createContent(url)
+        var contentItem  <- Content.createContent(content)
         let contentId= contentItem.id
         self.contentCapability.borrow()!.deposit(token: <- contentItem)
 
         
         let royalty = {
-            "artist" : Art.Royalty(wallet: self.artistWallet, cut: 0.01)
+            "artist" : Art.Royalty(wallet: self.artistWallet, cut: 0.05), 
+            "minter" : Art.Royalty(wallet: self.versusWallet, cut: 0.025)
         }
         let art <- self.artAdmin.createArtWithPointer(
             name: artName,

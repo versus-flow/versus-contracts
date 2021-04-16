@@ -57,6 +57,7 @@ func main() {
 		StringArgument("An Angry bull").
 		Argument(cadence.NewUInt64(10)). //number of editions to use for the editioned auction
 		UFix64Argument("5.0").           //min bid increment
+		UFix64Argument("10.0").           //min bid increment unique
 		RunPrintEventsFull()
 
 }
