@@ -35,6 +35,9 @@ transaction(
         self.artAdmin=account.borrow<&Art.Administrator>(from: Art.AdministratorStoragePath)!
         self.versusWallet=  account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+        if !self.artistWallet.check() {
+            panic(artist.toString())
+        }
     }
     
     execute {
