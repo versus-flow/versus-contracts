@@ -23,7 +23,7 @@ func main() {
 	}
 
 	flow.TransactionFromFile("setup/transfer_flow").
-		SignProposeAndPayAs("testnet-account").
+		SignProposeAndPayAsService().
 		UFix64Argument(amount).
 		RawAccountArgument(account).
 		RunPrintEventsFull()
