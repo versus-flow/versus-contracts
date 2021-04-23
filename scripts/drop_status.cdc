@@ -2,7 +2,7 @@
 //
 
 //emulator
-import NonFungibleToken, Content, Art, Auction, Versus from 0xf8d6e0586b0a20c7
+import Versus from 0xe193e719ae2b5853
 
 //testnet
 //import Auction, Versus from 0x1ff7e32d71183db0
@@ -10,10 +10,7 @@ import NonFungibleToken, Content, Art, Auction, Versus from 0xf8d6e0586b0a20c7
 /*
   Script used to get the first active drop in a versus 
  */
-pub fun main(marketplaceAddress:Address, dropID: UInt64) : Versus.DropStatus {
+pub fun main(dropID: UInt64) : Versus.DropStatus {
 
-    let account = getAccount(marketplaceAddress)
-    let versusCap=account.getCapability<&{Versus.PublicDrop}>(Versus.CollectionPublicPath)!
-    let versus= versusCap.borrow()!
-    return versus.getStatus(dropId: dropID)
+    return Versus.getDrop(dropID)!
 }

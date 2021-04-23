@@ -2,11 +2,10 @@
 import FungibleToken from "./standard/FungibleToken.cdc"
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 import Art from "./Art.cdc"
-import Auction from "./Auction.cdc"
 import Content from "./Content.cdc"
+import Auction from "./Auction.cdc"
 
 /*
-
  The main contract in the Versus auction system.
 
  A versions auction contains a single auction and a group of auctions and either of them will be fulfilled while the other will be cancelled
@@ -19,18 +18,15 @@ import Content from "./Content.cdc"
 pub contract Versus {
 
     //A set of capability and storage paths used in this contract
-    pub let VersusAdministratorPrivatePath: PrivatePath
-    pub let VersusAdministratorStoragePath: StoragePath
-    pub let VersusAdminClientPublicPath: PublicPath
-    pub let VersusAdminClientStoragePath: StoragePath
+    pub let VersusAdminPublicPath: PublicPath
+    pub let VersusAdminStoragePath: StoragePath
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
+    pub let CollectionPrivatePath: PrivatePath
 
 
     //counter for drops that is incremented every time there is a new versus drop made
     pub var totalDrops: UInt64
-
-    //All the events that start with a T are more technical in nature while the other events are there to be distributed to Discord or similar social media
 
     //emitted when a drop is extended
     pub event DropExtended(name: String, artist: String, dropId: UInt64, extendWith: Fix64, extendTo: Fix64)
@@ -53,7 +49,6 @@ pub contract Versus {
     pub resource Drop {
 
 
-        pub let metadata: Art.Metadata
 
         access(contract) let uniqueAuction: @Auction.AuctionItem
         access(contract) let editionAuctions: @Auction.AuctionCollection
@@ -64,6 +59,12 @@ pub contract Versus {
         access(contract) var settledAt: UInt64?
 
         access(contract) var extensionOnLateBid: UFix64
+
+
+        //Store metadata here would allow us to show this after the drop has ended. The NFTS are gone then but the  metadta remains here
+        pub let metadata: Art.Metadata
+
+        //these two together are a pointer to the content in the Drop. Storing them here means we can show the art after the drop has ended
         access(contract) var contentId: UInt64
         access(contract) var contentCapability: Capability<&Content.Collection>
 
@@ -132,7 +133,7 @@ pub contract Versus {
             let block=getCurrentBlock()
             let time=Fix64(block.timestamp)
 
-            var started = uniqueStatus.startTime < time 
+            var started = uniqueStatus.startTime < time
             var active=true
             if !started {
                 active=false
@@ -141,7 +142,6 @@ pub contract Versus {
             } else if uniqueStatus.expired && winningStatus != "TIE" {
                 active=false
             }
-            
             return DropStatus(
                 dropId: self.dropID,
                 uniqueStatus: uniqueStatus,
@@ -153,14 +153,14 @@ pub contract Versus {
                 metadata: self.metadata,
                 settledAt: self.settledAt,
                 active: active,
-                artId: uniqueStatus.artId
+                startPrice: uniqueRef.startPrice
             )
         }
 
         pub fun settle(cutPercentage:UFix64, vault: Capability<&{FungibleToken.Receiver}> ) {
             let status=self.getDropStatus()
 
-            if status.settled {
+            if status.settledAt != nil {
                 panic("Drop has already been settled")
             }
 
@@ -313,10 +313,9 @@ pub contract Versus {
         pub let timeRemaining: Fix64
         pub let firstBidBlock:UInt64?
         pub let metadata: Art.Metadata
-        pub let settled: Bool
         pub let expired: Bool
         pub let settledAt: UInt64?
-        pub let artId: UInt64?
+        pub let startPrice: UFix64
 
         init(
             dropId: UInt64,
@@ -328,8 +327,8 @@ pub contract Versus {
             difference:UFix64,
             metadata: Art.Metadata,
             settledAt: UInt64?
-            active: Bool,
-            artId: UInt64?
+            active: Bool
+            startPrice: UFix64
             ) {
                 self.dropId=dropId
                 self.uniqueStatus=DropAuctionStatus(uniqueStatus)
@@ -339,15 +338,14 @@ pub contract Versus {
                 self.endTime=uniqueStatus.endTime
                 self.startTime=uniqueStatus.startTime
                 self.timeRemaining=uniqueStatus.timeRemaining
-                self.active=active
+                self.active= active
                 self.winning=status
                 self.firstBidBlock=firstBidBlock
                 self.difference=difference
                 self.metadata=metadata
-                self.settled=uniqueStatus.completed
                 self.expired=uniqueStatus.expired
                 self.settledAt=settledAt
-                self.artId=artId
+                self.startPrice =startPrice
             }
     }
 
@@ -378,9 +376,8 @@ pub contract Versus {
              minimumBidUniqueIncrement: UFix64,
              startTime: UFix64, 
              startPrice: UFix64,  //TODO: seperate startPrice for unique and edition
-             vaultCap: Capability<&{FungibleToken.Receiver}>, 
-             artAdmin: &Art.Administrator,
-             duration: UFix64, 
+             vaultCap: Capability<&{FungibleToken.Receiver}>,
+             duration: UFix64,
              extensionOnLateBid:UFix64)
 
         pub fun settle(_ dropId: UInt64)
@@ -401,14 +398,13 @@ pub contract Versus {
         init(
             marketplaceVault: Capability<&{FungibleToken.Receiver}>, 
             marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>,
-            cutPercentage: UFix64,
+            cutPercentage: UFix64
         ) {
             self.marketplaceNFTTrash=marketplaceNFTTrash
             self.cutPercentage= cutPercentage
             self.marketplaceVault = marketplaceVault
             self.drops <- {}
         }
-
 
         // When creating a drop you send in an NFT and the number of editions you want to sell vs the unique one
         // There will then be minted edition number of extra copies and put into the editions auction
@@ -418,11 +414,10 @@ pub contract Versus {
              minimumBidIncrement: UFix64, 
              minimumBidUniqueIncrement: UFix64,
              startTime: UFix64, 
-             startPrice: UFix64,  //TODO: seperate startPrice for unique and edition
-             vaultCap: Capability<&{FungibleToken.Receiver}>, 
-             artAdmin: &Art.Administrator, 
-             duration: UFix64, 
-             extensionOnLateBid:UFix64) {
+             startPrice: UFix64,  
+             vaultCap: Capability<&{FungibleToken.Receiver}>,
+             duration: UFix64,
+             extensionOnLateBid: UFix64) {
 
             pre {
                 vaultCap.check() == true : "Vault capability should exist"
@@ -442,7 +437,7 @@ pub contract Versus {
             var currentEdition=(1 as UInt64)
             while currentEdition <= editions {
                 editionedAuctions.createAuction(
-                    token: <- artAdmin.makeEdition(original: &art as &Art.NFT, edition: currentEdition, maxEdition: editions),
+                    token: <- Art.makeEdition(original: &art as &Art.NFT, edition: currentEdition, maxEdition: editions),
                     minimumBidIncrement: minimumBidIncrement, 
                     auctionLength: duration,
                     auctionStartTime:startTime,
@@ -531,23 +526,40 @@ pub contract Versus {
         }
     }
 
-    pub fun getArtForDrop(address:Address, dropId: UInt64) : String? {
-        let account = getAccount(address)
-
-        let versusCap=account.getCapability<&{Versus.PublicDrop}>(self.CollectionPublicPath)
+    // Get the art stored on chain for this drop
+    pub fun getArtForDrop(_ dropId: UInt64) : String? {
+        let versusCap=Versus.account.getCapability<&{Versus.PublicDrop}>(self.CollectionPublicPath)
         if let versus = versusCap.borrow()  {
             return versus.getArt(dropId: dropId)
         }
         return nil
     }
 
-    /*
-     Get an active drop in the versus marketplace with the given address
+ /*
+     Get an active drop in the versus marketplace 
      
      */
-    pub fun getActiveDrop(address:Address) : Versus.DropStatus?{
+    pub fun getDrops() : [Versus.DropStatus]{
+        let account = Versus.account
+        let versusCap=account.getCapability<&{Versus.PublicDrop}>(self.CollectionPublicPath)!
+        return versusCap.borrow()!.getAllStatuses().values
+     }
+
+    pub fun getDrop(_ id: UInt64) : Versus.DropStatus? {
+      let account = Versus.account
+      let versusCap=account.getCapability<&{Versus.PublicDrop}>(Versus.CollectionPublicPath)
+      if let versus = versusCap.borrow() {
+          return versus.getStatus(dropId: id)
+      }
+      return nil
+    }
+
+    /*
+     Get the first active drop in the versus marketplace
+     */
+    pub fun getActiveDrop() : Versus.DropStatus?{
         // get the accounts' public address objects
-        let account = getAccount(address)
+        let account = Versus.account
 
         let versusCap=account.getCapability<&{Versus.PublicDrop}>(self.CollectionPublicPath)
         if let versus = versusCap.borrow() {
@@ -562,38 +574,23 @@ pub contract Versus {
         return nil
     }
 
- 
-    //An Administrator resource that is stored as a private capability. That capability will be given to another account using a capability receiver
-    pub resource Administrator {
-        pub fun createVersusDropCollection(
-            marketplaceVault: Capability<&{FungibleToken.Receiver}>,
-            marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>,
-            cutPercentage: UFix64): @DropCollection {
-            let collection <- create DropCollection(
-                marketplaceVault: marketplaceVault, 
-                marketplaceNFTTrash: marketplaceNFTTrash,
-                cutPercentage: cutPercentage
-            )
-            return <- collection
-        }
+
+
+    //The interface used to add a Versus Drop Collection capability to a AdminPublic
+    pub resource interface AdminPublic {
+        pub fun addCapability(_ cap: Capability<&Versus.DropCollection>)
     }
 
+    //The versus admin resource that a client will create and store, then link up a public AdminPublic
+    pub resource Admin: AdminPublic {
 
-    //The interface used to add a Administrator capability to a client
-    pub resource interface VersusAdminClient {
-        pub fun addCapability(_ cap: Capability<&Administrator>)
-    }
-
-    //The versus admin resource that a client will create and store, then link up a public VersusAdminClient
-    pub resource VersusAdmin: VersusAdminClient {
-
-        access(self) var server: Capability<&Administrator>?
+        access(self) var server: Capability<&Versus.DropCollection>?
 
         init() {
             self.server = nil
         }
 
-         pub fun addCapability(_ cap: Capability<&Administrator>) {
+         pub fun addCapability(_ cap: Capability<&Versus.DropCollection>) {
             pre {
                 cap.check() : "Invalid server capablity"
                 self.server == nil : "Server already set"
@@ -601,44 +598,147 @@ pub contract Versus {
             self.server = cap
         }
 
-        //make it possible to create a versus marketplace. Will just delegate to the administrator
-        pub fun createVersusMarketplace(
-            marketplaceVault: Capability<&{FungibleToken.Receiver}>,
-            marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>,
-            cutPercentage: UFix64) :@DropCollection {
+        // This will settle/end an auction
+        pub fun settle(_ dropId: UInt64) {
+           pre {
+             self.server != nil : "Your client has not been linked to the server"
+           }
+           self.server!.borrow()!.settle(dropId)
+
+          //since settling will return all items not sold to the NFTTrash, we take out the trash here.
+          let artC=Versus.account.borrow<&NonFungibleToken.Collection>(from: Art.CollectionStoragePath)!
+          for key in artC.ownedNFTs.keys{
+            log("burning art with key=".concat(key.toString()))
+            destroy <- artC.ownedNFTs.remove(key: key)
+          }
+        }
+
+        pub fun setVersusCut(_ num:UFix64) {
+           pre {
+              self.server != nil : "Your client has not been linked to the server"
+           }
+
+            let dc:&Versus.DropCollection=self.server!.borrow()!
+            dc.cutPercentage=num
+        }
+
+        pub fun createDrop(
+          nft: @NonFungibleToken.NFT,
+          editions: UInt64,
+          minimumBidIncrement: UFix64,
+          minimumBidUniqueIncrement: UFix64,
+          startTime: UFix64,
+          startPrice: UFix64,  //TODO: seperate startPrice for unique and edition
+          vaultCap: Capability<&{FungibleToken.Receiver}>
+          duration: UFix64,
+          extensionOnLateBid: UFix64)  {
+
+          pre {
+              self.server != nil : "Your client has not been linked to the server"
+          }
+
+          self.server!.borrow()!.createDrop(nft: <- nft,
+            editions:editions,
+            minimumBidIncrement:minimumBidIncrement,
+            minimumBidUniqueIncrement:minimumBidUniqueIncrement,
+            startTime:startTime,
+            startPrice:startPrice,
+            vaultCap:vaultCap,
+            duration: duration,
+            extensionOnLateBid: extensionOnLateBid
+          )
+        }
+        /*
+          A stored Transaction to mintArt on versus to a given artist
+         */
+        pub fun mintArt(artist: Address, artistName: String, artName: String, content:String, description: String) : @Art.NFT {
 
             pre {
-                self.server != nil: 
-                    "Cannot create versus marketplace if server is not set"
+                self.server != nil : "Your client has not been linked to the server"
             }
-            return <- self.server!.borrow()!.createVersusDropCollection(
-                marketplaceVault: marketplaceVault, 
-                marketplaceNFTTrash: marketplaceNFTTrash, 
-                cutPercentage: cutPercentage
-            )
+
+            let artistAccount = getAccount(artist)
+            var contentItem  <- Content.createContent(content)
+            let contentId= contentItem.id
+            let contentCapability=Versus.account.getCapability<&Content.Collection>(Content.CollectionPrivatePath)
+            contentCapability.borrow()!.deposit(token: <- contentItem)
+
+
+            let artistWallet= artistAccount.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+            let versusWallet=  Versus.account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+
+            let royalty = {
+                "artist" : Art.Royalty(wallet: artistWallet, cut: 0.05),
+                "minter" : Art.Royalty(wallet: versusWallet, cut: 0.025)
+            }
+            let art <- Art.createArtWithPointer(
+                name: artName,
+                artist:artistName,
+                artistAddress : artist,
+                description: description,
+                type: "png",
+                contentCapability: contentCapability,
+                contentId: contentId,
+                royalty: royalty)
+            return <- art
         }
+
+        pub fun getContent():&Content.Collection {
+          pre {
+            self.server != nil : "Your client has not been linked to the server"
+          }
+          return Versus.account.borrow<&Content.Collection>(from: Content.CollectionStoragePath)!
+        }
+
+        pub fun getFlowWallet():&FungibleToken.Vault {
+          pre {
+            self.server != nil : "Your client has not been linked to the server"
+          }
+          return Versus.account.borrow<&FungibleToken.Vault>(from: /storage/flowTokenVault)!
+        }
+
+        pub fun getArtCollection() : &NonFungibleToken.Collection {
+          pre {
+            self.server != nil : "Your client has not been linked to the server"
+          }
+          return Versus.account.borrow<&NonFungibleToken.Collection>(from: Art.CollectionStoragePath)!
+        }
+
     }
 
     //make it possible for a user that wants to be a versus admin to create the client
-    pub fun createAdminClient(): @VersusAdmin {
-        return <- create VersusAdmin()
+    pub fun createAdminClient(): @Admin {
+        return <- create Admin()
     }
     
 
 
     //initialize all the paths and create and link up the admin proxy
+    //init is only executed on initial deployment
     init() {
+
+        self.CollectionPublicPath= /public/versusCollection2
+        self.CollectionPrivatePath= /private/versusCollection2
+        self.CollectionStoragePath= /storage/versusCollection2
+        self.VersusAdminPublicPath= /public/versusAdmin2
+        self.VersusAdminStoragePath=/storage/versusAdmin2
+
         self.totalDrops = (0 as UInt64)
 
-        self.CollectionPublicPath= /public/versusCollection
-        self.CollectionStoragePath= /storage/versusCollection
-        self.VersusAdminClientPublicPath= /public/versusAdminClient
-        self.VersusAdminClientStoragePath=/storage/versusAdminClient
-        self.VersusAdministratorStoragePath=/storage/versusAdmin
-        self.VersusAdministratorPrivatePath=/private/versusAdmin
+        let account=self.account
 
-        self.account.save(<- create Administrator(), to: self.VersusAdministratorStoragePath)
-        self.account.link<&Administrator>(self.VersusAdministratorPrivatePath, target: self.VersusAdministratorStoragePath)
+        let marketplaceReceiver=account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+        let marketplaceNFTTrash: Capability<&{Art.CollectionPublic}> =account.getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath)
+
+        log("Setting up versus capability")
+        let collection <- create DropCollection(
+            marketplaceVault: marketplaceReceiver,
+            marketplaceNFTTrash: marketplaceNFTTrash,
+            cutPercentage: 0.15
+        )
+        account.save(<-collection, to: Versus.CollectionStoragePath)
+        account.link<&{Versus.PublicDrop}>(Versus.CollectionPublicPath, target: Versus.CollectionStoragePath)
+        account.link<&Versus.DropCollection>(Versus.CollectionPrivatePath, target: Versus.CollectionStoragePath)
     }
      
 }

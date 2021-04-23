@@ -29,14 +29,31 @@ transfer:
 #this goal settles and drop on testnet requires a drop(int) argument
 .PHONY: settle
 settle:
-	go run ./tasks/settle/main.go
+	go run ./tasks/settle_first/main.go
 
 #this goal creates and example drop on testnet, requires drop(string) env that will be used as NFT name suffix
 .PHONY: drop
 drop:
 	go run ./tasks/drop/main.go
 
+.PHONY: setup-testnet
+setup-testnet:
+	go run ./tasks/setup_testnet/main.go
+
 #set up the marketplace on testnet
 .PHONY: testnet
-testnet:
+testnet: 
 	go run ./tasks/testnet/main.go
+
+#this goal deployes all the contracts to emulator
+.PHONY: deploy-testnet
+deploy-testnet: setup-testnet
+	flow project deploy  -n testnet -f ~/.flow-dev.json
+
+.PHONY: get-drop
+get-drop:
+	go run ./tasks/get_drop/main.go
+
+.PHONY: art
+art:
+	go run ./tasks/mint_art/main.go

@@ -11,28 +11,15 @@ import NonFungibleToken, Content, Art, Auction, Versus from 0xf8d6e0586b0a20c7
 Transaction to settle/finish off an auction. Has to be signed by the owner of the versus marketplace
  */
 transaction(dropId: UInt64) {
-    // reference to the buyer's NFT collection where they
-    // will store the bought NFT
 
-    let versusRef: &Versus.DropCollection
-    let artRef:&NonFungibleToken.Collection
+    let client: &Versus.Admin
     prepare(account: AuthAccount) {
 
-        self.versusRef = account.borrow<&Versus.DropCollection>(from: Versus.CollectionStoragePath) ?? panic("Could not get versus storage")
-        self.artRef=account.borrow<&NonFungibleToken.Collection>(from: Art.CollectionStoragePath)!   
+        self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
     }
 
     execute {
-        self.versusRef.settle(dropId)
-
-
-        let art = self.versusRef.getArt(dropId: dropId)
-        log("Got art content length after settled ".concat(art.length.toString()))
-        for key in self.artRef.ownedNFTs.keys{
-          log("burning art with key=".concat(key.toString()))
-          destroy <- self.artRef.ownedNFTs.remove(key: key)
-        }
-          //should maybe consider to delete the trash here
+        self.client.settle(dropId)
     }
 }
  

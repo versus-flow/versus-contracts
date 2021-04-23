@@ -71,12 +71,12 @@ pub contract Content {
         }
     }
 
-    pub fun createEmptyCollection(): @Content.Collection {
+    access(account) fun createEmptyCollection(): @Content.Collection {
         return <- create Collection()
     }
 
 
-	pub fun createContent(_ content: String) : @Content.Blob {
+	access(account) fun createContent(_ content: String) : @Content.Blob {
 
         var newNFT <- create Blob(initID: Content.totalSupply, content:content)
         emit Created(id: Content.totalSupply)
@@ -88,8 +88,13 @@ pub contract Content {
 	init() {
         // Initialize the total supply
         self.totalSupply = 0
-        self.CollectionPrivatePath=/private/VersusContentCollection
-        self.CollectionStoragePath=/storage/VersusContentCollection
+        self.CollectionPrivatePath=/private/versusContentCollection2
+        self.CollectionStoragePath=/storage/versusContentCollection2
+
+        let account =self.account
+        account.save(<- Content.createEmptyCollection(), to: Content.CollectionStoragePath)
+        account.link<&Content.Collection>(Content.CollectionPrivatePath, target: Content.CollectionStoragePath)
+
         emit ContractInitialized()
 	}
 }

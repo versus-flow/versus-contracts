@@ -2,7 +2,7 @@
 //
 
 //emulator
-import NonFungibleToken, Content, Art, Auction, Versus from 0xf8d6e0586b0a20c7
+import Versus from 0xe193e719ae2b5853
 
 //testnet
 //import Versus from 0x6bb8a74d4db97b46
@@ -10,7 +10,7 @@ import NonFungibleToken, Content, Art, Auction, Versus from 0xf8d6e0586b0a20c7
 /*
   Script used to get the first active drop in a versus 
  */
-pub fun main(address:Address) : Versus.DropStatus?{
+pub fun main() : Versus.DropStatus?{
 
-    return Versus.getActiveDrop(address: address)
+    return Versus.getActiveDrop()
 }

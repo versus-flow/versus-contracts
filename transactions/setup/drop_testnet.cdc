@@ -3,7 +3,7 @@
 //testnet
 import FungibleToken from 0x9a0766d93b6608b7
 import NonFungibleToken from 0x631e88ae7f1d7c20
-import Content, Art, Auction, Versus from 0x6bb8a74d4db97b46
+import Content, Art, Auction, Versus from 0xe193e719ae2b5853
 
 
 //This transaction will setup a drop in a versus auction
@@ -12,8 +12,7 @@ transaction(
     startPrice: UFix64, 
     startTime: UFix64,
     artistName: String, 
-    artName: String, 
-    //TODO: change to content
+    artName: String,
     content: String, 
     description: String, 
     editions: UInt64,
@@ -24,47 +23,25 @@ transaction(
     ) {
 
 
+    let client: &Versus.Admin
     let artistWallet: Capability<&{FungibleToken.Receiver}>
-    let versusWallet: Capability<&{FungibleToken.Receiver}>
-    let versus: &Versus.DropCollection
-    let contentCapability: Capability<&Content.Collection>
-    let artAdmin:&Art.Administrator
 
     prepare(account: AuthAccount) {
 
-        self.versus= account.borrow<&Versus.DropCollection>(from: Versus.CollectionStoragePath)!
-        self.contentCapability=account.getCapability<&Content.Collection>(Content.CollectionPrivatePath)
-        self.artAdmin=account.borrow<&Art.Administrator>(from: Art.AdministratorStoragePath)!
-        self.versusWallet=  account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+        self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-        if !self.artistWallet.check() {
-            panic(artist.toString())
-        }
     }
     
     execute {
 
-        var contentItem  <- Content.createContent(content)
-        let contentId= contentItem.id
-        self.contentCapability.borrow()!.deposit(token: <- contentItem)
+        let art <-  self.client.mintArt(
+            artist: artist,
+            artistName: artistName,
+            artName: artName,
+            content:content,
+            description: description)
 
-        
-        let royalty = {
-            "artist" : Art.Royalty(wallet: self.artistWallet, cut: 0.05), 
-            "minter" : Art.Royalty(wallet: self.versusWallet, cut: 0.025)
-        }
-        let art <- self.artAdmin.createArtWithPointer(
-            name: artName,
-            artist:artistName,
-            artistAddress : artist,
-            description: description,
-            type: "png",
-            contentCapability: self.contentCapability,
-            contentId: contentId,
-            royalty: royalty
-        )
-
-        self.versus.createDrop(
+        self.client.createDrop(
            nft:  <- art,
            editions: editions,
            minimumBidIncrement: minimumBidIncrement,
@@ -72,7 +49,6 @@ transaction(
            startTime: startTime,
            startPrice: startPrice,
            vaultCap: self.artistWallet,
-           artAdmin: self.artAdmin,
            duration: duration,
            extensionOnLateBid: extensionOnLateBid 
        )

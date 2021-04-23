@@ -7,16 +7,16 @@ import (
 func main() {
 
 	// cronjob ready, read blockHeight from file
-	g := gwtf.NewGoWithTheFlow("/Users/bjartek/.flow-dev.json")
+	g := gwtf.NewGoWithTheFlow(".flow-dev.json")
 
 	//fetch the current block height
 	eb := g.SendEventsTo("beta").
-		TrackProgressIn("/Users/bjartek/.flow-dev.events").
-		Event("A.6bb8a74d4db97b46.Versus.Bid").
-		Event("A.6bb8a74d4db97b46.Versus.LeaderChanged").
-		Event("A.6bb8a74d4db97b46.Versus.Settle").
-		Event("A.6bb8a74d4db97b46.Versus.DropExtended").
-		Event("A.6bb8a74d4db97b46.Versus.DropCreated")
+		TrackProgressIn(".flow-dev.events").
+		Event("A.e193e719ae2b5853.Versus.Bid").
+		Event("A.e193e719ae2b5853.Versus.LeaderChanged").
+		Event("A.e193e719ae2b5853.Versus.Settle").
+		Event("A.e193e719ae2b5853.Versus.DropExtended").
+		Event("A.e193e719ae2b5853.Versus.DropCreated")
 
 	_, err := eb.Run()
 	if err != nil {

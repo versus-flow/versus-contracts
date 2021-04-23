@@ -105,7 +105,7 @@ pub contract Auction {
         priv var auctionCompleted: Bool
 
         // Auction State
-        priv var startPrice: UFix64
+        access(account) var startPrice: UFix64
         priv var currentPrice: UFix64
 
         //the capability that points to the resource where you want the NFT transfered to if you win this bid. 
@@ -167,7 +167,9 @@ pub contract Auction {
             // borrow a reference to the owner's NFT receiver
             if let vaultRef = capability.borrow() {
                 let bidVaultRef = &self.bidVault as &FungibleToken.Vault
-                vaultRef.deposit(from: <-bidVaultRef.withdraw(amount: bidVaultRef.balance))
+                if(bidVaultRef.balance > 0.0) {
+                    vaultRef.deposit(from: <-bidVaultRef.withdraw(amount: bidVaultRef.balance))
+                }
                 return
             }
             panic("Could not send tokens to non existant receiver")
@@ -336,8 +338,6 @@ pub contract Auction {
     // AuctionPublic is a resource interface that restricts users to
     // retreiving the auction price list and placing bids
     pub resource interface AuctionPublic {
-
-        pub fun extendAllAuctionsWith(_ amount: UFix64)
 
         //It could be argued that this method should not be here in the public contract. I guss it could be an interface of its own
         //That way when you create an auction you chose if this is a curated auction or an auction where everybody can put their pieces up for sale

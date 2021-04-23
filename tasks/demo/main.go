@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/onflow/cadence"
 )
 
@@ -52,11 +51,11 @@ func main() {
 	fmt.Println()
 	fmt.Println("MarketplaceCut: 15%, drop length: 5 ticks")
 	//fmt.Scanln()
-
+	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().RawAccountArgument("0xf8d6e0586b0a20c7").UFix64Argument("100.0").RunPrintEventsFull()
 	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().AccountArgument("artist").UFix64Argument("100.0").RunPrintEventsFull()
 	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().AccountArgument("marketplace").UFix64Argument("100.0").RunPrintEventsFull()
 
-	//create the versusAdminClientAndSomeOtherCollections
+	//create the AdminPublicAndSomeOtherCollections
 	flow.TransactionFromFile("setup/versus1").
 		SignProposeAndPayAs("marketplace").
 		RunPrintEventsFull()
@@ -65,12 +64,6 @@ func main() {
 	flow.TransactionFromFile("setup/versus2").
 		SignProposeAndPayAsService().
 		AccountArgument("marketplace").
-		RunPrintEventsFull()
-
-	//set up versus
-	flow.TransactionFromFile("setup/versus3").
-		SignProposeAndPayAs("marketplace").
-		UFix64Argument("0.15"). //cut percentage,
 		RunPrintEventsFull()
 
 	//fmt.Scanln()
@@ -95,10 +88,6 @@ func main() {
 		UFix64Argument("5.0").                                                                          //duration
 		RunPrintEventsFull()
 
-	fmt.Println("Get active auctions")
-	//fmt.Scanln()
-	flow.ScriptFromFile("get_active_auction").AccountArgument("marketplace").Run()
-
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Setup a buyer and make him bid on the unique auction")
@@ -108,19 +97,17 @@ func main() {
 
 	flow.TransactionFromFile("buy/bid").
 		SignProposeAndPayAs("buyer1").
-		AccountArgument("marketplace").
-		Argument(cadence.UInt64(1)).  //id of drop
-		Argument(cadence.UInt64(11)). //id of unique auction auction to bid on
-		UFix64Argument("10.00").      //amount to bid
+		RawAccountArgument("0xf8d6e0586b0a20c7"). //we use raw argument here because of a limitation on how go-with-the-flow is built
+		Argument(cadence.UInt64(1)).              //id of drop
+		Argument(cadence.UInt64(11)).             //id of unique auction auction to bid on
+		UFix64Argument("10.00").                  //amount to bid
 		RunPrintEventsFull()
 
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Go to website to bid there")
-	value := flow.ScriptFromFile("drop_status").AccountArgument("marketplace").UInt64Argument(1).RunReturns()
-	spew.Dump(value)
-	fmt.Scanln()
 	fmt.Println("Tick the clock to make the auction end and settle it")
+	fmt.Scanln()
 	time.Sleep(1 * time.Second)
 	flow.TransactionFromFile("tick").SignProposeAndPayAs("marketplace").Argument(cadence.UInt64(1)).Run()
 	time.Sleep(1 * time.Second)
@@ -141,5 +128,6 @@ func main() {
 	flow.ScriptFromFile("check_account").AccountArgument("artist").Run()
 	flow.ScriptFromFile("check_account").AccountArgument("marketplace").Run()
 
-	flow.TransactionFromFile("setup/destroy_versus").SignProposeAndPayAs("marketplace").Argument(cadence.NewUInt64(1)).RunPrintEventsFull()
+	flow.ScriptFromFile("drop_status_emulator").UInt64Argument(1).Run()
+	flow.TransactionFromFile("setup/destroy_versus").SignProposeAndPayAsService().Argument(cadence.NewUInt64(1)).RunPrintEventsFull()
 }
