@@ -254,21 +254,44 @@ pub contract Auction {
             self.auctionLength= self.auctionLength + amount
         }
 
+        pub fun bidder() : Address? {
+            if let vaultCap = self.recipientVaultCap {
+                return vaultCap.borrow()!.owner!.address
+            }
+            return nil
+        }
+
+        pub fun currentBidForUser(address:Address): UFix64 {
+             if(self.bidder() == address) {
+                return self.bidVault.balance
+            }
+            return 0.0
+        }
+
         // This method should probably use preconditions more
         pub fun placeBid(bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{Art.CollectionPublic}>) {
 
             pre {
                 !self.auctionCompleted : "The auction is already settled"
                 self.NFT != nil: "NFT in auction does not exist"
-                bidTokens.balance >= self.minNextBid() : "bid amount must be larger or equal to the current price + minimum bid increment"
             }
-           
-            if self.bidVault.balance != 0.0 {
+
+            let bidderAddress=vaultCap.borrow()!.owner!.address
+
+            let amountYouAreBidding= bidTokens.balance + self.currentBidForUser(address: bidderAddress)
+            let minNextBid=self.minNextBid()
+            if amountYouAreBidding < minNextBid {
+                panic("bid amount + (your current bid) must be larger or equal to the current price + minimum bid increment ".concat(amountYouAreBidding.toString()).concat(" < ").concat(minNextBid.toString()))
+             }
+
+            if self.bidder() != bidderAddress {
+              if self.bidVault.balance != 0.0 {
                 if let vaultCap = self.recipientVaultCap {
                     self.sendBidTokens(self.recipientVaultCap!)
                 } else {
                     panic("unable to get recipient Vault capability")
                 }
+              }
             }
 
             // Update the auction item
@@ -284,7 +307,6 @@ pub contract Auction {
             self.recipientCollectionCap = collectionCap
             self.numberOfBids=self.numberOfBids+(1 as UInt64)
 
-            let bidderAddress=vaultCap.borrow()!.owner!.address
 
             emit Bid(tokenID: self.auctionID, bidderAddress: bidderAddress, bidPrice: self.currentPrice)
         }
@@ -366,7 +388,7 @@ pub contract Auction {
     pub resource AuctionCollection: AuctionPublic {
 
         // Auction Items
-        access(contract) var auctionItems: @{UInt64: AuctionItem}
+        access(account) var auctionItems: @{UInt64: AuctionItem}
         access(contract) var cutPercentage:UFix64 
         access(contract) let marketplaceVault: Capability<&{FungibleToken.Receiver}>
 

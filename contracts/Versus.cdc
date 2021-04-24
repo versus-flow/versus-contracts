@@ -199,6 +199,26 @@ pub contract Versus {
            } 
         }
         
+         priv fun getAuction(auctionId:UInt64): &Auction.AuctionItem {
+            let dropStatus = self.getDropStatus()
+            if self.uniqueAuction.auctionID == auctionId {
+                return &self.uniqueAuction as &Auction.AuctionItem
+            } else {
+                let editionStatus=dropStatus.editionsStatuses[auctionId]!
+                return &self.editionAuctions.auctionItems[auctionId] as &Auction.AuctionItem
+            }
+         }
+
+         pub fun currentBidForUser(
+            auctionId: UInt64,
+            address:Address
+        ) : UFix64 {
+
+            let auction=self.getAuction(auctionId:auctionId)
+            return auction.currentBidForUser(address: address)
+           
+        }
+
         //place a bid on a given auction
         pub fun placeBid(
             auctionId:UInt64,
@@ -237,12 +257,12 @@ pub contract Versus {
                 self.extendDropWith(UFix64(extendWith))
             }
 
-            let bidPrice = bidTokens.balance
             let bidder=vaultCap.borrow()!.owner!.address
+            let currentBidForUser= self.currentBidForUser(auctionId: auctionId, address: bidder)
+            let bidPrice = bidTokens.balance + currentBidForUser
 
             var edition:String="1 of 1"
 
-            var price:UFix64=0.0
             //the bid is on a unique auction so we place the bid there
             if self.uniqueAuction.auctionID == auctionId {
                 let auctionRef = &self.uniqueAuction as &Auction.AuctionItem
@@ -352,6 +372,7 @@ pub contract Versus {
     //An resource interface that everybody can access through a public capability.
     pub resource interface PublicDrop {
 
+        pub fun currentBidForUser(dropId: UInt64, auctionId: UInt64, address:Address) : UFix64
         pub fun getAllStatuses(): {UInt64: DropStatus}
         pub fun getStatus(dropId: UInt64): DropStatus
 
@@ -504,6 +525,17 @@ pub contract Versus {
         pub fun settle(_ dropId: UInt64) {
             self.getDrop(dropId).settle(cutPercentage: self.cutPercentage, vault: self.marketplaceVault)
        }
+
+        pub fun currentBidForUser(
+            dropId: UInt64,
+            auctionId: UInt64,
+            address:Address
+        ) : UFix64 {
+            return  self.getDrop(dropId).currentBidForUser(
+                auctionId: auctionId, 
+                address:address
+            )
+        }
 
         //place a bid, will just delegate to the method in the drop collection
         pub fun placeBid(
