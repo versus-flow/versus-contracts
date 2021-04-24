@@ -110,7 +110,6 @@ pub contract Art: NonFungibleToken {
             }
 
             let contentCollection= self.contentCapability!.borrow()!
-            //not sure banging it here will work but we can try
             return contentCollection.content(self.contentId!)!
         }
     }
