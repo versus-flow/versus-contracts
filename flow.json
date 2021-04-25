@@ -60,10 +60,9 @@
 		}
 	},
 	"emulatorAccounts" : {
-		"accounts" : "01cf0e2f2f715450",
-		"marketplace" : "179b6b1cb6755e31",
-		"artist" : "f3fcd2c1a78f5eee",
-		"buyer1" : "e03daebed8ca0615",
-		"buyer2": "045a1763c93006ca"
+		"marketplace" : "01cf0e2f2f715450",
+		"artist" : "179b6b1cb6755e31",
+		"buyer1" : "f3fcd2c1a78f5eee",
+		"buyer2" : "e03daebed8ca0615"
 	}
 }
