@@ -30,6 +30,8 @@ pub contract Art: NonFungibleToken {
         pub fun content() : String?
 
         pub let royalty: {String: Royalty}
+        pub fun cacheKey() : String
+
     }
 
     pub struct Metadata {
@@ -101,6 +103,13 @@ pub contract Art: NonFungibleToken {
             self.schema=nil
             self.name = metadata.name
             self.description=metadata.description
+        }
+
+        pub fun cacheKey() : String {
+            if self.url != nil {
+                return self.url!
+            }
+            return self.contentId!.toString()
         }
 
         //return the content for this NFT
@@ -200,9 +209,11 @@ pub contract Art: NonFungibleToken {
     pub struct ArtData {
         pub let metadata: Art.Metadata
         pub let id: UInt64
-        init(metadata: Art.Metadata, id: UInt64) {
+        pub let cacheKey: String
+        init(metadata: Art.Metadata, id: UInt64, cacheKey: String) {
             self.metadata= metadata
             self.id=id
+            self.cacheKey=cacheKey
         }
     }
 
@@ -228,7 +239,8 @@ pub contract Art: NonFungibleToken {
                 var art=artCollection.borrowArt(id: id) 
                 artData.append(ArtData(
                     metadata: art!.metadata,
-                    id: id))
+                    id: id, 
+                    cacheKey: art!.cacheKey()))
             }
         }
         return artData
@@ -329,8 +341,8 @@ pub contract Art: NonFungibleToken {
 	init() {
         // Initialize the total supply
         self.totalSupply = 0
-        self.CollectionPublicPath=/public/versusArtCollection3
-        self.CollectionStoragePath=/storage/versusArtCollection3
+        self.CollectionPublicPath=/public/versusArtCollection
+        self.CollectionStoragePath=/storage/versusArtCollection
 
         self.account.save<@NonFungibleToken.Collection>(<- Art.createEmptyCollection(), to: Art.CollectionStoragePath)
         self.account.link<&{Art.CollectionPublic}>(Art.CollectionPublicPath, target: Art.CollectionStoragePath)
