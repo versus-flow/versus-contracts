@@ -3,12 +3,9 @@ package main
 import (
 	"bufio"
 	"encoding/base64"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
@@ -41,7 +38,7 @@ func main() {
 		SignProposeAndPayAs("admin").
 		RawAccountArgument("0xd21cfcf820f27c42").
 		UFix64Argument("1.00").          //start price
-		UFix64Argument(timeString).      //start time 
+		UFix64Argument(timeString).      //start time
 		StringArgument("ekaitza").       //artist name
 		StringArgument("Transcendence"). //name
 		StringArgument(image).           //image
