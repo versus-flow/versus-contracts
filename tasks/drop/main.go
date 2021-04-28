@@ -32,35 +32,25 @@ func fileAsImageData(path string) string {
 }
 
 func main() {
-	number, ok := os.LookupEnv("number")
-	if !ok {
-		fmt.Println("number is not present")
-		os.Exit(1)
-	}
-
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
-	now := time.Now() //.Add(time.Hour * 12)
-	t := now.Unix()
-	//t := time.Now().Unix()
-	timeString := strconv.FormatInt(t, 10) + ".0"
-
-	image := fileAsImageData("versus.png")
+	timeString := "1619704800.0"
+	image := fileAsImageData("ekaitza.png")
 
 	flow.TransactionFromFile("setup/drop_testnet").
 		SignProposeAndPayAs("admin").
-		AccountArgument("artist").             //artist address
-		UFix64Argument("1.00").                //start price
-		UFix64Argument(timeString).            //start time
-		StringArgument("Kinger9999").          //artist name
-		StringArgument("Versus" + number). //name of art
-		StringArgument(image).                 //imaage
-		StringArgument("Versus").
+		RawAccountArgument("0xd21cfcf820f27c42").
+		UFix64Argument("1.00").            //start price
+		UFix64Argument(timeString).        //start time
+		StringArgument("ekaitza").      //artist name
+		StringArgument("Transcendence").
+		StringArgument(image).             //imaage
+		StringArgument("We are complex individuals that have to often pull from our strengths and weaknesses in order to transcend. 3500x 3500 pixels, rendered at 350 ppi").
 		Argument(cadence.NewUInt64(10)). //number of editions to use for the editioned auction
 		UFix64Argument("2.0").           //min bid increment
 		UFix64Argument("4.0").           //min bid increment unique
-		UFix64Argument("21600.0").       //duration
-		UFix64Argument("300.0").         //extensionOnLateBid
+		UFix64Argument("86400.0").       //duration
+		UFix64Argument("600.0").         //extensionOnLateBid
 		RunPrintEventsFull()
 
 }
