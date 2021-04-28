@@ -42,7 +42,7 @@ setup-testnet:
 
 #set up the marketplace on testnet
 .PHONY: testnet
-testnet: deploy-testnet
+testnet: 
 	go run ./tasks/testnet/main.go
 
 #this goal deployes all the contracts to emulator
