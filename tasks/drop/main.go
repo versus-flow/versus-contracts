@@ -32,7 +32,7 @@ func main() {
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
 	timeString := "1619704800.0"
-	image := fileAsImageData("ekaitza.png")
+	image := fileAsImageData("ekaitza.jpg")
 
 	flow.TransactionFromFile("setup/drop_testnet").
 		SignProposeAndPayAs("admin").
