@@ -6,7 +6,7 @@ import (
 
 func main() {
 
-	flow := gwtf.NewGoWithTheFlowDevNet()
+	flow := gwtf.NewGoWithTheFlow(".flow-prod.json")
 
 	flow.TransactionFromFile("buy/settle_first").SignProposeAndPayAs("admin").RunPrintEventsFull()
 

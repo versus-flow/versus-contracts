@@ -40,17 +40,17 @@ func main() {
 	flow.TransactionFromFile("setup/drop_testnet").
 		SignProposeAndPayAs("admin").
 		RawAccountArgument("0xd21cfcf820f27c42").
-		UFix64Argument("1.00").            //start price
-		UFix64Argument(timeString).        //start time
-		StringArgument("ekaitza").      //artist name
-		StringArgument("Transcendence").
-		StringArgument(image).             //imaage
+		UFix64Argument("1.00").          //start price
+		UFix64Argument(timeString).      //start time 
+		StringArgument("ekaitza").       //artist name
+		StringArgument("Transcendence"). //name
+		StringArgument(image).           //image
 		StringArgument("We are complex individuals that have to often pull from our strengths and weaknesses in order to transcend. 3500x 3500 pixels, rendered at 350 ppi").
-		Argument(cadence.NewUInt64(10)). //number of editions to use for the editioned auction
+		Argument(cadence.NewUInt64(15)). //number of editions to use for the editioned auction
 		UFix64Argument("2.0").           //min bid increment
 		UFix64Argument("4.0").           //min bid increment unique
-		UFix64Argument("86400.0").       //duration
-		UFix64Argument("600.0").         //extensionOnLateBid
+		UFix64Argument("86400.0").       //duration 60 * 60 * 24 1 day
+		UFix64Argument("600.0").         //extensionOnLateBid 10 * 60 10 min
 		RunPrintEventsFull()
 
 }
