@@ -53,7 +53,7 @@ func main() {
 
 	parts := splitByWidthMake(image, 1_000_000)
 	for _, part := range parts {
-		flow.TransactionFromFile("setup/upload").SignProposeAndPayAs("marketplace").StringArgument(part).RunPrintEventsFull()
+		flow.TransactionFromFile("setup/upload").SignProposeAndPayAs("admin").StringArgument(part).RunPrintEventsFull()
 	}
 
 	flow.TransactionFromFile("setup/drop_testnet").
