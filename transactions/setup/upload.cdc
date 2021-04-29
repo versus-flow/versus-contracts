@@ -1,5 +1,6 @@
 transaction(part: String) {
     prepare(signer: AuthAccount) {
+        log("Uploading chunk")
         let path = /storage/upload
         let existing = signer.load<String>(from: path) ?? ""
         log("length:".concat(existing.length.toString()))

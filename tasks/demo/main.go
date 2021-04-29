@@ -84,17 +84,14 @@ func main() {
 		RunPrintEventsFull()
 
 	fmt.Println("try to upload")
-	fmt.Scanln()
+	//fmt.Scanln()
 
 	image := fileAsImageData("ekaitza.png")
 	parts := splitByWidthMake(image, 1_000_000)
 	for _, part := range parts {
-		fmt.Println("Uploading part")
-		fmt.Println(part)
-		flow.TransactionFromFile("setup/upload.cdc").SignProposeAndPayAs("marketplace").StringArgument(part)
-
+		flow.TransactionFromFile("setup/upload").SignProposeAndPayAs("marketplace").StringArgument(part).RunPrintEventsFull()
 	}
-	fmt.Scanln()
+	//	fmt.Scanln()
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Create a drop in versus that is already started with 10 editions")
