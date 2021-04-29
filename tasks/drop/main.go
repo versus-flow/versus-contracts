@@ -49,7 +49,7 @@ func main() {
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
 	timeString := "1619704800.0"
-	image := fileAsImageData("ekaitza.jpg")
+	image := fileAsImageData("ekaitza.png")
 
 	parts := splitByWidthMake(image, 1_000_000)
 	for _, part := range parts {
@@ -63,7 +63,6 @@ func main() {
 		UFix64Argument(timeString).      //start time
 		StringArgument("ekaitza").       //artist name
 		StringArgument("Transcendence"). //name
-		StringArgument(image).           //image
 		StringArgument("We are complex individuals that have to often pull from our strengths and weaknesses in order to transcend. 3500x 3500 pixels, rendered at 350 ppi").
 		Argument(cadence.NewUInt64(15)). //number of editions to use for the editioned auction
 		UFix64Argument("2.0").           //min bid increment
