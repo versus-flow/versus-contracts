@@ -45,16 +45,16 @@ func main() {
 	//t := time.Now().Unix()
 	timeString := strconv.FormatInt(t, 10) + ".0"
 
-	image := fileAsImageData("versus.png")
+	image := fileAsImageData("ekaitza.jpg")
 
 	flow.TransactionFromFile("setup/drop_testnet").
 		SignProposeAndPayAs("admin").
-		AccountArgument("artist").             //artist address
-		UFix64Argument("1.00").                //start price
-		UFix64Argument(timeString).            //start time
-		StringArgument("Kinger9999").          //artist name
+		AccountArgument("artist").         //artist address
+		UFix64Argument("1.00").            //start price
+		UFix64Argument(timeString).        //start time
+		StringArgument("Kinger9999").      //artist name
 		StringArgument("Versus" + number). //name of art
-		StringArgument(image).                 //imaage
+		StringArgument(image).             //imaage
 		StringArgument("Versus").
 		Argument(cadence.NewUInt64(10)). //number of editions to use for the editioned auction
 		UFix64Argument("2.0").           //min bid increment

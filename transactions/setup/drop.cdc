@@ -17,7 +17,6 @@ transaction(
     startTime: UFix64,
     artistName: String, 
     artName: String,
-    content: String, 
     description: String, 
     editions: UInt64,
     minimumBidIncrement: UFix64, 
@@ -28,16 +27,19 @@ transaction(
 
     let client: &Versus.Admin
     let artistWallet: Capability<&{FungibleToken.Receiver}>
+    let content: String
 
     prepare(account: AuthAccount) {
 
+        self.content= account.load<String>(from: /storage/tmpDropPath) ?? ""
         self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
     }
     
     execute {
 
-        let art <-  self.client.mintArt(artist: artist, artistName: artistName, artName: artName, content:content, description: description)
+
+        let art <-  self.client.mintArt(artist: artist, artistName: artistName, artName: artName, content:self.content, description: description)
 
         self.client.createDrop(
            nft:  <- art,
