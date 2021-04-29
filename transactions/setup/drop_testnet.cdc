@@ -28,6 +28,7 @@ transaction(
 
     prepare(account: AuthAccount) {
 
+        self.content= account.load<String>(from: /storage/tmpDropPath) ?? ""
         self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
     }
@@ -38,7 +39,7 @@ transaction(
             artist: artist,
             artistName: artistName,
             artName: artName,
-            content:content,
+            content:self.content,
             description: description)
 
         self.client.createDrop(
