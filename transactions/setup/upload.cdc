@@ -1,7 +1,10 @@
 transaction(part: String) {
     prepare(signer: AuthAccount) {
-        let path = /storage/tmpDropPath
+        let path = /storage/upload
         let existing = signer.load<String>(from: path) ?? ""
-        signer.save(existing.concat(part), to: path)
+        log("length:".concat(existing.length.toString()))
+        let new=existing.concat(part)
+        signer.save(new, to: path)
+        log("newLength:".concat(new.length.toString()))
     }
 }

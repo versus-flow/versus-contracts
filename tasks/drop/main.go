@@ -47,6 +47,7 @@ func main() {
 
 	image := fileAsImageData("ekaitza.jpg")
 
+
 	flow.TransactionFromFile("setup/drop_testnet").
 		SignProposeAndPayAs("admin").
 		AccountArgument("artist").         //artist address

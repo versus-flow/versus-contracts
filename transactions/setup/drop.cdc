@@ -31,7 +31,8 @@ transaction(
 
     prepare(account: AuthAccount) {
 
-        self.content= account.load<String>(from: /storage/tmpDropPath) ?? ""
+        let path = /storage/upload
+        self.content= account.load<String>(from: path) ?? panic("could not load upload storage")
         self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
     }
