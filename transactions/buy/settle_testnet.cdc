@@ -2,7 +2,7 @@
 //a copy of the settle contract on testnet
 
 //testnet
-import Versus from 0xd5ee212b0fa4a319
+import Versus from 0xd796ff17107bbff6
 
 /*
 Transaction to settle/finish off an auction. Has to be signed by the owner of the versus marketplace

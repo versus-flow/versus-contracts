@@ -1,9 +1,9 @@
 //todo, update this when the contract is updated on testnet
 //a copy of the drop transaction on testnet
 //testnet
-import FungibleToken from 0x9a0766d93b6608b7
-import NonFungibleToken from 0x631e88ae7f1d7c20
-import Content, Art, Auction, Versus from 0xd5ee212b0fa4a319
+import FungibleToken from 0xf233dcee88fe0abe
+import NonFungibleToken from 0x1d7e57aa55817448
+import Content, Art, Auction, Versus from 0xd796ff17107bbff6
 
 
 //This transaction will setup a drop in a versus auction
@@ -13,7 +13,6 @@ transaction(
     startTime: UFix64,
     artistName: String, 
     artName: String,
-    content: String, 
     description: String, 
     editions: UInt64,
     minimumBidIncrement: UFix64, 
@@ -25,9 +24,12 @@ transaction(
 
     let client: &Versus.Admin
     let artistWallet: Capability<&{FungibleToken.Receiver}>
+    let content: String
 
     prepare(account: AuthAccount) {
 
+        let path = /storage/upload
+        self.content= account.load<String>(from: path) ?? panic("could not load content")
         self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
     }
@@ -38,7 +40,7 @@ transaction(
             artist: artist,
             artistName: artistName,
             artName: artName,
-            content:content,
+            content:self.content,
             description: description)
 
         self.client.createDrop(

@@ -714,6 +714,26 @@ pub contract Versus {
             return <- art
         }
 
+
+        pub fun editionArt(art: &Art.NFT, edition: UInt64, maxEdition: UInt64) : @Art.NFT {
+            return <- Art.makeEdition(original: art, edition: edition, maxEdition: maxEdition)
+        }
+
+        pub fun editionAndDepositArt(art: &Art.NFT, to: [Address]) {
+
+            let maxEdition:UInt64=UInt64(to.length)
+
+            var i:UInt64=1
+
+            for address in to {
+                let editionedArt <- Art.makeEdition(original: art, edition: i, maxEdition: maxEdition)
+                let account= getAccount(address)
+                var collectionCap = account.getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath)
+                collectionCap.borrow()!.deposit(token: <- editionedArt)
+                i=i+(1 as UInt64)
+            }
+        }
+
         pub fun getContent():&Content.Collection {
           pre {
             self.server != nil : "Your client has not been linked to the server"

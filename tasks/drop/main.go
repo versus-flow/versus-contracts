@@ -3,16 +3,30 @@ package main
 import (
 	"bufio"
 	"encoding/base64"
-	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
 )
+
+func splitByWidthMake(str string, size int) []string {
+	strLength := len(str)
+	splitedLength := int(math.Ceil(float64(strLength) / float64(size)))
+	splited := make([]string, splitedLength)
+	var start, stop int
+	for i := 0; i < splitedLength; i += 1 {
+		start = i * size
+		stop = start + size
+		if stop > strLength {
+			stop = strLength
+		}
+		splited[i] = str[start:stop]
+	}
+	return splited
+}
 
 func fileAsImageData(path string) string {
 	f, _ := os.Open("./" + path)
@@ -32,36 +46,29 @@ func fileAsImageData(path string) string {
 }
 
 func main() {
-	number, ok := os.LookupEnv("number")
-	if !ok {
-		fmt.Println("number is not present")
-		os.Exit(1)
-	}
-
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
-	now := time.Now() //.Add(time.Hour * 12)
-	t := now.Unix()
-	//t := time.Now().Unix()
-	timeString := strconv.FormatInt(t, 10) + ".0"
+	timeString := "1619704800.0"
+	image := fileAsImageData("ekaitza.png")
 
-	image := fileAsImageData("ekaitza.jpg")
-
+	parts := splitByWidthMake(image, 1_000_000)
+	for _, part := range parts {
+		flow.TransactionFromFile("setup/upload").SignProposeAndPayAs("admin").StringArgument(part).RunPrintEventsFull()
+	}
 
 	flow.TransactionFromFile("setup/drop_testnet").
 		SignProposeAndPayAs("admin").
-		AccountArgument("artist").         //artist address
-		UFix64Argument("1.00").            //start price
-		UFix64Argument(timeString).        //start time
-		StringArgument("Kinger9999").      //artist name
-		StringArgument("Versus" + number). //name of art
-		StringArgument(image).             //imaage
-		StringArgument("Versus").
-		Argument(cadence.NewUInt64(10)). //number of editions to use for the editioned auction
+		RawAccountArgument("0xd21cfcf820f27c42").
+		UFix64Argument("1.00").          //start price
+		UFix64Argument(timeString).      //start time
+		StringArgument("ekaitza").       //artist name
+		StringArgument("Transcendence"). //name
+		StringArgument("We are complex individuals that have to often pull from our strengths and weaknesses in order to transcend. 3500x 3500 pixels, rendered at 350 ppi").
+		Argument(cadence.NewUInt64(15)). //number of editions to use for the editioned auction
 		UFix64Argument("2.0").           //min bid increment
 		UFix64Argument("4.0").           //min bid increment unique
-		UFix64Argument("21600.0").       //duration
-		UFix64Argument("300.0").         //extensionOnLateBid
+		UFix64Argument("86400.0").       //duration 60 * 60 * 24 1 day
+		UFix64Argument("600.0").         //extensionOnLateBid 10 * 60 10 min
 		RunPrintEventsFull()
 
 }
