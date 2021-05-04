@@ -29,7 +29,10 @@ transaction(
 
     execute {
         let art <-  self.client.mintArt(artist: artist, artistName: artistName, artName: artName, content:content, description: description)
-        self.client.editionAndDepositArt(art: <- art, to: self.addresses)
+        self.client.editionAndDepositArt(art: &art as &Art.NFT, to: self.addresses)
+
+        self.artistCollection.borrow()!.deposit(token: <- self.client.editionArt(art: &art as &Art.NFT, edition:5, maxEdition:20))
+        destroy art
     }
 }
 
