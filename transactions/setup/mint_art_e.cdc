@@ -1,20 +1,11 @@
-
-//testnet
-//import FungibleToken from 0xf233dcee88fe0abe
-//import NonFungibleToken from 0x1d7e57aa55817448
-//import Content, Art, Auction, Versus from 0xd796ff17107bbff6
-
-
-//local emulator
-import FungibleToken from 0xf233dcee88fe0abe
+import NonFungibleToken from 0x1d7e57aa55817448
 import Art, Versus from 0xd796ff17107bbff6
 
 transaction(
     artist: Address,
     artistName: String, 
     artName: String, 
-    description: String, 
-    addresses: [Address]) {
+    description: String) {
 
     let client: &Versus.Admin
     let content: String

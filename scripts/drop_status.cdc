@@ -1,7 +1,6 @@
 // This script checks that the accounts are set up correctly for the marketplace tutorial.
 //
 
-//emulator
 import Versus from 0xd796ff17107bbff6
 
 //testnet
@@ -10,7 +9,7 @@ import Versus from 0xd796ff17107bbff6
 /*
   Script used to get the first active drop in a versus 
  */
-pub fun main(dropID: UInt64) : Versus.DropStatus {
+pub fun main() : Versus.DropStatus {
 
     return Versus.getDrop(dropID)!
 }

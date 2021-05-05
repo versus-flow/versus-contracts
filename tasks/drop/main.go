@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
-	"github.com/onflow/cadence"
 )
 
 func splitByWidthMake(str string, size int) []string {
@@ -48,8 +47,7 @@ func fileAsImageData(path string) string {
 func main() {
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
-	timeString := "1619704800.0"
-	image := fileAsImageData("ekaitza.png")
+	image := fileAsImageData("zebra_forrest.jpg")
 
 	parts := splitByWidthMake(image, 1_000_000)
 	for _, part := range parts {
@@ -58,17 +56,17 @@ func main() {
 
 	flow.TransactionFromFile("setup/drop_testnet").
 		SignProposeAndPayAs("admin").
-		RawAccountArgument("0xd21cfcf820f27c42").
-		UFix64Argument("1.00").          //start price
-		UFix64Argument(timeString).      //start time
-		StringArgument("ekaitza").       //artist name
-		StringArgument("Transcendence"). //name
-		StringArgument("We are complex individuals that have to often pull from our strengths and weaknesses in order to transcend. 3500x 3500 pixels, rendered at 350 ppi").
-		Argument(cadence.NewUInt64(15)). //number of editions to use for the editioned auction
-		UFix64Argument("2.0").           //min bid increment
-		UFix64Argument("4.0").           //min bid increment unique
-		UFix64Argument("86400.0").       //duration 60 * 60 * 24 1 day
-		UFix64Argument("600.0").         //extensionOnLateBid 10 * 60 10 min
+		RawAccountArgument("0x48660ca71a35bede").
+		UFix64Argument("1.00").         //start price
+		UFix64Argument("1620223200.0"). //start time
+		StringArgument("Mankind").      //artist name
+		StringArgument("Zebra Forest"). //name
+		StringArgument("This yin and yang forest is visually in flux and balance at the same time. The striking landscape represents growth through competition versus going with the flow. The Versus innovative collector format and contrasting artwork show how seemingly opposite or contrary forces may actually be complementary and interconnected.").
+		UInt64Argument(20).        //number of editions
+		UFix64Argument("2.0").     //min bid increment
+		UFix64Argument("4.0").     //min bid increment unique
+		UFix64Argument("86400.0"). //duration 60 * 60 * 24 1 day
+		UFix64Argument("450.0").   //extensionOnLateBid 10 * 60 7.5 min
 		RunPrintEventsFull()
 
 }

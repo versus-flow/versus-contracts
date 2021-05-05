@@ -51,7 +51,8 @@ func splitByWidthMake(str string, size int) []string {
 func main() {
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
-	accounts := []string{"0xa92f1e2bb6978ff3",
+	accounts := []string{
+		"0xa92f1e2bb6978ff3",
 		"0x7aad8cbf4bf09a9c",
 		"0x3693303b2669856c",
 		"0xcbdf19d61cc0eb80",
