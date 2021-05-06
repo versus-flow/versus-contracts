@@ -19,11 +19,12 @@ func main() {
 
 	amount, ok := os.LookupEnv("amount")
 	if !ok {
-		amount = "1000.0"
+		fmt.Println("amount is not present")
+		os.Exit(1)
 	}
 
-	flow.TransactionFromFile("setup/transfer_flow").
-		SignProposeAndPayAsService().
+	flow.TransactionFromFile("setup/transfer_flow_versus").
+		SignProposeAndPayAs("admin").
 		UFix64Argument(amount).
 		RawAccountArgument(account).
 		RunPrintEventsFull()
