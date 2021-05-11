@@ -48,8 +48,6 @@ pub contract Versus {
    //A Drop in versus represents a single auction vs an editioned auction
     pub resource Drop {
 
-
-
         access(contract) let uniqueAuction: @Auction.AuctionItem
         access(contract) let editionAuctions: @Auction.AuctionCollection
         pub let dropID: UInt64
