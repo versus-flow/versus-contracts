@@ -47,7 +47,7 @@ func fileAsImageData(path string) string {
 func main() {
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
-	image := fileAsImageData("zebra_forrest.jpg")
+	image := fileAsImageData("han.png")
 
 	parts := splitByWidthMake(image, 1_000_000)
 	for _, part := range parts {
@@ -56,17 +56,17 @@ func main() {
 
 	flow.TransactionFromFile("setup/drop_prod").
 		SignProposeAndPayAs("admin").
-		RawAccountArgument("0x48660ca71a35bede").
+		RawAccountArgument("0x80a40ba6062fe356").
 		UFix64Argument("1.00").         //start price
-		UFix64Argument("1620223200.0"). //start time
-		StringArgument("Mankind").      //artist name
-		StringArgument("Zebra Forest"). //name
-		StringArgument("This yin and yang forest is visually in flux and balance at the same time. The striking landscape represents growth through competition versus going with the flow. The Versus innovative collector format and contrasting artwork show how seemingly opposite or contrary forces may actually be complementary and interconnected.").
-		UInt64Argument(20).        //number of editions
+		UFix64Argument("1620828000.0"). //start time `date -r to confirm`
+		StringArgument("Hanrgb").       //artist name
+		StringArgument("Fall").         //name
+		StringArgument("Is it an illusion?").
+		UInt64Argument(16).        //number of editions
 		UFix64Argument("2.0").     //min bid increment
 		UFix64Argument("4.0").     //min bid increment unique
 		UFix64Argument("86400.0"). //duration 60 * 60 * 24 1 day
-		UFix64Argument("450.0").   //extensionOnLateBid 10 * 60 7.5 min
+		UFix64Argument("300.0").   //extensionOnLateBid 5 * 60 5 min
 		RunPrintEventsFull()
 
 }
