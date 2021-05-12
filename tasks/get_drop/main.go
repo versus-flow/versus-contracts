@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
-	"github.com/onflow/cadence"
 )
 
 func main() {
@@ -22,13 +21,6 @@ func main() {
 	}
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
-	result := flow.ScriptFromFile("drop_status").UInt64Argument(drop).RunReturns()
-	resultStruct := result.(cadence.Struct)
-	names := resultStruct.StructType.Fields
-	
-	for i, field := range resultStruct.Fields {
-		fmt.Printf("%v=%v\n", names[i].Identifier, field)
-
-	}
+	flow.ScriptFromFile("drop_status").UInt64Argument(drop).Run()
 
 }
