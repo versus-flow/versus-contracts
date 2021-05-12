@@ -10,13 +10,13 @@ func main() {
 	g := gwtf.NewGoWithTheFlow(".flow-prod.json")
 
 	//fetch the current block height
-	eb := g.SendEventsTo("versus-prod").
+	_, err := g.EventFetcher().
+		Workers(1).
 		TrackProgressIn(".flow-prod.events").
 		EventIgnoringFields("A.d796ff17107bbff6.Versus.Bid", []string{"auctionId", "dropId"}).
 		EventIgnoringFields("A.d796ff17107bbff6.Versus.LeaderChanged", []string{"dropId"}).
-		Event("A.d796ff17107bbff6.Versus.Settle")
-
-	_, err := eb.Run()
+		Event("A.d796ff17107bbff6.Versus.Settle").
+		SendEventsToWebhook("versus-prod")
 	if err != nil {
 		panic(err)
 	}
