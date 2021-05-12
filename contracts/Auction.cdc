@@ -188,7 +188,7 @@ pub contract Auction {
 
         pub fun releasePreviousBid() {
             if let vaultCap = self.recipientVaultCap {
-                self.sendBidTokens(self.recipientVaultCap!)
+                self.sendBidTokens(vaultCap)
                 return
             } 
         }
@@ -212,9 +212,9 @@ pub contract Auction {
             let amount=self.currentPrice*cutPercentage
             let beneficiaryCut <- self.bidVault.withdraw(amount:amount )
 
-            let cutVault=cutVault.borrow()!
-            emit MarketplaceEarned(amount: amount, owner: cutVault.owner!.address)
-            cutVault.deposit(from: <- beneficiaryCut)
+            let vault=cutVault.borrow()!
+            emit MarketplaceEarned(amount: amount, owner: cutVault.address)
+            vault.deposit(from: <- beneficiaryCut)
 
             self.sendNFT(self.recipientCollectionCap!)
             self.sendBidTokens(self.ownerVaultCap)
@@ -266,7 +266,7 @@ pub contract Auction {
 
         pub fun bidder() : Address? {
             if let vaultCap = self.recipientVaultCap {
-                return vaultCap.borrow()!.owner!.address
+                return vaultCap.address
             }
             return nil
         }
@@ -286,7 +286,12 @@ pub contract Auction {
                 self.NFT != nil: "NFT in auction does not exist"
             }
 
-            let bidderAddress=vaultCap.borrow()!.owner!.address
+            let bidderAddress=vaultCap.address
+            let collectionAddresss=collectionCap.address
+
+            if bidderAddress != collectionAddresss {
+                panic("you cannot make a bid and send the art to sombody elses collection")
+            }
 
             let amountYouAreBidding= bidTokens.balance + self.currentBidForUser(address: bidderAddress)
             let minNextBid=self.minNextBid()
@@ -321,7 +326,7 @@ pub contract Auction {
 
             var leader:Address?= nil
             if let recipient = self.recipientVaultCap {
-                leader=recipient.borrow()!.owner!.address
+                leader=recipient.address
             }
 
             return AuctionStatus(
@@ -334,7 +339,7 @@ pub contract Auction {
                 artId: self.NFT?.id,
                 leader: leader,
                 bidIncrement: self.minimumBidIncrement,
-                owner: self.ownerVaultCap.borrow()!.owner!.address,
+                owner: self.ownerVaultCap.address,
                 startTime: Fix64(self.auctionStartTime),
                 endTime: Fix64(self.auctionStartTime+self.auctionLength),
                 minNextBid: self.minNextBid(),
@@ -447,7 +452,7 @@ pub contract Auction {
             let oldItem <- self.auctionItems[id] <- item
             destroy oldItem
 
-            let owner= vaultCap.borrow()!.owner!.address
+            let owner= vaultCap.address
 
             emit Created(tokenID: id, owner: owner, startPrice: startPrice, startTime: auctionStartTime)
         }
@@ -522,28 +527,29 @@ pub contract Auction {
         }
     }
 
-        //this method is used to create a standalone auction that is not part of a collection
-        //we use this to create the unique part of the Versus contract
-        pub fun createStandaloneAuction(
-            token: @Art.NFT, 
-            minimumBidIncrement: UFix64, 
-            auctionLength: UFix64,
-            auctionStartTime: UFix64,
-            startPrice: UFix64, 
-            collectionCap: Capability<&{Art.CollectionPublic}>, 
-            vaultCap: Capability<&{FungibleToken.Receiver}>) : @AuctionItem {
-            
-            // create a new auction items resource container
-            return  <- create AuctionItem(
-                NFT: <-token,
-                minimumBidIncrement: minimumBidIncrement,
-                auctionStartTime: auctionStartTime,
-                startPrice: startPrice,
-                auctionLength: auctionLength,
-                ownerCollectionCap: collectionCap,
-                ownerVaultCap: vaultCap
-            )
-        }
+    //this method is used to create a standalone auction that is not part of a collection
+    //we use this to create the unique part of the Versus contract
+    pub fun createStandaloneAuction(
+        token: @Art.NFT, 
+        minimumBidIncrement: UFix64, 
+        auctionLength: UFix64,
+        auctionStartTime: UFix64,
+        startPrice: UFix64, 
+        collectionCap: Capability<&{Art.CollectionPublic}>, 
+        vaultCap: Capability<&{FungibleToken.Receiver}>) : @AuctionItem {
+        
+        // create a new auction items resource container
+        return  <- create AuctionItem(
+            NFT: <-token,
+            minimumBidIncrement: minimumBidIncrement,
+            auctionStartTime: auctionStartTime,
+            startPrice: startPrice,
+            auctionLength: auctionLength,
+            ownerCollectionCap: collectionCap,
+            ownerVaultCap: vaultCap
+        )
+    }
+
     // createAuctionCollection returns a new AuctionCollection resource to the caller
     pub fun createAuctionCollection(marketplaceVault: Capability<&{FungibleToken.Receiver}>,cutPercentage: UFix64): @AuctionCollection {
         let auctionCollection <- create AuctionCollection(
@@ -551,7 +557,7 @@ pub contract Auction {
             cutPercentage: cutPercentage
         )
 
-        emit CollectionCreated(owner: marketplaceVault.borrow()!.owner!.address, cutPercentage: cutPercentage)
+        emit CollectionCreated(owner: marketplaceVault.address, cutPercentage: cutPercentage)
         return <- auctionCollection
     }
 

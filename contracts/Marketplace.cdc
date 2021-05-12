@@ -120,12 +120,13 @@ pub contract Marketplace {
                 let royaltyData= token.royalty[royality]!
                 let amount= price * royaltyData.cut
                 let wallet= royaltyData.wallet.borrow()!
+                let address=royaltyData.wallet.address
 
                 let royaltyWallet <- buyTokens.withdraw(amount: amount)
 
                 wallet.deposit(from: <- royaltyWallet)
 
-                emit RoyaltyPaid(id: tokenID, amount:amount, to: wallet.owner!.address, name:royality)
+                emit RoyaltyPaid(id: tokenID, amount:amount, to: address, name:royality)
             }
             // deposit the purchasing tokens into the owners vault
             vaultRef.deposit(from: <-buyTokens)
@@ -133,7 +134,7 @@ pub contract Marketplace {
             // deposit the NFT into the buyers collection
             recipient.deposit(token: <- token)
 
-            emit TokenPurchased(id: tokenID, price: price, from: vaultRef.owner!.address, to:  recipient.owner!.address)
+            emit TokenPurchased(id: tokenID, price: price, from: self.ownerVault.address, to:  recipientCap.address)
         }
 
         // idPrice returns the price of a specific token in the sale
