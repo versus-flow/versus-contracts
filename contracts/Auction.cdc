@@ -287,9 +287,9 @@ pub contract Auction {
             }
 
             let bidderAddress=vaultCap.address
-            let collectionAddresss=collectionCap.address
+            let collectionAddress=collectionCap.address
 
-            if bidderAddress != collectionAddresss {
+            if bidderAddress != collectionAddress {
                 panic("you cannot make a bid and send the art to sombody elses collection")
             }
 
