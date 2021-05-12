@@ -287,6 +287,11 @@ pub contract Auction {
             }
 
             let bidderAddress=vaultCap.borrow()!.owner!.address
+            let collectionAddress=collectionCap.borrow()!.owner!.address
+
+            if bidderAddress != collectionAddress {
+              panic("you cannot make a bid and send the art to sombody elses collection")
+            }
 
             let amountYouAreBidding= bidTokens.balance + self.currentBidForUser(address: bidderAddress)
             let minNextBid=self.minNextBid()
