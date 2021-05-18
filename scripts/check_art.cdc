@@ -15,11 +15,9 @@ import Content, Art, Auction, Versus from  0xd796ff17107bbff6
 /*
   This script will check an address and print out its FT, NFT and Versus resources
  */
-pub fun main(bidders:[Address])  {
+pub fun main(bidder:Address) : Bool {
    
-    for bidder in bidders {
-        getAccount(bidder).getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath).borrow()!
-    }
+    return getAccount(bidder).getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath).check()
 }
  
  

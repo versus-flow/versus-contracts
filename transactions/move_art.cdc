@@ -13,7 +13,7 @@ transaction(address:Address, artID: UInt64) {
 
   execute {
       let versusCollection : &{Art.CollectionPublic} = getAccount(address).getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath).borrow()!
-      let art <- self.nftCollection.withdraw(withdrawID:)
+      let art <- self.nftCollection.withdraw(withdrawID:artID)
       versusCollection.deposit(token: <- art)
   }
 }

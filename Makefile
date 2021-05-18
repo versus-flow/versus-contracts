@@ -57,3 +57,7 @@ get-drop:
 .PHONY: art
 art:
 	go run ./tasks/mint_art/main.go
+
+.PHONY: move
+move:
+	go run ./tasks/move_art/main.go

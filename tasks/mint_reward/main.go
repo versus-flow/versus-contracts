@@ -3,16 +3,14 @@ package main
 import (
 	"bufio"
 	"encoding/base64"
-	"encoding/hex"
 	"io/ioutil"
 	"math"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-go-sdk"
 )
 
 func fileAsImageData(path string) string {
@@ -49,70 +47,118 @@ func splitByWidthMake(str string, size int) []string {
 }
 
 func main() {
-	flow := gwtf.NewGoWithTheFlowDevNet()
+	g := gwtf.NewGoWithTheFlowDevNet()
 
 	accounts := []string{
-		"0xa92f1e2bb6978ff3",
-		"0x7aad8cbf4bf09a9c",
-		"0x3693303b2669856c",
-		"0xcbdf19d61cc0eb80",
-		"0x8bfc07b7d67d2396",
-		"0x2e5de12450d63ce8",
-		"0x0831b1aafba2a215",
-		"0xab970f62ff24fd15",
-		"0x32c7b06ef9b0340f",
-		"0xa9cbc35e9fe9e649",
 		"0xf6337be8d00d3950",
-		"0xc51a17ff9c75f76a",
-		"0x7c3639ec45bc7f6b",
-		"0x886f3aeaf848c535",
-		"0xdf868d4de6d2e0ab",
-		"0x8971f163d111cfcd",
-		"0xd7f7a6c5a26a725d",
+		"0x97f01799da0472e6",
+		"0xdd75ed85980ef5a8",
+		"0x626e2a193431984d",
+		"0xd094671f2eb0239b",
+		"0x049dd9ad857ec93f",
+		"0x8c17db6465f5406c",
 		"0xc48a10eadb0ed1dc",
-		"0x2f1a7a47f7db0fc8",
-		"0x402e8631d876d85c",
-		"0x99638805f4b51848",
-		"0x48660ca71a35bede",
-		"0xcdef88eb6f76418c",
-		"0xcb25ee3bcfa29315",
-		"0xa0fc96e34de16243",
-		"0xc4363553c69a81b9",
-		"0x2a0eccae942667be",
-		"0x915cc83458eba23a",
-		"0x92ba5cba77fc1e87",
-		"0xcd321b69db46775d",
-		"0x8b061fb31eaaf01c",
-		"0x97db0e0fc558dece"}
+		"0xd33a7339beeda712",
+		"0x7aad8cbf4bf09a9c",
+		"0xc366b48b6ec6fdce",
+		"0xbe597dbd64919901",
+		"0x27371ae354486de0",
+		"0x53f389d96fb4ce5e",
+		"0x8a62bcb61681ef66",
+		"0x2e5de12450d63ce8",
+		"0xf44b810a228fecc0",
+		"0x8ea4f41ce22217ab",
+		"0xc9656a158cba99ef",
+		"0x1052aecb4ac51547",
+		"0xdbc15039ca69fbb2",
+		"0xf16b42dcb3cf14ce",
+		"0xb906e857f1f40f37",
+		"0x29402ffede5845ed",
+		"0x7294516ad0534ada",
+		"0xb1c58f1f3236823f",
+		"0xb93a257b93af195c",
+		"0x2dfc0ed9e607f93f",
+		"0xa2cd327adac6f564",
+		"0x886f3aeaf848c535",
+		"0xc641e1070ffdb0aa",
+		"0x9a41084e8ea7693e",
+		"0x01d63aa89238a559",
+		"0x32c7b06ef9b0340f",
+		"0x14c6ff4e7389da6a",
+		"0x8b97f308a09c43be",
+		"0x6832ece4728d0a5d",
+		"0x7fc910a18d42360e",
+		"0x04ff3cd96f31a964",
+		"0xc38748bc281b53b0",
+		"0x7e8c9fbd93d77f23",
+		"0x5ea04e82b3fe560e",
+		"0x08a2a687e7b9c0a5",
+		"0x3f98df5e1be53c14",
+		"0xb125acfa438a075f",
+		"0x796b9c0ec8e77071",
+		"0xbfeb3f852b1b3637",
+		"0xf4ba72ad622d684c",
+		"0xf1da2ba6170f775b",
+		"0x0c0096bdcea83207",
+		"0x4d433aa04f49a2ae",
+		"0xd74a89c395f6acfb",
+		"0x807f3f44833eb171",
+		"0x80cd9c6d1ff10590",
+		"0x81f33c32811df227",
+		"0x4df4f44581d07237",
+		"0x2b329798f39f96e1",
+		"0x80cd9c6d1ff10590",
+		"0xb5b47f5a33250715",
+		"0x80cd9c6d1ff10590",
+		"0xf6cd72955badad1f",
+		"0xf391452a31ec7b3a",
+		"0x327d45bc03a2fc7f",
+		"0xcd19a0990fd4824b",
+		"0x3c3715ab5157c21e",
+		"0x80cd9c6d1ff10590",
+		"0x0e4b5aa878fdb0a2",
+		"0x5d28e0189e1ee640",
+		"0x7a9a332cda3a0a6a",
+		"0xe4d3f01b6c6f22e9",
+		"0x63d53465376ec529",
+		"0x80cd9c6d1ff10590",
+		"0x80cd9c6d1ff10590",
+		"0x80cd9c6d1ff10590",
+		"0x80cd9c6d1ff10590",
+		"0x80cd9c6d1ff10590",
+		"0x80cd9c6d1ff10590",
+		"0x80cd9c6d1ff10590",
+		"0x80cd9c6d1ff10590",
+		"0x80cd9c6d1ff10590",
+	}
+
+	adminAddress := cadence.BytesToAddress(flow.HexToAddress("0x80cd9c6d1ff10590").Bytes())
 
 	var addresses []cadence.Value
 	for _, key := range accounts {
-		trimmedString := strings.TrimPrefix(key, "0x")
-		accountHex, err := hex.DecodeString(trimmedString)
-		if err != nil {
-			panic(err)
+		address := cadence.BytesToAddress(flow.HexToAddress(key).Bytes())
+		bool := g.ScriptFromFile("check_art").Argument(address).RunReturns()
+		if bool.ToGoValue() == true {
+			addresses = append(addresses, address)
+		} else {
+			addresses = append(addresses, adminAddress)
 		}
-		addresses = append(addresses, cadence.BytesToAddress(accountHex))
 	}
+	cadenceArray := cadence.NewArray(addresses)
 
-	argument := cadence.NewArray(addresses)
-	spew.Dump(argument)
-
-	flow.ScriptFromFile("check_art").Argument(argument).RunReturns()
-
-	image := fileAsImageData("percipient.png")
+	image := fileAsImageData("versus.png")
 	parts := splitByWidthMake(image, 1_000_000)
 	for _, part := range parts {
-		flow.TransactionFromFile("setup/upload").SignProposeAndPayAs("admin").StringArgument(part).RunPrintEventsFull()
+		g.TransactionFromFile("setup/upload").SignProposeAndPayAs("admin").StringArgument(part).RunPrintEventsFull()
 	}
 
-	flow.TransactionFromFile("setup/mint_art_e").
+	g.TransactionFromFile("setup/mint_art_e").
 		SignProposeAndPayAs("admin").
-		RawAccountArgument("0xd21cfcf820f27c42").
-		StringArgument("ekaitza").    //artist name
-		StringArgument("Percipient"). //name of art
-		StringArgument("A percipient and clear-sighted mind is often rewarded. Founder’s NFT for Versus launch. 3500 x 3500 pixels. Rendered at 350 ppi.").
-		Argument(argument).
+		RawAccountArgument("0xd796ff17107bbff6").
+		StringArgument("Versus"). //artist name
+		StringArgument("VS").     //name of art
+		StringArgument("This NFT was distributed to beta testers of the Versus platform as a reward for their invaluable feedback!").
+		Argument(cadenceArray).
 		RunPrintEventsFull()
 
 }

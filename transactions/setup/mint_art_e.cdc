@@ -5,7 +5,8 @@ transaction(
     artist: Address,
     artistName: String, 
     artName: String, 
-    description: String) {
+    description: String,
+    addresses: [Address]) {
 
     let client: &Versus.Admin
     let content: String
