@@ -23,4 +23,6 @@ func main() {
 
 	flow.ScriptFromFile("drop_status").UInt64Argument(drop).Run()
 
+	//flow.ScriptFromFile("drop_art").UInt64Argument(drop).Run()
+
 }

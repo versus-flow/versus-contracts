@@ -7,11 +7,6 @@ import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 
 pub contract Marketplace {
 
-    pub init() {
-        self.CollectionPublicPath= /public/versusArtMarketplace2
-        self.CollectionStoragePath= /storage/versusArtMarketplace2
-    }
-
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
 
@@ -29,8 +24,6 @@ pub contract Marketplace {
     // Event that is emitted when a seller withdraws their NFT from the sale
     pub event SaleWithdrawn(id: UInt64)
 
-
-    pub event RoyalityPaid()
     // Interface that users will publish for their Sale collection
     // that only exposes the methods that are supposed to be public
     //
@@ -118,14 +111,12 @@ pub contract Marketplace {
 
             for royality in token.royalty.keys {
                 let royaltyData= token.royalty[royality]!
-                let amount= price * royaltyData.cut
-                let wallet= royaltyData.wallet.borrow()!
-
-                let royaltyWallet <- buyTokens.withdraw(amount: amount)
-
-                wallet.deposit(from: <- royaltyWallet)
-
-                emit RoyaltyPaid(id: tokenID, amount:amount, to: wallet.owner!.address, name:royality)
+                if let wallet= royaltyData.wallet.borrow() {
+                    let amount= price * royaltyData.cut
+                    let royaltyWallet <- buyTokens.withdraw(amount: amount)
+                    wallet.deposit(from: <- royaltyWallet)
+                    emit RoyaltyPaid(id: tokenID, amount:amount, to: royaltyData.wallet.address, name:royality)
+                } 
             }
             // deposit the purchasing tokens into the owners vault
             vaultRef.deposit(from: <-buyTokens)
@@ -155,5 +146,11 @@ pub contract Marketplace {
     pub fun createSaleCollection(ownerVault: Capability<&{FungibleToken.Receiver}>): @SaleCollection {
         return <- create SaleCollection(vault: ownerVault)
     }
+
+    pub init() {
+        self.CollectionPublicPath= /public/versusArtMarketplace2
+        self.CollectionStoragePath= /storage/versusArtMarketplace2
+    }
+
 }
  

@@ -254,7 +254,7 @@ pub contract Versus {
                 self.extendDropWith(UFix64(extendWith))
             }
 
-            let bidder=vaultCap.borrow()!.owner!.address
+            let bidder=vaultCap.address
             let currentBidForUser= self.currentBidForUser(auctionId: auctionId, address: bidder)
             let bidPrice = bidTokens.balance + currentBidForUser
 
@@ -482,7 +482,7 @@ pub contract Versus {
                 extensionOnLateBid: extensionOnLateBid, 
                 contentId: contentId, 
                 contentCapability: contentCapability)
-            emit DropCreated(name: metadata.name, artist: metadata.artist,  editions: editions, owner: vaultCap.borrow()!.owner!.address, dropId: drop.dropID)
+            emit DropCreated(name: metadata.name, artist: metadata.artist,  editions: editions, owner: vaultCap.address, dropId: drop.dropID)
 
             let oldDrop <- self.drops[drop.dropID] <- drop
             destroy oldDrop
@@ -752,6 +752,8 @@ pub contract Versus {
           }
           return Versus.account.borrow<&NonFungibleToken.Collection>(from: Art.CollectionStoragePath)!
         }
+
+        //TODO: missing get DropCollection
 
     }
 

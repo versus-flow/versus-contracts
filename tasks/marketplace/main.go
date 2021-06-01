@@ -58,7 +58,7 @@ func main() {
 	flow.TransactionFromFile("setup/art_collection").SignProposeAndPayAs("buyer1").RunPrintEventsFull()
 
 	image := fileAsImageData("bull.png")
-	flow.TransactionFromFile("setup/mint_art_e").
+	flow.TransactionFromFile("setup/mint_art").
 		SignProposeAndPayAs("marketplace").
 		AccountArgument("artist").
 		StringArgument("Vincent Kamp").                                                                 //artist name
@@ -68,7 +68,6 @@ func main() {
 		RunPrintEventsFull()
 
 
-	/*
 		flow.TransactionFromFile("setup/setup_marketplace_with_art").
 			SignProposeAndPayAs("artist").
 			UInt64Argument(0).       //artId
@@ -81,6 +80,4 @@ func main() {
 			UInt64Argument(0).
 			UFix64Argument("10.0").
 			RunPrintEventsFull()
-
-	*/
 }

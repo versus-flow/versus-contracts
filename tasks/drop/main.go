@@ -47,7 +47,7 @@ func fileAsImageData(path string) string {
 func main() {
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
-	image := fileAsImageData("kamp.jpg")
+	image := fileAsImageData("zigor.jpg")
 
 	parts := splitByWidthMake(image, 1_000_000)
 	for _, part := range parts {
@@ -56,13 +56,13 @@ func main() {
 
 	flow.TransactionFromFile("setup/drop_prod").
 		SignProposeAndPayAs("admin").
-		RawAccountArgument("0x52ceaf5bf4a24d21").
-		UFix64Argument("1.00").                  //start price
-		UFix64Argument("1621432800.0").          //start time `date -r to confirm`
-		StringArgument("vincekamp").             //artist name
-		StringArgument("Pulvis et umbra sumus"). //name
-		StringArgument("This painting is titled pulvis et umbra sumus. Which means 'we, like all other things, will one day perish'. And therein lies the truth. We are all but dust and shadows. Particles that one day will cease to exist. When you think back to early art drawings and sculptures, they too are vulnerable to time. They are lost, stolen and destroyed. Can this painting live beyond those confines?  Will the intensity of thoughts that embodied the man  I translated into art remain. He wondered as I painted, if he could somehow live forever - perhaps be seen in another lifetime. Would his soul now somehow be preserved, not by canvas and paint but by the blockchain? Or would he too finally succumb to the dust and shadows …").
-		UInt64Argument(15).        //number of editions
+		RawAccountArgument("0xfb1b4662ca2f6dbd").
+		UFix64Argument("1.00").                //start price
+		UFix64Argument("1622642400.0").        //start time `date -r to confirm`
+		StringArgument("Zigor"). //artist name
+		StringArgument("Jaime el hortaliza").    //name
+		StringArgument("Jaime is a peculiar guy, depending on the time of the day he is angry or very happy, or both at the same time. Not many people know it but Jaime has a split personality. Every once in a while a human eats him but sooner or later he comes out again.").
+		UInt64Argument(10).        //number of editions
 		UFix64Argument("2.0").     //min bid increment
 		UFix64Argument("4.0").     //min bid increment unique
 		UFix64Argument("86400.0"). //duration 60 * 60 * 24 1 day

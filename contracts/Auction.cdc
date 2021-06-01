@@ -266,7 +266,7 @@ pub contract Auction {
 
         pub fun bidder() : Address? {
             if let vaultCap = self.recipientVaultCap {
-                return vaultCap.borrow()!.owner!.address
+                return vaultCap.address
             }
             return nil
         }
@@ -286,8 +286,8 @@ pub contract Auction {
                 self.NFT != nil: "NFT in auction does not exist"
             }
 
-            let bidderAddress=vaultCap.borrow()!.owner!.address
-            let collectionAddress=collectionCap.borrow()!.owner!.address
+            let bidderAddress=vaultCap.address
+            let collectionAddress=collectionCap.address
 
             if bidderAddress != collectionAddress {
               panic("you cannot make a bid and send the art to sombody elses collection")
@@ -326,7 +326,7 @@ pub contract Auction {
 
             var leader:Address?= nil
             if let recipient = self.recipientVaultCap {
-                leader=recipient.borrow()!.owner!.address
+                leader=recipient.address
             }
 
             return AuctionStatus(
@@ -339,7 +339,7 @@ pub contract Auction {
                 artId: self.NFT?.id,
                 leader: leader,
                 bidIncrement: self.minimumBidIncrement,
-                owner: self.ownerVaultCap.borrow()!.owner!.address,
+                owner: self.ownerVaultCap.address,
                 startTime: Fix64(self.auctionStartTime),
                 endTime: Fix64(self.auctionStartTime+self.auctionLength),
                 minNextBid: self.minNextBid(),
@@ -452,7 +452,7 @@ pub contract Auction {
             let oldItem <- self.auctionItems[id] <- item
             destroy oldItem
 
-            let owner= vaultCap.borrow()!.owner!.address
+            let owner= vaultCap.address
 
             emit Created(tokenID: id, owner: owner, startPrice: startPrice, startTime: auctionStartTime)
         }
@@ -556,7 +556,7 @@ pub contract Auction {
             cutPercentage: cutPercentage
         )
 
-        emit CollectionCreated(owner: marketplaceVault.borrow()!.owner!.address, cutPercentage: cutPercentage)
+        emit CollectionCreated(owner: marketplaceVault.address, cutPercentage: cutPercentage)
         return <- auctionCollection
     }
 
