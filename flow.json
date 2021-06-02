@@ -25,7 +25,8 @@
 		"Art": "./contracts/Art.cdc",
 		"Auction": "./contracts/Auction.cdc",
 		"Versus": "./contracts/Versus.cdc",
-		"Marketplace": "./contracts/Marketplace.cdc"
+		"Marketplace": "./contracts/Marketplace.cdc",
+    "Profile": "./contracts/Profiel.cdc"
 	},
 	"deployments": {
 		"emulator": {
@@ -35,7 +36,8 @@
 				"Art", 
 				"Auction", 
 				"Versus",
-				"Marketplace"
+				"Marketplace",
+        "Profile"
 			]
 		}
 	},
