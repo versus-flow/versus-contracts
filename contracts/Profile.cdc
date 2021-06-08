@@ -224,6 +224,11 @@ pub contract Profile {
     //A user must be able to remove a follower since this data in your account is added there by another user
     pub fun removeFollower(_ val: Address)
 
+    //manage bans
+    pub fun addBan(_ val: Address)
+    pub fun removeBan(_ val: Address)
+    pub fun getBans(): [Address]
+
     //Set if user is allowed to store followers or now
     pub fun setAllowStoringFollowers(_ val: Bool)
   }
@@ -235,6 +240,7 @@ pub contract Profile {
     access(self) var avatar: String
     access(self) var tags: [String]
     access(self) var followers: {Address: FriendStatus}
+    access(self) var bans: {Address: Bool}
     access(self) var following: {Address: FriendStatus}
     access(self) var collections: {String: ResourceCollection}
     access(self) var wallets: [Wallet]
@@ -252,8 +258,13 @@ pub contract Profile {
       self.wallets=[]
       self.links={}
       self.allowStoringFollowers=allowStoringFollowers
+      self.bans={}
 
     }
+
+    pub fun addBan(_ val: Address) { self.bans[val]= true}
+    pub fun removeBan(_ val:Address) { self.bans.remove(key: val) }
+    pub fun getBans() : [Address] { return self.bans.keys }
 
     pub fun setAllowStoringFollowers(_ val: Bool) {
       self.allowStoringFollowers=val
@@ -384,8 +395,8 @@ pub contract Profile {
     }
     
     access(contract) fun internal_addFollower(_ val: FriendStatus) {
-      if self.allowStoringFollowers {
-        self.followers[val.following] = val
+      if self.allowStoringFollowers && !self.bans.containsKey(val.follower) {
+        self.followers[val.follower] = val
       }
     }
     
@@ -406,15 +417,11 @@ pub contract Profile {
   pub fun createUser(name: String, description:String, allowStoringFollowers: Bool, tags:[String]) : @Profile.User {
     pre {
       Profile.verifyTags(tags: tags, tagLength:10, tagSize:3) : "cannot have more then 3 tags of length 10"
+      name.length <= 16: "Name must be 16 or less characters"
+      description.length <= 255: "Descriptions must be 255 or less characters"
     }
     return <- create Profile.User(name: name, description: description, allowStoringFollowers: allowStoringFollowers, tags: tags)
   }
-
-  init() {
-    self.publicPath = /public/User
-    self.storagePath = /storage/User
-  }
-
 
   pub fun verifyTags(tags : [String], tagLength: Int, tagSize: Int): Bool {
     if tags.length > tagSize {
@@ -428,4 +435,12 @@ pub contract Profile {
     }
     return true
   }
+
+  init() {
+    self.publicPath = /public/VersusUserProfile
+    self.storagePath = /storage/VersusUserProfile
+  }
+
+
+  
 }
