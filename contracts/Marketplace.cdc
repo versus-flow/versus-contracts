@@ -17,7 +17,7 @@ pub contract Marketplace {
     pub event PriceChanged(id: UInt64, newPrice: UFix64)
     
     // Event that is emitted when a token is purchased
-    pub event TokenPurchased(id: UInt64, price: UFix64, from:Address, to:Address)
+    pub event TokenPurchased(id: UInt64, artId: UInt64, price: UFix64, from:Address, to:Address)
 
     pub event RoyaltyPaid(id:UInt64, amount: UFix64, to:Address, name:String)
 
@@ -108,6 +108,7 @@ pub contract Marketplace {
                 ?? panic("Could not borrow reference to owner token vault")
             
             let token <-self.withdraw(tokenID: tokenID)
+            let artId = token.id
 
             for royality in token.royalty.keys {
                 let royaltyData= token.royalty[royality]!
@@ -124,7 +125,7 @@ pub contract Marketplace {
             // deposit the NFT into the buyers collection
             recipient.deposit(token: <- token)
 
-            emit TokenPurchased(id: tokenID, price: price, from: vaultRef.owner!.address, to:  recipient.owner!.address)
+            emit TokenPurchased(id: tokenID, artId: artId, price: price, from: vaultRef.owner!.address, to:  recipient.owner!.address)
         }
 
         // idPrice returns the price of a specific token in the sale
@@ -148,8 +149,8 @@ pub contract Marketplace {
     }
 
     pub init() {
-        self.CollectionPublicPath= /public/versusArtMarketplace2
-        self.CollectionStoragePath= /storage/versusArtMarketplace2
+        self.CollectionPublicPath= /public/versusArtMarketplace
+        self.CollectionStoragePath= /storage/versusArtMarketplace
     }
 
 }
