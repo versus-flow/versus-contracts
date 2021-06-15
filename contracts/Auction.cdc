@@ -68,6 +68,7 @@ pub contract Auction {
     // Events
 
 
+    pub event TokenPurchased(id: UInt64, artId: UInt64, price: UFix64, from:Address, to:Address?)
     pub event CollectionCreated(owner: Address, cutPercentage: UFix64)
     pub event Created(tokenID: UInt64, owner: Address, startPrice: UFix64, startTime: UFix64)
     pub event Bid(tokenID: UInt64, bidderAddress: Address, bidPrice: UFix64)
@@ -216,12 +217,21 @@ pub contract Auction {
             emit MarketplaceEarned(amount: amount, owner: cutVault.owner!.address)
             cutVault.deposit(from: <- beneficiaryCut)
 
+            let artId=self.NFT?.id 
+
             self.sendNFT(self.recipientCollectionCap!)
             self.sendBidTokens(self.ownerVaultCap)
 
             self.auctionCompleted = true
             
             emit Settled(tokenID: self.auctionID, price: self.currentPrice)
+
+            emit TokenPurchased(id: self.auctionID, 
+                artId: artId!, 
+                price: self.currentPrice, 
+                from: self.ownerVaultCap.address, 
+                to: self.recipientCollectionCap?.address)
+
         }
 
         pub fun returnAuctionItemToOwner() {

@@ -25,7 +25,6 @@ pub contract Versus {
     pub let CollectionPublicPath: PublicPath
     pub let CollectionPrivatePath: PrivatePath
 
-
     //counter for drops that is incremented every time there is a new versus drop made
     pub var totalDrops: UInt64
 
