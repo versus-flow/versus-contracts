@@ -27,27 +27,34 @@ func splitByWidthMake(str string, size int) []string {
 	return splited
 }
 
-func fileAsImageData(path string) string {
+func fileAsImageData(path string) (string, error) {
 	f, _ := os.Open("./" + path)
 
 	defer f.Close()
 
 	// Read entire JPG into byte slice.
 	reader := bufio.NewReader(f)
-	content, _ := ioutil.ReadAll(reader)
+	//TODO: exit on error!
+	content, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return "", err
+	}
 
 	contentType := http.DetectContentType(content)
 
 	// Encode as base64.
 	encoded := base64.StdEncoding.EncodeToString(content)
 
-	return "data:" + contentType + ";base64, " + encoded
+	return "data:" + contentType + ";base64, " + encoded, nil
 }
 
 func main() {
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
-	image := fileAsImageData("zigor.jpg")
+	image, err := fileAsImageData("conductor.jpeg")
+	if err != nil {
+		panic(err)
+	}
 
 	parts := splitByWidthMake(image, 1_000_000)
 	for _, part := range parts {
@@ -56,13 +63,13 @@ func main() {
 
 	flow.TransactionFromFile("setup/drop_prod").
 		SignProposeAndPayAs("admin").
-		RawAccountArgument("0xfb1b4662ca2f6dbd").
-		UFix64Argument("1.00").                //start price
-		UFix64Argument("1622642400.0").        //start time `date -r to confirm`
-		StringArgument("Zigor"). //artist name
-		StringArgument("Jaime el hortaliza").    //name
-		StringArgument("Jaime is a peculiar guy, depending on the time of the day he is angry or very happy, or both at the same time. Not many people know it but Jaime has a split personality. Every once in a while a human eats him but sooner or later he comes out again.").
-		UInt64Argument(10).        //number of editions
+		RawAccountArgument("0xa882dfac54316070").
+		UFix64Argument("1.00").          //start price
+		UFix64Argument("1623247200.0").  //start time `date -r to confirm`
+		StringArgument("SKAN").          //artist name
+		StringArgument("The Conductor"). //name
+		StringArgument("This was created for a challenge in the cgsociety forum back when I was first trying to learn about digital arts. Thinking back it was crazy that I had so much energy to spend 2 full weeks, day and night, doing this with a trackball mouse. I was introduced to a wacom pen after this and my life changed forever.").
+		UInt64Argument(20).        //number of editions
 		UFix64Argument("2.0").     //min bid increment
 		UFix64Argument("4.0").     //min bid increment unique
 		UFix64Argument("86400.0"). //duration 60 * 60 * 24 1 day
