@@ -170,6 +170,8 @@ pub contract Profile {
     pub fun deposit(from: @FungibleToken.Vault)
     pub fun supportedFungigleTokenTypes() : [Type]
     pub fun asProfile() : UserProfile
+    pub fun isBanned(_ val: Address): Bool
+    //TODO: should getBanned be here?
     
     access(contract) fun internal_addFollower(_ val: FriendStatus)
     access(contract) fun internal_removeFollower(_ address: Address) 
@@ -265,6 +267,7 @@ pub contract Profile {
     pub fun addBan(_ val: Address) { self.bans[val]= true}
     pub fun removeBan(_ val:Address) { self.bans.remove(key: val) }
     pub fun getBans() : [Address] { return self.bans.keys }
+    pub fun isBanned(_ val:Address) : Bool { return self.bans.containsKey(val)}
 
     pub fun setAllowStoringFollowers(_ val: Bool) {
       self.allowStoringFollowers=val
@@ -376,7 +379,6 @@ pub contract Profile {
     pub fun addCollection(_ val: ResourceCollection) { self.collections[val.name]=val}
     pub fun getCollections(): [ResourceCollection] { return self.collections.values}
 
- 
 
     pub fun follow(_ address: Address, tags:[String]) {
       let friendProfile=Profile.find(address)

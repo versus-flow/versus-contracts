@@ -4,6 +4,7 @@ import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 import Art from "./Art.cdc"
 import Content from "./Content.cdc"
 import Auction from "./Auction.cdc"
+import Profile from "./Profile.cdc"
 
 /*
  The main contract in the Versus auction system.
@@ -393,7 +394,7 @@ pub contract Versus {
              minimumBidIncrement: UFix64, 
              minimumBidUniqueIncrement: UFix64,
              startTime: UFix64, 
-             startPrice: UFix64,  //TODO: seperate startPrice for unique and edition
+             startPrice: UFix64,  
              vaultCap: Capability<&{FungibleToken.Receiver}>,
              duration: UFix64,
              extensionOnLateBid:UFix64)
@@ -753,7 +754,19 @@ pub contract Versus {
           return Versus.account.borrow<&NonFungibleToken.Collection>(from: Art.CollectionStoragePath)!
         }
 
-        //TODO: missing get DropCollection
+        pub fun getDropCollection(): &Versus.DropCollection {
+          pre {
+            self.server != nil : "Your client has not been linked to the server"
+          }
+          return self.server!.borrow()!
+        }
+
+        pub fun getVersusProfile(): &Profile.User {
+          pre {
+            self.server != nil : "Your client has not been linked to the server"
+          }
+          return Versus.account.borrow<&Profile.User>(from: Profile.storagePath)!
+        }
 
     }
 
@@ -761,8 +774,6 @@ pub contract Versus {
     pub fun createAdminClient(): @Admin {
         return <- create Admin()
     }
-    
-
 
     //initialize all the paths and create and link up the admin proxy
     //init is only executed on initial deployment
