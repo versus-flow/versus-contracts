@@ -34,7 +34,6 @@ func fileAsImageData(path string) (string, error) {
 
 	// Read entire JPG into byte slice.
 	reader := bufio.NewReader(f)
-	//TODO: exit on error!
 	content, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return "", err

@@ -6,8 +6,10 @@
 
 
 //local emulator
-import FungibleToken from 0xee82856bf20e2aa6
-import Art, Versus from 0xf8d6e0586b0a20c7
+//import FungibleToken from 0xee82856bf20e2aa6
+//import Art, Versus from 0xf8d6e0586b0a20c7
+
+import Art, Versus from 0xdb47998bf96c9ef1
 
 transaction(
     artist: Address,

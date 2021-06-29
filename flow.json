@@ -1,5 +1,11 @@
 {
- "gasLimit" : 9999,
+  "gasLimit" : 9999,
+	"emulators": {
+		"default": {
+			"port": 3569,
+			"serviceAccount": "emulator-account"
+		}
+	},
 	"contracts": {
 		"NonFungibleToken": {
 			"source": "./contracts/standard/NonFungibleToken.cdc",
@@ -28,6 +34,16 @@
 		"Marketplace": "./contracts/Marketplace.cdc",
     "Profile": "./contracts/Profile.cdc"
 	},
+	"networks": {
+		"emulator": "127.0.0.1:3569"
+	},
+  "accounts": {
+		"emulator-account": {
+			"address": "f8d6e0586b0a20c7",
+			"keys": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8",
+			"chain": "flow-emulator"
+		}
+	},
 	"deployments": {
 		"emulator": {
 			"emulator-account": [
@@ -41,26 +57,7 @@
 			]
 		}
 	},
-	"emulators": {
-		"default": {
-			"port": 3569,
-			"serviceAccount": "emulator-account"
-		}
-	},
-	"accounts": {
-		"emulator-account": {
-			"address": "f8d6e0586b0a20c7",
-			"keys": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8",
-			"chain": "flow-emulator"
-		}
-	},
-	"networks": {
-		"emulator": {
-			"host": "127.0.0.1:3569",
-			"serviceAccount": "emulator-account",
-			"chain" : "flow-emulator"
-		}
-	},
+	
 	"emulatorAccounts" : {
 		"marketplace" : "01cf0e2f2f715450",
 		"artist" : "179b6b1cb6755e31",

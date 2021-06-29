@@ -27,27 +27,33 @@ func splitByWidthMake(str string, size int) []string {
 	return splited
 }
 
-func fileAsImageData(path string) string {
+func fileAsImageData(path string) (string, error) {
 	f, _ := os.Open("./" + path)
 
 	defer f.Close()
 
 	// Read entire JPG into byte slice.
 	reader := bufio.NewReader(f)
-	content, _ := ioutil.ReadAll(reader)
+	content, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return "", err
+	}
 
 	contentType := http.DetectContentType(content)
 
 	// Encode as base64.
 	encoded := base64.StdEncoding.EncodeToString(content)
 
-	return "data:" + contentType + ";base64, " + encoded
+	return "data:" + contentType + ";base64, " + encoded, nil
 }
 
 func main() {
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
-	image := fileAsImageData("bull.png")
+	image, err := fileAsImageData("sprinklefest.gif")
+	if err != nil {
+		panic(err)
+	}
 
 	parts := splitByWidthMake(image, 1_000_000)
 	for _, part := range parts {
@@ -58,10 +64,10 @@ func main() {
 		SignProposeAndPayAs("admin").
 		AccountArgument("artist").
 		UFix64Argument("1.00").         //start price
-		UFix64Argument("1620368421.0"). //start time
-		StringArgument("Kinger9999").   //artist name
-		StringArgument("Bull").         //name
-		StringArgument("Teh bull").
+		UFix64Argument("1624565506.0"). //start time
+		StringArgument("Sprinkler").   //artist name
+		StringArgument("Sprinklefest").         //name
+		StringArgument("PARTAYl").
 		UInt64Argument(10).           //number of editions
 		UFix64Argument("2.0").        //min bid increment
 		UFix64Argument("4.0").        //min bid increment unique

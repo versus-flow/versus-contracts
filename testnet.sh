@@ -4,13 +4,13 @@ name=$1
 
 
 # this file needs an service account for testnet that can create accounts
-flowJson="~/.flow.dev.json"
-keys=$(flow keys generate -o json)
+flowJson="~/.flow-dev.json"
+keys=$(flow keys generate -o json -f $flowJson)
 
-publicKey=$(echo $keys | jq ".private" -r)
-privateKey=$(echo $keys | jq ".public" -r)
+publicKey=$(echo $keys | jq ".public" -r)
+privateKey=$(echo $keys | jq ".private" -r)
 
-account=$(flow accounts create --host access.devnet.nodes.onflow.org:9000 --config-path ~/.flow-dev.json --key $publicKey -o json)
+account=$(flow accounts create --host access.devnet.nodes.onflow.org:9000 --config-path $flowJson --key $publicKey -o json)
 
 
 address=$(echo $account | jq ".address" -r)

@@ -1,9 +1,9 @@
 
 
 //these are testnet 
-import FungibleToken from 0xf233dcee88fe0abe
-import NonFungibleToken from 0x1d7e57aa55817448
-import Content, Art, Auction, Versus from 0xd796ff17107bbff6
+import FungibleToken from 0x9a0766d93b6608b7
+import NonFungibleToken from 0x631e88ae7f1d7c20
+import Content, Art, Auction, Versus from 0xdb47998bf96c9ef1
 
 //this transaction is run as the account that will host and own the marketplace to set up the 
 //versusAdmin client and create the empty content and art collection
