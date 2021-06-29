@@ -13,6 +13,8 @@ pub contract Marketplace {
     // Event that is emitted when a new NFT is put up for sale
     pub event ForSale(id: UInt64, price: UFix64, from: Address)
 
+    pub event SaleItem(id: UInt64, seller: Address, price: UFix64, active: Bool, title: String, artist: String, edition: UInt64, maxEdition: UInt64, cacheKey: String)
+
     // Event that is emitted when the price of an NFT changes
     pub event PriceChanged(id: UInt64, newPrice: UFix64)
     
@@ -85,17 +87,47 @@ pub contract Marketplace {
           return saleItems
         }
 
+          pub fun borrowArt(id: UInt64): &{Art.Public}? {
+            if self.forSale[id] != nil {
+                return &self.forSale[id] as &Art.NFT
+            } else {
+                return nil
+            }
+        }
+
         pub fun withdraw(tokenID: UInt64): @Art.NFT {
-            // remove the price
-            self.prices.remove(key: tokenID)
+ 
+            let price=self.prices.remove(key: tokenID)
             // remove and return the token
             let token <- self.forSale.remove(key: tokenID) ?? panic("missing NFT")
+           
             emit SaleWithdrawn(id: tokenID, from: self.ownerVault.address)
+
+            emit SaleItem(id: token.id, 
+              seller: self.ownerVault.address, 
+              price: price ?? 0.0, 
+              active: false,
+              title: token.metadata.name,
+              artist: token.metadata.artist,
+              edition: token.metadata.edition, 
+              maxEdition: token.metadata.maxEdition,
+              cacheKey: token.cacheKey())
+
             return <-token
         }
 
         // listForSale lists an NFT for sale in this collection
         pub fun listForSale(token: @Art.NFT, price: UFix64) {
+            emit SaleItem(id: token.id, 
+              seller: self.ownerVault.address, 
+              price: price, 
+              active: true,
+              title: token.metadata.name,
+              artist: token.metadata.artist,
+              edition: token.metadata.edition, 
+              maxEdition: token.metadata.maxEdition,
+              cacheKey: token.cacheKey())
+
             let id = token.id
 
             // store the price in the price array
@@ -111,8 +143,18 @@ pub contract Marketplace {
         // changePrice changes the price of a token that is currently for sale
         pub fun changePrice(tokenID: UInt64, newPrice: UFix64) {
             self.prices[tokenID] = newPrice
-
             emit PriceChanged(id: tokenID, newPrice: newPrice)
+
+            let token= self.borrowArt(id: tokenID)!
+            emit SaleItem(id: token.id, 
+              seller: self.ownerVault.address, 
+              price: newPrice, 
+              active: true,
+              title: token.metadata.name,
+              artist: token.metadata.artist,
+              edition: token.metadata.edition, 
+              maxEdition: token.metadata.maxEdition,
+              cacheKey: token.cacheKey())
         }
 
         // purchase lets a user send tokens to purchase an NFT that is for sale
