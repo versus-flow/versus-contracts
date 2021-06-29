@@ -11,7 +11,7 @@ pub contract Marketplace {
     pub let CollectionPublicPath: PublicPath
 
     // Event that is emitted when a new NFT is put up for sale
-    pub event ForSale(id: UInt64, price: UFix64)
+    pub event ForSale(id: UInt64, price: UFix64, from: Address)
 
     // Event that is emitted when the price of an NFT changes
     pub event PriceChanged(id: UInt64, newPrice: UFix64)
@@ -22,15 +22,30 @@ pub contract Marketplace {
     pub event RoyaltyPaid(id:UInt64, amount: UFix64, to:Address, name:String)
 
     // Event that is emitted when a seller withdraws their NFT from the sale
-    pub event SaleWithdrawn(id: UInt64)
+    pub event SaleWithdrawn(id: UInt64, from:Address)
 
     // Interface that users will publish for their Sale collection
     // that only exposes the methods that are supposed to be public
     //
     pub resource interface SalePublic {
         pub fun purchase(tokenID: UInt64, recipientCap: Capability<&{Art.CollectionPublic}>, buyTokens: @FungibleToken.Vault)
-        pub fun idPrice(tokenID: UInt64): UFix64?
+        pub fun getSaleItem(tokenID: UInt64): MarketplaceData
         pub fun getIDs(): [UInt64]
+        pub fun listSaleItems() : [MarketplaceData]
+        pub fun getContent(tokenID: UInt64) : String
+     }
+
+     pub struct MarketplaceData {
+        pub let id: UInt64
+        pub let art: Art.Metadata
+        pub let cacheKey: String
+        pub let price: UFix64
+        init( id: UInt64, art: Art.Metadata, cacheKey:String, price: UFix64) {
+            self.art= art
+            self.id=id
+            self.price=price
+            self.cacheKey=cacheKey
+        }
     }
 
     // SaleCollection
@@ -57,13 +72,25 @@ pub contract Marketplace {
             self.prices = {}
         }
 
-        // withdraw gives the owner the opportunity to remove a sale from the collection
+        pub fun getContent(tokenID: UInt64) : String {
+            return self.forSale[tokenID]?.content()!
+        }
+             
+        pub fun listSaleItems() : [MarketplaceData] {
+          var saleItems: [MarketplaceData] = []
+
+          for id in self.getIDs() {
+            saleItems.append(self.getSaleItem(tokenID: id))
+          }
+          return saleItems
+        }
+
         pub fun withdraw(tokenID: UInt64): @Art.NFT {
             // remove the price
             self.prices.remove(key: tokenID)
             // remove and return the token
             let token <- self.forSale.remove(key: tokenID) ?? panic("missing NFT")
-            emit SaleWithdrawn(id: tokenID)
+            emit SaleWithdrawn(id: tokenID, from: self.ownerVault.address)
             return <-token
         }
 
@@ -78,7 +105,7 @@ pub contract Marketplace {
             let oldToken <- self.forSale[id] <- token
             destroy oldToken
 
-            emit ForSale(id: id, price: price)
+            emit ForSale(id: id, price: price, from: self.ownerVault.address)
         }
 
         // changePrice changes the price of a token that is currently for sale
@@ -129,8 +156,16 @@ pub contract Marketplace {
         }
 
         // idPrice returns the price of a specific token in the sale
-        pub fun idPrice(tokenID: UInt64): UFix64? {
-            return self.prices[tokenID]
+        pub fun getSaleItem(tokenID: UInt64): MarketplaceData {
+
+            let metadata=self.forSale[tokenID]?.metadata
+            let cacheKey=self.forSale[tokenID]?.cacheKey()
+            return MarketplaceData(
+                id: tokenID,
+                art: metadata!,
+                cacheKey: cacheKey!,
+                price: self.prices[tokenID]!
+            )
         }
 
         // getIDs returns an array of token IDs that are for sale

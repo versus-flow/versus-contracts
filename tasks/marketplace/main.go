@@ -74,6 +74,8 @@ func main() {
 			UFix64Argument("10.00"). //price
 			RunPrintEventsFull()
 
+		flow.ScriptFromFile("check_salepublic").AccountArgument("artist").UInt64Argument(0).Run()
+			
 		flow.TransactionFromFile("buy/marketplace").
 			SignProposeAndPayAs("buyer1").
 			AccountArgument("artist").
