@@ -149,10 +149,10 @@ func main() {
 	image := fileAsImageData("versus.png")
 	parts := splitByWidthMake(image, 1_000_000)
 	for _, part := range parts {
-		g.TransactionFromFile("setup/upload").SignProposeAndPayAs("admin").StringArgument(part).RunPrintEventsFull()
+		g.TransactionFromFile("upload").SignProposeAndPayAs("admin").StringArgument(part).RunPrintEventsFull()
 	}
 
-	g.TransactionFromFile("setup/mint_art_e").
+	g.TransactionFromFile("mint_art_e").
 		SignProposeAndPayAs("admin").
 		RawAccountArgument("0xd796ff17107bbff6").
 		StringArgument("Versus"). //artist name

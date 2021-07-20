@@ -1,14 +1,6 @@
-
-//testnet
-//import FungibleToken from 0xf233dcee88fe0abe
-//import NonFungibleToken from 0x1d7e57aa55817448
-//import Content, Art, Auction, Versus, Marketplace from 0x1ff7e32d71183db0
-
-//local emulator
-import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken, Content, Art, Auction, Versus, Marketplace from 0xf8d6e0586b0a20c7
-
-//TODO: This is not done, need to mint art first and then add it to the sale collection
+import Marketplace from "../../contracts/Marketplace.cdc"
+import Art from "../../contracts/Art.cdc"
+import FungibleToken from "../../contracts/standard/FungibleToken.cdc"
 
 //this transaction will setup an newly minted item for sale
 transaction(

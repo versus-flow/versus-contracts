@@ -23,6 +23,6 @@ func main() {
 		fmt.Println("could not parse drop as number")
 	}
 
-	flow.TransactionFromFile("buy/settle_testnet").SignProposeAndPayAs("admin").Argument(cadence.UInt64(drop)).RunPrintEventsFull()
+	flow.TransactionFromFile("settle_testnet").SignProposeAndPayAs("admin").Argument(cadence.UInt64(drop)).RunPrintEventsFull()
 
 }

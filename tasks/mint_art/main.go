@@ -43,7 +43,7 @@ func main() {
 	}
 
 	image := fileAsImageData(imageFile)
-	flow.TransactionFromFile("setup/mint_art").
+	flow.TransactionFromFile("mint_art").
 		SignProposeAndPayAs("admin").
 		RawAccountArgument(account).
 		StringArgument("ExampleArtist"). //artist name

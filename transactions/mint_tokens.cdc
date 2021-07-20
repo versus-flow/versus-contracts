@@ -1,7 +1,6 @@
 
-
-import FungibleToken from 0xee82856bf20e2aa6
-import FlowToken from 0x0ae53cb6e3f42a79
+import FungibleToken from "../../contracts/standard/FungibleToken.cdc"
+import FlowToken from "../../contracts/standard/FlowToken.cdc"
 
 transaction(recipient: Address, amount: UFix64) {
     let tokenAdmin: &FlowToken.Administrator

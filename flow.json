@@ -1,5 +1,4 @@
 {
-  "gasLimit" : 9999,
 	"emulators": {
 		"default": {
 			"port": 3569,
@@ -43,6 +42,22 @@
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
 			"key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
+		},
+		"artist": {
+			"address": "01cf0e2f2f715450",
+			"key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
+		},
+		"buyer1": {
+			"address": "179b6b1cb6755e31",
+			"key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
+		},
+		"buyer2": {
+			"address": "f3fcd2c1a78f5eee",
+			"key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
+		},
+		"marketplace": {
+			"address": "e03daebed8ca0615",
+			"key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
 		}
 	},
 	"deployments": {
@@ -55,14 +70,11 @@
 				"Versus",
 				"Marketplace",
         "Profile"
-			]
+			],
+			"artist" : [],
+			"buyer1" : [],
+			"buyer2" : [],
+			"marketplace" : []
 		}
-	},
-	
-	"emulatorAccounts" : {
-		"marketplace" : "01cf0e2f2f715450",
-		"artist" : "179b6b1cb6755e31",
-		"buyer1" : "f3fcd2c1a78f5eee",
-		"buyer2" : "e03daebed8ca0615"
 	}
 }

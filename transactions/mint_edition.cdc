@@ -1,14 +1,8 @@
+import NonFungibleToken from "../../contracts/standard/NonFungibleToken.cdc"
+import Art from "../../contracts/Art.cdc"
+import Versus from "../../contracts/Versus.cdc"
 
-//testnet
-//import FungibleToken from 0xf233dcee88fe0abe
-//import NonFungibleToken from 0x1d7e57aa55817448
-//import Content, Art, Auction, Versus from 0xd796ff17107bbff6
-
-
-//local emulator
-import Art, Versus from 0xd796ff17107bbff6
-import NonFungibleToken from 0x1d7e57aa55817448
-
+//transaction to create an edition of an nft in admins collection and send it to a user
 transaction(
     user: Address,
     original:Address,

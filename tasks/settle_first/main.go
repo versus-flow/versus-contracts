@@ -20,7 +20,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		flow.TransactionFromFile("buy/settle_testnet").SignProposeAndPayAs("admin").UInt64Argument(number).RunPrintEventsFull()
+		flow.TransactionFromFile("settle_testnet").SignProposeAndPayAs("admin").UInt64Argument(number).RunPrintEventsFull()
 	}
 
 }

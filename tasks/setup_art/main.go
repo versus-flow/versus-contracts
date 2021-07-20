@@ -16,6 +16,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	flow.TransactionFromFile("setup/setup_art").SignProposeAndPayAs(account).RunPrintEventsFull()
+	flow.TransactionFromFile("art_collection").SignProposeAndPayAs(account).RunPrintEventsFull()
 
 }

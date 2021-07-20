@@ -29,5 +29,5 @@ func main() {
 		panic(err)
 	}
 	accountArg := cadence.BytesToAddress(accountHex)
-	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().Argument(accountArg).UFix64Argument(amount).RunPrintEventsFull()
+	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().Argument(accountArg).UFix64Argument(amount).RunPrintEventsFull()
 }

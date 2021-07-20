@@ -39,26 +39,26 @@ func main() {
 	//flow.CreateAccountWithContracts("accounts", "NonFungibleToken", "Content", "Art", "Auction", "Versus")
 
 	flow.CreateAccount("marketplace", "artist", "buyer1", "buyer2")
-	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().AccountArgument("artist").UFix64Argument("1000.0").RunPrintEventsFull()
-	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().AccountArgument("marketplace").UFix64Argument("1000.0").RunPrintEventsFull()
-	flow.TransactionFromFile("setup/mint_tokens").SignProposeAndPayAsService().AccountArgument("buyer1").UFix64Argument("1000.0").RunPrintEventsFull()
+	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("artist").UFix64Argument("1000.0").RunPrintEventsFull()
+	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("marketplace").UFix64Argument("1000.0").RunPrintEventsFull()
+	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("buyer1").UFix64Argument("1000.0").RunPrintEventsFull()
 
 	//create the AdminPublicAndSomeOtherCollections
-	flow.TransactionFromFile("setup/versus1").
+	flow.TransactionFromFile("versus1").
 		SignProposeAndPayAs("marketplace").
 		RunPrintEventsFull()
 
 	//link in the server in the versus client
-	flow.TransactionFromFile("setup/versus2").
+	flow.TransactionFromFile("versus2").
 		SignProposeAndPayAsService().
 		AccountArgument("marketplace").
 		RunPrintEventsFull()
 
-	flow.TransactionFromFile("setup/art_collection").SignProposeAndPayAs("artist").RunPrintEventsFull()
-	flow.TransactionFromFile("setup/art_collection").SignProposeAndPayAs("buyer1").RunPrintEventsFull()
+	flow.TransactionFromFile("art_collection").SignProposeAndPayAs("artist").RunPrintEventsFull()
+	flow.TransactionFromFile("art_collection").SignProposeAndPayAs("buyer1").RunPrintEventsFull()
 
 	image := fileAsImageData("bull.png")
-	flow.TransactionFromFile("setup/mint_art").
+	flow.TransactionFromFile("mint_art").
 		SignProposeAndPayAs("marketplace").
 		AccountArgument("artist").
 		StringArgument("Vincent Kamp").                                                                 //artist name
@@ -68,7 +68,7 @@ func main() {
 		RunPrintEventsFull()
 
 
-		flow.TransactionFromFile("setup/setup_marketplace_with_art").
+		flow.TransactionFromFile("setup_marketplace_with_art").
 			SignProposeAndPayAs("artist").
 			UInt64Argument(0).       //artId
 			UFix64Argument("10.00"). //price
@@ -76,7 +76,7 @@ func main() {
 
 		flow.ScriptFromFile("check_salepublic").AccountArgument("artist").UInt64Argument(0).Run()
 			
-		flow.TransactionFromFile("buy/marketplace").
+		flow.TransactionFromFile("marketplace").
 			SignProposeAndPayAs("buyer1").
 			AccountArgument("artist").
 			UInt64Argument(0).

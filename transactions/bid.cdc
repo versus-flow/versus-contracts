@@ -1,16 +1,9 @@
-//emulator
-import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken, Content, Art, Auction, Versus from 0xf8d6e0586b0a20c7
+import FungibleToken from "../../contracts/standard/FungibleToken.cdc"
+import NonFungibleToken from "../../contracts/standard/NonFungibleToken.cdc"
+import Versus from "../../contracts/Versus.cdc"
+import Art from "../../contracts/Art.cdc"
 
-//testnet
-//import FungibleToken from 0xf233dcee88fe0abe
-//import NonFungibleToken from 0x1d7e57aa55817448
-//import Art, Auction, Versus from 0x1ff7e32d71183db0
-
-/*
-    Transaction to make a bid in a marketplace for the given dropId and auctionId
-
- */
+// Transaction to make a bid in a marketplace for the given dropId and auctionId
 transaction(marketplace: Address, dropId: UInt64, auctionId: UInt64, bidAmount: UFix64) {
     // reference to the buyer's NFT collection where they
     // will store the bought NFT

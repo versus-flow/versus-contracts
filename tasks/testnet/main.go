@@ -9,12 +9,12 @@ func main() {
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
 	//create the AdminPublicAndSomeOtherCollections
-	flow.TransactionFromFile("setup/versus1_testnet").
+	flow.TransactionFromFile("versus1_testnet").
 		SignProposeAndPayAs("admin").
 		RunPrintEventsFull()
 
 	//link in the server in the versus client
-	flow.TransactionFromFile("setup/versus2_testnet").
+	flow.TransactionFromFile("versus2_testnet").
 		SignProposeAndPayAs("versus").
 		AccountArgument("admin").
 		RunPrintEventsFull()

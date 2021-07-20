@@ -1,12 +1,8 @@
 
-//testnet
-//import Art, Versus from 0xdb47998bf96c9ef1
+import Versus from "../../contracts/Versus.cdc"
+import Art from "../../contracts/Art.cdc"
 
-
-//local emulator
-import Art, Versus from 0xf8d6e0586b0a20c7
-
-
+//mint an art and add it to a users collection
 transaction(
     artist: Address,
     artistName: String, 

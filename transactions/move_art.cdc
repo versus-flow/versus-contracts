@@ -1,9 +1,9 @@
 
-import NonFungibleToken from 0x1d7e57aa55817448
-import Art from 0xd796ff17107bbff6
+import NonFungibleToken from "../../contracts/standard/NonFungibleToken.cdc"
+import Art from "../../contracts/Art.cdc"
 
+//Transaction to move a NFT art from the signers collection to another collection
 transaction(address:Address, artID: UInt64) {
-
 
   let nftCollection: &NonFungibleToken.Collection
 

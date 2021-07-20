@@ -1,8 +1,8 @@
-import FungibleToken from 0xf233dcee88fe0abe
-import FlowToken from 0x1654653399040a61
-import Versus from 0xd796ff17107bbff6
+import FungibleToken from "../../contracts/standard/FungibleToken.cdc"
+import FlowToken from "../../contracts/standard/FlowToken.cdc"
+import Versus from "../../contracts/Versus.cdc"
 
-//This transactions transfers flow on testnet from one account to another
+//This transactions transfers flow on from versus to another user
 transaction(amount: UFix64, to: Address) {
   let sentVault: @FungibleToken.Vault
 

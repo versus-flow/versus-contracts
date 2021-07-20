@@ -27,13 +27,13 @@ func main() {
 
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
-	flow.TransactionFromFile("setup/transfer_flow").
+	flow.TransactionFromFile("transfer_flow").
 		SignProposeAndPayAsService().
 		UFix64Argument("1000.0").
 		AccountArgument("versus").
 		RunPrintEventsFull()
 
-	flow.TransactionFromFile("setup/transfer_flow").
+	flow.TransactionFromFile("transfer_flow").
 		SignProposeAndPayAsService().
 		UFix64Argument("100.0").
 		AccountArgument("admin").

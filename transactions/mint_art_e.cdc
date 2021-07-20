@@ -1,6 +1,6 @@
-import NonFungibleToken from 0x1d7e57aa55817448
-import Art, Versus from 0xd796ff17107bbff6
+import Versus from "../../contracts/Versus.cdc"
 
+//Transaction to mint Art and edition art and deploy to all addresses
 transaction(
     artist: Address,
     artistName: String, 

@@ -23,7 +23,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	flow.TransactionFromFile("setup/transfer_flow_versus").
+	flow.TransactionFromFile("transfer_flow_versus").
 		SignProposeAndPayAs("admin").
 		UFix64Argument(amount).
 		RawAccountArgument(account).

@@ -57,10 +57,10 @@ func main() {
 
 	parts := splitByWidthMake(image, 1_000_000)
 	for _, part := range parts {
-		flow.TransactionFromFile("setup/upload").SignProposeAndPayAs("admin").StringArgument(part).RunPrintEventsFull()
+		flow.TransactionFromFile("upload").SignProposeAndPayAs("admin").StringArgument(part).RunPrintEventsFull()
 	}
 
-	flow.TransactionFromFile("setup/drop_testnet").
+	flow.TransactionFromFile("drop_testnet").
 		SignProposeAndPayAs("admin").
 		AccountArgument("artist").
 		UFix64Argument("1.00").         //start price
