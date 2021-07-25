@@ -70,7 +70,7 @@ func parseTime(timeString string) string {
 
 func main() {
 
-	startDate := "July 29"
+	startTime := "July 29, 2021 08:00:00 AM"
 	durationHrs := 4
 	artistAddress := "0x1b945b52f416ddf9"
 	artist := "Jos"
@@ -82,13 +82,14 @@ we will still be strangers to ourselves
 We will bridge the open space
 we will witness new wonders
 but in the immense distance of the cosmos
-we will be smaller and smaller."
-`
+we will be smaller and smaller.`
+
 	fileName := "solitude.jpeg"
 
-	flow := gwtf.NewGoWithTheFlowDevNet()
+	flow := gwtf.NewGoWithTheFlowMainNet()
 
 	image, err := fileAsImageData(fileName)
+
 	if err != nil {
 		panic(err)
 	}
@@ -101,16 +102,16 @@ we will be smaller and smaller."
 	flow.TransactionFromFile("setup/drop_prod").
 		SignProposeAndPayAs("admin").
 		RawAccountArgument(artistAddress).
-		UFix64Argument("1.00").                                     //start price
-		UFix64Argument(parseTime(startDate + ", 2021 8:00:00 AM")). //start time `date -r to confirm`
-		StringArgument(artist).                                     //artist name
-		StringArgument(name).                                       //name
-		StringArgument(description).                                //description
-		UInt64Argument(uint64(editions)).                           //number of editions
-		UFix64Argument("2.0").                                      //min bid increment
-		UFix64Argument("4.0").                                      //min bid increment unique
-		UFix64Argument(fmt.Sprintf("%d.0", durationHrs*60*60)).     //duration 60 * 60 * 24 1 day
-		UFix64Argument("300.0").                                    //extensionOnLateBid 5 * 60 5 min
+		UFix64Argument("1.00").                                 //start price
+		UFix64Argument(parseTime(startTime)).                   //start time `date -r to confirm`
+		StringArgument(artist).                                 //artist name
+		StringArgument(name).                                   //name
+		StringArgument(description).                            //description
+		UInt64Argument(uint64(editions)).                       //number of editions
+		UFix64Argument("2.0").                                  //min bid increment
+		UFix64Argument("4.0").                                  //min bid increment unique
+		UFix64Argument(fmt.Sprintf("%d.0", durationHrs*60*60)). //duration 60 * 60 * 24 1 day
+		UFix64Argument("300.0").                                //extensionOnLateBid 5 * 60 5 min
 		RunPrintEventsFull()
 
 }
