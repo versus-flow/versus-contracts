@@ -2,7 +2,7 @@ all: demo
 
 #run the demo script on devnet
 .PHONY: demo
-demo: deploy
+demo: 
 	go run ./tasks/demo/main.go
 
 .PHONY: marketplace
@@ -13,7 +13,6 @@ marketplace: deploy
 .PHONY: deploy
 deploy:
 	flow project deploy  -n emulator
-
 
 #this goal mints new flow tokens on emulator takes an account(Addres) env and can take an amount(int:100) env
 .PHONY:mint
