@@ -49,10 +49,12 @@ func main() {
 		UFix64Argument("5.0").                                                                          //min bid increment
 		UFix64Argument("10.0").                                                                         //min bid increment unique
 		UFix64Argument("5.0").                                                                          //duration
+		UFix64Argument("5.0").                                                                          //extensionOnLateBid
 		RunPrintEventsFull()
 
 	fmt.Println("Setup a buyer and make him bid on the unique auction")
 	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("buyer1").UFix64Argument("1000.0").RunPrintEventsFull()
+	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("buyer2").UFix64Argument("1000.0").RunPrintEventsFull()
 
 	flow.TransactionFromFile("bid").
 		SignProposeAndPayAs("buyer1").
@@ -63,11 +65,11 @@ func main() {
 		RunPrintEventsFull()
 
 	flow.TransactionFromFile("bid").
+		SignProposeAndPayAs("buyer2").
 		AccountArgument("account").
-		RawAccountArgument("0xf8d6e0586b0a20c7"). //we use raw argument here because of a limitation on how go-with-the-flow is built
-		UInt64Argument(1).                        //id of drop
-		Argument(cadence.UInt64(11)).             //id of unique auction auction to bid on
-		UFix64Argument("30.00").                  //amount to bid
+		UInt64Argument(1).            //id of drop
+		Argument(cadence.UInt64(11)). //id of unique auction auction to bid on
+		UFix64Argument("30.00").      //amount to bid
 		RunPrintEventsFull()
 
 	fmt.Println("Go to website to bid there")

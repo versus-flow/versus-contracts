@@ -1,4 +1,4 @@
-import FungibleToken from 0xFUNGIBLETOKENADDRESS
+import FungibleToken from "./FungibleToken.cdc"
 
 pub contract FUSD: FungibleToken {
 
@@ -191,7 +191,8 @@ pub contract FUSD: FungibleToken {
 
     }
 
-    init(adminAccount: AuthAccount) {
+    init() {
+        let adminAccount = self.account
         self.AdminStoragePath = /storage/fusdAdmin
         self.MinterProxyPublicPath = /public/fusdMinterProxy
         self.MinterProxyStoragePath = /storage/fusdMinterProxy
