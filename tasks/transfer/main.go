@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 )
 
 func main() {
