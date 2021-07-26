@@ -1,6 +1,6 @@
-import FungibleToken from "../../contracts/standard/FungibleToken.cdc"
-import NonFungibleToken from "../../contracts/standard/NonFungibleToken.cdc"
-import Versus from "../../contracts/Versus.cdc"
+import FungibleToken from "../contracts/standard/FungibleToken.cdc"
+import NonFungibleToken from "../contracts/standard/NonFungibleToken.cdc"
+import Versus from "../contracts/Versus.cdc"
 
 //This transaction will setup a drop in a versus auction
 transaction(
