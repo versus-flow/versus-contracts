@@ -1,4 +1,4 @@
-import Versus from "../../contracts/Versus.cdc"
+import Versus from "../contracts/Versus.cdc"
 //This transaction will destroy a versus drop
 transaction(id: UInt64) {
     let versus: &Versus.DropCollection

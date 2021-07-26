@@ -1,6 +1,6 @@
 
 
-import Versus from "../../contracts/Versus.cdc"
+import Versus from "../contracts/Versus.cdc"
 
 //This transactions is run as the owner of the versus contract and links in the client
 //ownerAddress is the address that will host the marketplace

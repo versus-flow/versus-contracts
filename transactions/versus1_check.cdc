@@ -1,4 +1,4 @@
-import Versus from "../../contracts/Versus.cdc"
+import Versus from "../contracts/Versus.cdc"
 
 //this transaction is run as the account that will host and own the marketplace to set up the 
 //versusAdmin client and create the empty content and art collection

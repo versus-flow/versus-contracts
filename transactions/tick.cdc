@@ -1,4 +1,4 @@
-import Versus from "../../contracts/Versus.cdc"
+import Versus from "../contracts/Versus.cdc"
 
 /*
 Simulate that the clock is running

@@ -1,6 +1,6 @@
 
-import Versus from "../../contracts/Versus.cdc"
-import Art from "../../contracts/Art.cdc"
+import Versus from "../contracts/Versus.cdc"
+import Art from "../contracts/Art.cdc"
 
 //mint an art and add it to a users collection
 transaction(

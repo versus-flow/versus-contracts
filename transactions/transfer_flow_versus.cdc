@@ -1,6 +1,6 @@
-import FungibleToken from "../../contracts/standard/FungibleToken.cdc"
-import FlowToken from "../../contracts/standard/FlowToken.cdc"
-import Versus from "../../contracts/Versus.cdc"
+import FungibleToken from "../contracts/standard/FungibleToken.cdc"
+import FlowToken from "../contracts/standard/FlowToken.cdc"
+import Versus from "../contracts/Versus.cdc"
 
 //This transactions transfers flow on from versus to another user
 transaction(amount: UFix64, to: Address) {

@@ -1,52 +1,13 @@
 package main
 
 import (
-	"bufio"
-	"encoding/base64"
 	"fmt"
-	"io/ioutil"
-	"math"
-	"net/http"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	"github.com/onflow/cadence"
 )
-
-func fileAsImageData(path string) string {
-	f, _ := os.Open("./" + path)
-
-	defer f.Close()
-
-	// Read entire JPG into byte slice.
-	reader := bufio.NewReader(f)
-	content, _ := ioutil.ReadAll(reader)
-
-	contentType := http.DetectContentType(content)
-
-	// Encode as base64.
-	encoded := base64.StdEncoding.EncodeToString(content)
-
-	return "data:" + contentType + ";base64, " + encoded
-}
-
-func splitByWidthMake(str string, size int) []string {
-	strLength := len(str)
-	splitedLength := int(math.Ceil(float64(strLength) / float64(size)))
-	splited := make([]string, splitedLength)
-	var start, stop int
-	for i := 0; i < splitedLength; i += 1 {
-		start = i * size
-		stop = start + size
-		if stop > strLength {
-			stop = strLength
-		}
-		splited[i] = str[start:stop]
-	}
-	return splited
-}
 
 //NB! start from root dir with makefile
 func main() {
@@ -57,7 +18,7 @@ func main() {
 
 	flow := gwtf.NewGoWithTheFlowInMemoryEmulator()
 
-	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("emulator-account").UFix64Argument("100.0").RunPrintEventsFull()
+	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("account").UFix64Argument("100.0").RunPrintEventsFull()
 	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("artist").UFix64Argument("100.0").RunPrintEventsFull()
 	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("marketplace").UFix64Argument("100.0").RunPrintEventsFull()
 
@@ -72,13 +33,9 @@ func main() {
 		AccountArgument("marketplace").
 		RunPrintEventsFull()
 
-	fmt.Println("try to upload")
+	fmt.Println("Upload image")
+	flow.UploadImageAsDataUrl("ekaitza.png", "marketplace")
 
-	image := fileAsImageData("ekaitza.png")
-	parts := splitByWidthMake(image, 1_000_000)
-	for _, part := range parts {
-		flow.TransactionFromFile("upload").SignProposeAndPayAs("marketplace").StringArgument(part).RunPrintEventsFull()
-	}
 	fmt.Println("Create a drop in versus that is already started with 10 editions")
 	flow.TransactionFromFile("drop").
 		SignProposeAndPayAs("marketplace").
@@ -99,14 +56,14 @@ func main() {
 
 	flow.TransactionFromFile("bid").
 		SignProposeAndPayAs("buyer1").
-		RawAccountArgument("0xf8d6e0586b0a20c7"). //we use raw argument here because of a limitation on how go-with-the-flow is built
-		UInt64Argument(1).                        //id of drop
-		Argument(cadence.UInt64(11)).             //id of unique auction auction to bid on
-		UFix64Argument("10.00").                  //amount to bid
+		AccountArgument("account").
+		UInt64Argument(1).            //id of drop
+		Argument(cadence.UInt64(11)). //id of unique auction auction to bid on
+		UFix64Argument("10.00").      //amount to bid
 		RunPrintEventsFull()
 
 	flow.TransactionFromFile("bid").
-		SignProposeAndPayAs("buyer1").
+		AccountArgument("account").
 		RawAccountArgument("0xf8d6e0586b0a20c7"). //we use raw argument here because of a limitation on how go-with-the-flow is built
 		UInt64Argument(1).                        //id of drop
 		Argument(cadence.UInt64(11)).             //id of unique auction auction to bid on

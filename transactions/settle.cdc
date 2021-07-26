@@ -1,4 +1,4 @@
-import Versus from "../../contracts/Versus.cdc"
+import Versus from "../contracts/Versus.cdc"
 
 //Transaction to settle/finish off an auction. Has to be signed by the owner of the versus marketplace
 transaction(dropId: UInt64) {

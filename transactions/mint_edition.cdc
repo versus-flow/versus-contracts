@@ -1,6 +1,6 @@
-import NonFungibleToken from "../../contracts/standard/NonFungibleToken.cdc"
-import Art from "../../contracts/Art.cdc"
-import Versus from "../../contracts/Versus.cdc"
+import NonFungibleToken from "../contracts/standard/NonFungibleToken.cdc"
+import Art from "../contracts/Art.cdc"
+import Versus from "../contracts/Versus.cdc"
 
 //transaction to create an edition of an nft in admins collection and send it to a user
 transaction(

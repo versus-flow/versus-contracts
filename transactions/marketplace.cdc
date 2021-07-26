@@ -1,7 +1,7 @@
-import Art from "../../contracts/Art.cdc"
-import Marketplace from "../../contracts/Marketplace.cdc"
-import FungibleToken from "../../contracts/standard/FungibleToken.cdc"
-import NonFungibleToken from "../../contracts/standard/NonFungibleToken.cdc"
+import Art from "../contracts/Art.cdc"
+import Marketplace from "../contracts/Marketplace.cdc"
+import FungibleToken from "../contracts/standard/FungibleToken.cdc"
+import NonFungibleToken from "../contracts/standard/NonFungibleToken.cdc"
 
 //Transaction to make a bid in a marketplace for the given dropId and auctionId
 transaction(marketplace: Address, tokenId: UInt64, amount: UFix64) {

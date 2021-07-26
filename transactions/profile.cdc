@@ -1,11 +1,11 @@
-import FungibleToken from "../../contracts/standard/FungibleToken.cdc"
-import FUSD from "../../contracts/standard/FUSD.cdc"
-import FlowToken from "../../contracts/standard/FlowToken.cdc"
-import NonFungibleToken from "../../contracts/standard/NonFungibleToken.cdc"
-import Art from "../../contracts/Art.cdc"
-import Versus from "../../contracts/Versus.cdc"
-import Profile from "../../contracts/Profile.cdc"
-import Marketplace from "../../contracts/Marketplace.cdc"
+import FungibleToken from "../contracts/standard/FungibleToken.cdc"
+import FUSD from "../contracts/standard/FUSD.cdc"
+import FlowToken from "../contracts/standard/FlowToken.cdc"
+import NonFungibleToken from "../contracts/standard/NonFungibleToken.cdc"
+import Art from "../contracts/Art.cdc"
+import Versus from "../contracts/Versus.cdc"
+import Profile from "../contracts/Profile.cdc"
+import Marketplace from "../contracts/Marketplace.cdc"
 
 transaction(name: String, description: String, allowStoringFollowers: Bool) {
   prepare(acct: AuthAccount) {

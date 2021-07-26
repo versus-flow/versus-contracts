@@ -1,6 +1,6 @@
 
-import NonFungibleToken from "../../contracts/standard/NonFungibleToken.cdc"
-import Art from "../../contracts/Art.cdc"
+import NonFungibleToken from "../contracts/standard/NonFungibleToken.cdc"
+import Art from "../contracts/Art.cdc"
 
 //Transaction to move a NFT art from the signers collection to another collection
 transaction(address:Address, artID: UInt64) {

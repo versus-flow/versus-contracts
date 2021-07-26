@@ -1,5 +1,5 @@
-import FungibleToken from "../../contracts/standard/FungibleToken.cdc"
-import FlowToken from "../../contracts/standard/FlowToken.cdc"
+import FungibleToken from "../contracts/standard/FungibleToken.cdc"
+import FlowToken from "../contracts/standard/FlowToken.cdc"
 
 //This transactions transfers flow on testnet from one account to another
 transaction(amount: UFix64, to: Address) {

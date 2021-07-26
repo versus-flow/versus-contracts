@@ -1,6 +1,6 @@
-import Marketplace from "../../contracts/Marketplace.cdc"
-import Art from "../../contracts/Art.cdc"
-import FungibleToken from "../../contracts/standard/FungibleToken.cdc"
+import Marketplace from "../contracts/Marketplace.cdc"
+import Art from "../contracts/Art.cdc"
+import FungibleToken from "../contracts/standard/FungibleToken.cdc"
 
 //this transaction will setup an newly minted item for sale
 transaction(

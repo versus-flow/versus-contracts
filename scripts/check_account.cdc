@@ -1,5 +1,5 @@
-import FungibleToken from "../../contracts/standard/FungibleToken.cdc"
-import Art from "../../contracts/Art.cdc"
+import FungibleToken from "../contracts/standard/FungibleToken.cdc"
+import Art from "../contracts/Art.cdc"
 
 pub struct AddressStatus {
 

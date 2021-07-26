@@ -1,4 +1,4 @@
-import Versus from "../../contracts/Versus.cdc"
+import Versus from "../contracts/Versus.cdc"
 
 //Transaction to mint Art and edition art and deploy to all addresses
 transaction(

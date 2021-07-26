@@ -1,6 +1,6 @@
 
-import NonFungibleToken from "../../contracts/standard/NonFungibleToken.cdc"
-import Art from "../../contracts/Art.cdc"
+import NonFungibleToken from "../contracts/standard/NonFungibleToken.cdc"
+import Art from "../contracts/Art.cdc"
 
 //This transaction will prepare the art collection
 transaction() {

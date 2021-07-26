@@ -1,7 +1,7 @@
-import FungibleToken from "../../contracts/standard/FungibleToken.cdc"
-import NonFungibleToken from "../../contracts/standard/NonFungibleToken.cdc"
-import Versus from "../../contracts/Versus.cdc"
-import Art from "../../contracts/Art.cdc"
+import FungibleToken from "../contracts/standard/FungibleToken.cdc"
+import NonFungibleToken from "../contracts/standard/NonFungibleToken.cdc"
+import Versus from "../contracts/Versus.cdc"
+import Art from "../contracts/Art.cdc"
 
 // Transaction to make a bid in a marketplace for the given dropId and auctionId
 transaction(marketplace: Address, dropId: UInt64, auctionId: UInt64, bidAmount: UFix64) {
