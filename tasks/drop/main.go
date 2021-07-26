@@ -1,78 +1,50 @@
 package main
 
 import (
-	"bufio"
-	"encoding/base64"
-	"io/ioutil"
-	"math"
-	"net/http"
-	"os"
+	"fmt"
 
 	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 )
 
-func splitByWidthMake(str string, size int) []string {
-	strLength := len(str)
-	splitedLength := int(math.Ceil(float64(strLength) / float64(size)))
-	splited := make([]string, splitedLength)
-	var start, stop int
-	for i := 0; i < splitedLength; i += 1 {
-		start = i * size
-		stop = start + size
-		if stop > strLength {
-			stop = strLength
-		}
-		splited[i] = str[start:stop]
-	}
-	return splited
-}
-
-func fileAsImageData(path string) (string, error) {
-	f, _ := os.Open("./" + path)
-
-	defer f.Close()
-
-	// Read entire JPG into byte slice.
-	reader := bufio.NewReader(f)
-	content, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return "", err
-	}
-
-	contentType := http.DetectContentType(content)
-
-	// Encode as base64.
-	encoded := base64.StdEncoding.EncodeToString(content)
-
-	return "data:" + contentType + ";base64, " + encoded, nil
-}
-
 func main() {
-	flow := gwtf.NewGoWithTheFlowDevNet()
 
-	image, err := fileAsImageData("conductor.jpeg")
-	if err != nil {
+	startTime := "July 29, 2021 08:00:00 AM"
+	durationHrs := 4
+	artistAddress := "0x1b945b52f416ddf9"
+	artist := "Jos"
+	name := "Solitude 2.0"
+	editions := 15
+	description := `In the near future,
+When we have conquered all
+We will still be strangers to ourselves
+We will bridge the open space
+We will witness new wonders
+But in the immense distance of the cosmos
+We will be smaller and smaller.`
+
+	imageUrl := "https://uploads.linear.app/b5013517-8161-4940-b2a0-d5fc21b1fafb/67a95870-468d-478b-9ee8-e21bbf87e35f/9af1ea1a-89d1-40fa-9390-43fd5d52e284"
+
+
+//	flow := gwtf.NewGoWithTheFlowMainNet()
+	flow := gwtf.NewGoWithTheFlowDevNet()
+	err := flow.DownloadImageAndUploadAsDataUrl(imageUrl, "admin")
+	if err != nil  {
 		panic(err)
 	}
 
-	parts := splitByWidthMake(image, 1_000_000)
-	for _, part := range parts {
-		flow.TransactionFromFile("upload").SignProposeAndPayAs("admin").StringArgument(part).RunPrintEventsFull()
-	}
-
-	flow.TransactionFromFile("drop_prod").
+	flow.TransactionFromFile("drop").
 		SignProposeAndPayAs("admin").
-		RawAccountArgument("0xa882dfac54316070").
-		UFix64Argument("1.00").          //start price
-		UFix64Argument("1623247200.0").  //start time `date -r to confirm`
-		StringArgument("SKAN").          //artist name
-		StringArgument("The Conductor"). //name
-		StringArgument("This was created for a challenge in the cgsociety forum back when I was first trying to learn about digital arts. Thinking back it was crazy that I had so much energy to spend 2 full weeks, day and night, doing this with a trackball mouse. I was introduced to a wacom pen after this and my life changed forever.").
-		UInt64Argument(20).        //number of editions
-		UFix64Argument("2.0").     //min bid increment
-		UFix64Argument("4.0").     //min bid increment unique
-		UFix64Argument("86400.0"). //duration 60 * 60 * 24 1 day
-		UFix64Argument("300.0").   //extensionOnLateBid 5 * 60 5 min
+		RawAccountArgument(artistAddress).
+		UFix64Argument("1.00"). //start price
+		DateStringAsUnixTimestamp(startTime, "America/New_York"). //time
+		StringArgument(artist).                                 //artist name
+		StringArgument(name).                                   //name
+		StringArgument(description).                            //description
+		UInt64Argument(uint64(editions)).                       //number of editions
+		UFix64Argument("2.0").                                  //min bid increment
+		UFix64Argument("4.0").                                  //min bid increment unique
+		UFix64Argument(fmt.Sprintf("%d.0", durationHrs*60*60)). //duration 60 * 60 * 24 1 day
+		UFix64Argument("300.0").                                //extensionOnLateBid 5 * 60 5 min
 		RunPrintEventsFull()
 
 }
