@@ -53,24 +53,68 @@
       "address": "f8d6e0586b0a20c7",
       "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
     },
-    "artist": {
+    "emulator-artist": {
       "address": "01cf0e2f2f715450",
       "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
     },
-    "buyer1": {
+    "emulator-buyer1": {
       "address": "179b6b1cb6755e31",
       "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
     },
-    "buyer2": {
+    "emulator-buyer2": {
       "address": "f3fcd2c1a78f5eee",
       "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
     },
-    "marketplace": {
+    "emulator-marketplace": {
       "address": "e03daebed8ca0615",
       "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
+    },
+    "testnet-account": {
+      "address": "1ff7e32d71183db0",
+      "key": "${TESTNET_ACCOUNT}"
+    },
+    "testnet-versus" : {
+      "address": "69915b410cca3c65",
+      "key": "${TESTNET_VERSUS}"
+    },
+    "testnet-admin" : {
+      "address": "8df6e29c1d303cba",
+      "key": "${TESTNET_VERSUS_ADMIN}"
+    },
+    "testnet-artist" : {
+      "address": "6c04420dea8b6eff",
+      "key": "${TESTNET_VERSUS_ARTIST}"
+    },
+    "mainnet-admin" : {
+      "address": "80cd9c6d1ff10590",
+      "key": "${MAINNET_VERSUS_ADMIN}"
+    },
+    "mainnet-versus" : {
+      "address": "d796ff17107bbff6",
+      "key": "${MAINNET_VERSUS}"
     }
   },
   "deployments": {
+    "testnet" : {
+      "testnet-versus" : [
+        "Content",
+        "Art", 
+        "Auction", 
+        "Versus",
+        "Marketplace",
+        "Profile"
+      ]
+    },
+    "mainnet" : {
+      "mainnet-versus" : [
+        "Content",
+        "Art", 
+        "Auction", 
+        "Versus",
+        "Marketplace",
+        "Profile"
+      ]
+    },
     "emulator": {
       "emulator-account": [
         "NonFungibleToken",
@@ -79,12 +123,13 @@
         "Auction", 
         "Versus",
         "Marketplace",
-        "Profile"
+        "Profile",
+        "FUSD"
       ],
-      "artist" : [],
-      "buyer1" : [],
-      "buyer2" : [],
-      "marketplace" : []
+      "emulator-artist" : [],
+      "emulator-buyer1" : [],
+      "emulator-buyer2" : [],
+      "emulator-marketplace" : []
     }
   }
 }
