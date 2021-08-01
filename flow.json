@@ -91,7 +91,13 @@
     },
     "mainnet-versus" : {
       "address": "d796ff17107bbff6",
-      "key": "${MAINNET_VERSUS}"
+      "key": {
+        "type": "hex",
+        "index": 1,
+        "signatureAlgorithm": "ECDSA_P256",
+        "hashAlgorithm": "SHA3_256",
+        "privateKey": "${MAINNET_VERSUS}"
+      }
     }
   },
   "deployments": {
