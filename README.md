@@ -13,9 +13,7 @@ This project started as a collaboration with 0xAlchemist in his repo https://git
 
 ## How to run the sample
 
-Start two terminals. Both from the root directory.
- - `flow emulator -v`
-- `make demo`
+Start a terminal and run `make demo`
 
 ## What happends in the sample
 
