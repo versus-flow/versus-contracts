@@ -8,9 +8,9 @@ import (
 
 func main() {
 
-	flow := gwtf.NewGoWithTheFlow(".flow-prod.json")
+	flow := gwtf.NewGoWithTheFlowMainNet()
 
-	value := flow.ScriptFromFile("check_unsettled_drop").RunReturns()
+	value := flow.ScriptFromFile("check_unsettled_drop").AccountArgument("versus").RunReturns()
 
 	stringValue := value.String()
 
@@ -20,7 +20,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		flow.TransactionFromFile("settle_testnet").SignProposeAndPayAs("admin").UInt64Argument(number).RunPrintEventsFull()
+		flow.TransactionFromFile("settle").SignProposeAndPayAs("admin").UInt64Argument(number).RunPrintEventsFull()
 	}
 
 }

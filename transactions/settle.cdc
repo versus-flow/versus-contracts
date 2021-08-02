@@ -5,7 +5,6 @@ transaction(dropId: UInt64) {
 
     let client: &Versus.Admin
     prepare(account: AuthAccount) {
-
         self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
     }
 

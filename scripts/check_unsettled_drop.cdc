@@ -1,4 +1,3 @@
-  
 import Versus from "../contracts/Versus.cdc"
 
 pub fun main(owner:Address) : UInt64? {
