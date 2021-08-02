@@ -1,4 +1,6 @@
-import Marketplace, Art from 0xf8d6e0586b0a20c7
+import Marketplace from "../contracts/Marketplace.cdc"
+import Art from "../contracts/Art.cdc"
+
 /*
   This script will check an address and print out its FT, NFT and Versus resources
  */

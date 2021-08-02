@@ -1,8 +1,8 @@
   
-import Versus from 0xd796ff17107bbff6
+import Versus from "../contracts/Versus.cdc"
 
-pub fun main() : UInt64? {
-  let account = getAccount(0xd796ff17107bbff6)
+pub fun main(owner:Address) : UInt64? {
+  let account = getAccount(owner)
   let versusCap=account.getCapability<&{Versus.PublicDrop}>(Versus.CollectionPublicPath)
   if let versus = versusCap.borrow() {
       let versusStatuses=versus.getAllStatuses()

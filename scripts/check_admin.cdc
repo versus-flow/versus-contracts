@@ -1,5 +1,5 @@
 //mainnnet
-import Versus from 0xd796ff17107bbff6
+import Versus from "../contracts/Versus.cdc"
 
 /*
   This script will check if an address has created an admin client

@@ -1,5 +1,5 @@
 
-import Versus from 0xd796ff17107bbff6
+import Versus from "../contracts/Versus.cdc"
 
 pub fun main(dropID: UInt64) : String {
 

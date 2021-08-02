@@ -1,11 +1,4 @@
-// This script checks that the accounts are set up correctly for the marketplace tutorial.
-//
-
-//emulator
-import Versus from 0xd796ff17107bbff6
-
-//testnet
-//import Versus from 0x6bb8a74d4db97b46
+import Versus from "../contracts/Versus.cdc"
 
 /*
   Script used to get the first active drop in a versus 

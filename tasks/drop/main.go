@@ -8,21 +8,15 @@ import (
 
 func main() {
 
-	startTime := "July 29, 2021 08:00:00 AM"
+	startTime := "August 5, 2021 08:00:00 AM"
 	durationHrs := 4
-	artistAddress := "0x1b945b52f416ddf9"
-	artist := "Jos"
-	name := "Solitude 2.0"
+	artistAddress := "0xb1510e68de5655e5"
+	artist := "LOREM"
+	name := "PATH"
 	editions := 15
-	description := `In the near future,
-When we have conquered all
-We will still be strangers to ourselves
-We will bridge the open space
-We will witness new wonders
-But in the immense distance of the cosmos
-We will be smaller and smaller.`
+	description := `The process of creating art feels like a path that helps me to escape from negativity. It helps me to disconnect, decompress, and finally to define the emotions I want to express. I'd love to bring you with me on this path.`
 
-	imageUrl := "https://uploads.linear.app/b5013517-8161-4940-b2a0-d5fc21b1fafb/67a95870-468d-478b-9ee8-e21bbf87e35f/9af1ea1a-89d1-40fa-9390-43fd5d52e284"
+	imageUrl := "https://www.dropbox.com/s/bi3n8c5jwn4ki0c/PATH_LOREM.jpg"
 
 	flow := gwtf.NewGoWithTheFlowMainNet()
 	//	flow := gwtf.NewGoWithTheFlowDevNet()
