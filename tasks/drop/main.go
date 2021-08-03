@@ -16,7 +16,7 @@ func main() {
 	editions := 15
 	description := `The process of creating art feels like a path that helps me to escape from negativity. It helps me to disconnect, decompress, and finally to define the emotions I want to express. I'd love to bring you with me on this path.`
 
-	imageUrl := "https://www.dropbox.com/s/bi3n8c5jwn4ki0c/PATH_LOREM.jpg"
+	imageUrl := "https://dl.dropboxusercontent.com/s/bi3n8c5jwn4ki0c/PATH_LOREM.jpg"
 
 	flow := gwtf.NewGoWithTheFlowMainNet()
 	//	flow := gwtf.NewGoWithTheFlowDevNet()

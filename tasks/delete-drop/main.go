@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/bjartek/go-with-the-flow/v2/gwtf"
+	"github.com/onflow/cadence"
 )
 
 func main() {
@@ -22,6 +23,13 @@ func main() {
 	flow := gwtf.NewGoWithTheFlowMainNet()
 
 	flow.ScriptFromFile("drop_status").UInt64Argument(drop).Run()
-	//flow.ScriptFromFile("drop_art").UInt64Argument(drop).Run()
+
+	value := flow.ScriptFromFile("not_valid_drop").UInt64Argument(drop).RunReturns()
+
+	if value == cadence.Bool(true) {
+		flow.TransactionFromFile("destroy_versus").SignProposeAndPayAs("admin").UInt64Argument(drop).Run()
+	} else {
+		fmt.Println("We cannot delete this")
+	}
 
 }
