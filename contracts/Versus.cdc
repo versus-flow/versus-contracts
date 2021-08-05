@@ -165,6 +165,7 @@ pub contract Versus {
                 panic("Auction has not completed yet")
             }
 
+
             let winning=status.winning
             var price=0.0
             if winning == "UNIQUE" {
@@ -448,6 +449,7 @@ pub contract Versus {
 
             let metadata= art.metadata
             //Sending in a NFTEditioner capability here and using that instead of this loop would probably make sense. 
+						//NB! the marketplaceVault here is not used anymore, we now fetch the vault from the art that is sold
             let editionedAuctions <- Auction.createAuctionCollection( 
                 marketplaceVault: self.marketplaceVault , 
                 cutPercentage: self.cutPercentage)
@@ -693,13 +695,17 @@ pub contract Versus {
             contentCapability.borrow()!.deposit(token: <- contentItem)
 
 
-						var walletPath :  PublicPath = /public/fusdReceiver
-						if type == "fusd" {
+						var walletPath :  PublicPath = /public/flowTokenReceive
+						if type == "FUSD" {
 							walletPath=/public/fusdReceiver
 						} 
 
+						log("WALLET PATH")
+						log(walletPath)
+
 						let artistWallet= artistAccount.getCapability<&{FungibleToken.Receiver}>(walletPath)
 						let minterWallet=  Versus.account.getCapability<&{FungibleToken.Receiver}>(walletPath)
+						log(minterWallet)
             let royalty = {
                 "artist" : Art.Royalty(wallet: artistWallet, cut: artistCut),
                 "minter" : Art.Royalty(wallet: minterWallet, cut: minterCut)

@@ -28,7 +28,6 @@ pub contract Art: NonFungibleToken {
         pub let schema: String? 
 
         pub fun content() : String?
-				pub fun type() : String
 
         pub let royalty: {String: Royalty}
         pub fun cacheKey() : String
@@ -106,9 +105,14 @@ pub contract Art: NonFungibleToken {
             self.description=metadata.description
         }
 
-				pub fun type() : String {
+				pub fun vaultType() : String {
 					return self.metadata.type
 				}
+
+				pub fun getMinterVault() : Capability<&{FungibleToken.Receiver}>  {
+					return self.royalty["minter"]!.wallet
+				}
+
 
         pub fun cacheKey() : String {
             if self.url != nil {
@@ -280,9 +284,8 @@ pub contract Art: NonFungibleToken {
 
         Art.totalSupply = Art.totalSupply + UInt64(1)
         return <- newNFT
+		}
 
-
-    }
 
     //This method can only be called from another contract in the same account. In Versus case it is called from the VersusAdmin that is used to administer the solution
     access(account) fun createArtWithPointer(
