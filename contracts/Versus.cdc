@@ -696,6 +696,7 @@ pub contract Versus {
             let artistWallet= artistAccount.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
             let versusWallet=  Versus.account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
 
+			//TODO: This should be configured from the outside IIRC, the percentages
             let royalty = {
                 "artist" : Art.Royalty(wallet: artistWallet, cut: 0.05),
                 "minter" : Art.Royalty(wallet: versusWallet, cut: 0.025)
