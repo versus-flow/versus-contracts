@@ -1,4 +1,5 @@
 import Versus from "../contracts/Versus.cdc"
+import Art from "../contracts/Art.cdc"
 
 //Transaction to mint Art and edition art and deploy to all addresses
 transaction(
@@ -10,6 +11,7 @@ transaction(
 		artistCut: UFix64,
 		minterCut: UFix64,
 		addresses: [Address], 
+    receiverPath: PublicPath
 	) {
 
 		let client: &Versus.Admin
@@ -22,9 +24,9 @@ transaction(
 	}
 
 	execute {
-		let art <-  self.client.mintArt(artist: artist, artistName: artistName, artName: artName, content:self.content, description: description, type:type, artistCut: artistCut, minterCut:minterCut)
-			self.client.editionAndDepositArt(art: &art as &Art.NFT, to: addresses)
-			destroy art
+		let art <-  self.client.mintArt(artist: artist, artistName: artistName, artName: artName, content:self.content, description: description, type:type, artistCut: artistCut, minterCut:minterCut, receiverPath: receiverPath)
+		self.client.editionAndDepositArt(art: &art as &Art.NFT, to: addresses)
+		destroy art
 	}
 }
 

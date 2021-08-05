@@ -16,8 +16,8 @@ func main() {
 	t := now.Unix() - 5
 	timeString := strconv.FormatInt(t, 10) + ".0"
 
-	//flow := gwtf.NewGoWithTheFlowInMemoryEmulator()
-	flow := gwtf.NewGoWithTheFlowEmulator().InitializeContracts().CreateAccounts("emulator-account")
+	flow := gwtf.NewGoWithTheFlowInMemoryEmulator()
+	//flow := gwtf.NewGoWithTheFlowEmulator().InitializeContracts().CreateAccounts("emulator-account")
 
 	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("marketplace").UFix64Argument("100.0").RunPrintEventsFull()
 	flow.TransactionFromFile("setup_fusd_vault").SignProposeAndPayAs("artist").RunPrintEventsFull()
@@ -41,7 +41,7 @@ func main() {
 	flow.UploadImageAsDataUrl("bull.png", "marketplace")
 
 	fmt.Println("Create a drop in versus that is already started with 10 editions")
-	flow.TransactionFromFile("drop_fusd").
+	flow.TransactionFromFile("drop").
 		SignProposeAndPayAs("marketplace").
 		AccountArgument("artist").                                                                      //marketplace location
 		UFix64Argument("10.00").                                                                        //start price
@@ -57,26 +57,31 @@ func main() {
 		StringArgument("FUSD").                                                                         //type of auction
 		UFix64Argument("0.05").                                                                         //artistCut 5%
 		UFix64Argument("0.025").                                                                        //minterCut 2.5%
+		Argument(cadence.Path{Domain: "public", Identifier: "fusdReceiver"}).
 		RunPrintEventsFull()
 
 	fmt.Println("Setup a buyer and make him bid on the unique auction")
 	flow.TransactionFromFile("mint_fusd").SignProposeAndPayAsService().AccountArgument("buyer1").UFix64Argument("100.0").RunPrintEventsFull()
 	fmt.Println("Bid on an auction using fusd")
-	flow.TransactionFromFile("bid_fusd").
+	flow.TransactionFromFile("bid").
 		SignProposeAndPayAs("buyer1").
 		AccountArgument("account").
-		UInt64Argument(1).            //id of drop
-		Argument(cadence.UInt64(11)). //id of unique auction auction to bid on
-		UFix64Argument("10.00").      //amount to bid
+		UInt64Argument(1).                                                    //id of drop
+		Argument(cadence.UInt64(11)).                                         //id of unique auction auction to bid on
+		UFix64Argument("10.00").                                              //amount to bid
+		Argument(cadence.Path{Domain: "public", Identifier: "fusdReceiver"}). //receiver path
+		Argument(cadence.Path{Domain: "storage", Identifier: "fusdVault"}).   //storage  path to vault
 		RunPrintEventsFull()
 
 	flow.TransactionFromFile("mint_fusd").SignProposeAndPayAsService().AccountArgument("buyer2").UFix64Argument("100.0").RunPrintEventsFull()
-	flow.TransactionFromFile("bid_fusd").
+	flow.TransactionFromFile("bid").
 		SignProposeAndPayAs("buyer2").
 		AccountArgument("account").
-		UInt64Argument(1).            //id of drop
-		Argument(cadence.UInt64(11)). //id of unique auction auction to bid on
-		UFix64Argument("30.00").      //amount to bid
+		UInt64Argument(1).                                                    //id of drop
+		Argument(cadence.UInt64(11)).                                         //id of unique auction auction to bid on
+		UFix64Argument("30.00").                                              //amount to bid
+		Argument(cadence.Path{Domain: "public", Identifier: "fusdReceiver"}). //receiver path
+		Argument(cadence.Path{Domain: "storage", Identifier: "fusdVault"}).   //storage  path to vault
 		RunPrintEventsFull()
 
 	fmt.Println("Go to website to bid there")

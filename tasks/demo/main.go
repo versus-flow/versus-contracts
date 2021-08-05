@@ -53,6 +53,7 @@ func main() {
 		StringArgument("flow").                                                                         //type of auction
 		UFix64Argument("0.05").                                                                         //artistCut 5%
 		UFix64Argument("0.025").                                                                        //minterCut 2.5%
+		Argument(cadence.Path{Domain: "public", Identifier: "flowTokenReceiver"}).
 		RunPrintEventsFull()
 
 	fmt.Println("Setup a buyer and make him bid on the unique auction")
@@ -62,17 +63,21 @@ func main() {
 	flow.TransactionFromFile("bid").
 		SignProposeAndPayAs("buyer1").
 		AccountArgument("account").
-		UInt64Argument(1).            //id of drop
-		Argument(cadence.UInt64(11)). //id of unique auction auction to bid on
-		UFix64Argument("10.00").      //amount to bid
+		UInt64Argument(1).                                                         //id of drop
+		Argument(cadence.UInt64(11)).                                              //id of unique auction auction to bid on
+		UFix64Argument("10.00").                                                   //amount to bid
+		Argument(cadence.Path{Domain: "public", Identifier: "flowTokenReceiver"}). //receiver path
+		Argument(cadence.Path{Domain: "storage", Identifier: "flowTokenVault"}).   //storage  path to vault
 		RunPrintEventsFull()
 
 	flow.TransactionFromFile("bid").
 		SignProposeAndPayAs("buyer2").
 		AccountArgument("account").
-		UInt64Argument(1).            //id of drop
-		Argument(cadence.UInt64(11)). //id of unique auction auction to bid on
-		UFix64Argument("30.00").      //amount to bid
+		UInt64Argument(1).                                                         //id of drop
+		Argument(cadence.UInt64(11)).                                              //id of unique auction auction to bid on
+		UFix64Argument("30.00").                                                   //amount to bid
+		Argument(cadence.Path{Domain: "public", Identifier: "flowTokenReceiver"}). //receiver path
+		Argument(cadence.Path{Domain: "storage", Identifier: "flowTokenVault"}).   //storage  path to vault
 		RunPrintEventsFull()
 
 	fmt.Println("Go to website to bid there")

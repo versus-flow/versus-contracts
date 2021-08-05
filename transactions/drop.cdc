@@ -15,9 +15,10 @@ transaction(
     minimumBidUniqueIncrement:UFix64,
     duration:UFix64,
     extensionOnLateBid:UFix64,
-		type: String, 
-		artistCut: UFix64,
-		minterCut: UFix64
+    type: String, 
+    artistCut: UFix64,
+    minterCut: UFix64
+    ftReceiverPath: PublicPath
     ) {
 
 
@@ -27,36 +28,37 @@ transaction(
 
     prepare(account: AuthAccount) {
 
-        let path = /storage/upload
-        self.content= account.load<String>(from: path) ?? panic("could not load content")
-        self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
-        self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+      let path = /storage/upload
+      self.content= account.load<String>(from: path) ?? panic("could not load content")
+      self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
+      self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(ftReceiverPath)
     }
-    
-    execute {
 
-        let art <-  self.client.mintArt(
-            artist: artist,
-            artistName: artistName,
-            artName: artName,
-            content:self.content,
-            description: description, 
-						type: type, 
-						artistCut: artistCut, 
-						minterCut:minterCut)
+  execute {
 
-        self.client.createDrop(
-           nft:  <- art,
-           editions: editions,
-           minimumBidIncrement: minimumBidIncrement,
-           minimumBidUniqueIncrement: minimumBidUniqueIncrement,
-           startTime: startTime,
-           startPrice: startPrice,
-           vaultCap: self.artistWallet,
-           duration: duration,
-           extensionOnLateBid: extensionOnLateBid 
-       )
-    }
+    let art <-  self.client.mintArt(
+        artist: artist,
+        artistName: artistName,
+        artName: artName,
+        content:self.content,
+        description: description, 
+        type: type, 
+        artistCut: artistCut, 
+        minterCut:minterCut, 
+        receiverPath: ftReceiverPath)
+
+      self.client.createDrop(
+          nft:  <- art,
+          editions: editions,
+          minimumBidIncrement: minimumBidIncrement,
+          minimumBidUniqueIncrement: minimumBidUniqueIncrement,
+          startTime: startTime,
+          startPrice: startPrice,
+          vaultCap: self.artistWallet,
+          duration: duration,
+          extensionOnLateBid: extensionOnLateBid 
+          )
+  }
 }
 
 

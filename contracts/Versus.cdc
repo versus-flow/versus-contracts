@@ -681,7 +681,7 @@ pub contract Versus {
         /*
           A stored Transaction to mintArt on versus to a given artist
          */
-        pub fun mintArt(artist: Address, artistName: String, artName: String, content:String, description: String, type:String, artistCut: UFix64, minterCut:UFix64) : @Art.NFT {
+        pub fun mintArt(artist: Address, artistName: String, artName: String, content:String, description: String, type:String, artistCut: UFix64, minterCut:UFix64, receiverPath:PublicPath) : @Art.NFT {
 
             pre {
                 self.server != nil : "Your client has not been linked to the server"
@@ -694,13 +694,8 @@ pub contract Versus {
             contentCapability.borrow()!.deposit(token: <- contentItem)
 
 
-            var walletPath :  PublicPath = /public/flowTokenReceive
-            if type == "FUSD" {
-              walletPath=/public/fusdReceiver
-            }
-
-            let artistWallet= artistAccount.getCapability<&{FungibleToken.Receiver}>(walletPath)
-            let minterWallet=  Versus.account.getCapability<&{FungibleToken.Receiver}>(walletPath)
+            let artistWallet= artistAccount.getCapability<&{FungibleToken.Receiver}>(receiverPath)
+            let minterWallet=  Versus.account.getCapability<&{FungibleToken.Receiver}>(receiverPath)
             let royalty = {
                 "artist" : Art.Royalty(wallet: artistWallet, cut: artistCut),
                 "minter" : Art.Royalty(wallet: minterWallet, cut: minterCut)
