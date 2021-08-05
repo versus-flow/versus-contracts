@@ -42,6 +42,7 @@ func main() {
 		imageFile = "bull.png"
 	}
 
+	//TODO support bigger images here aswell
 	image := fileAsImageData(imageFile)
 	flow.TransactionFromFile("mint_art").
 		SignProposeAndPayAs("admin").
@@ -50,6 +51,9 @@ func main() {
 		StringArgument("Example title"). //name of art
 		StringArgument(image).           //imaage
 		StringArgument("Description").
+		StringArgument("flow").
+		UFix64Argument("0.05").  //artistCut 5%
+		UFix64Argument("0.025"). //minterCut 2.5%
 		RunPrintEventsFull()
 
 }

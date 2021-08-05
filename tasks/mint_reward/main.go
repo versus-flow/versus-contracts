@@ -158,6 +158,9 @@ func main() {
 		StringArgument("Versus"). //artist name
 		StringArgument("VS").     //name of art
 		StringArgument("This NFT was distributed to beta testers of the Versus platform as a reward for their invaluable feedback!").
+		StringArgument("flow").
+		UFix64Argument("0.05").  //artistCut 5%
+		UFix64Argument("0.025"). //minterCut 2.5%
 		Argument(cadenceArray).
 		RunPrintEventsFull()
 

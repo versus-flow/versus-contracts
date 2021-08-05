@@ -34,7 +34,7 @@ func main() {
 		RunPrintEventsFull()
 
 	fmt.Println("Upload image")
-	flow.UploadImageAsDataUrl("ekaitza.png", "marketplace")
+	flow.UploadImageAsDataUrl("bull.png", "marketplace")
 
 	fmt.Println("Create a drop in versus that is already started with 10 editions")
 	flow.TransactionFromFile("drop").
@@ -50,6 +50,9 @@ func main() {
 		UFix64Argument("10.0").                                                                         //min bid increment unique
 		UFix64Argument("5.0").                                                                          //duration
 		UFix64Argument("5.0").                                                                          //extensionOnLateBid
+		StringArgument("flow").                                                                         //type of auction
+		UFix64Argument("0.05").                                                                         //artistCut 5%
+		UFix64Argument("0.025").                                                                        //minterCut 2.5%
 		RunPrintEventsFull()
 
 	fmt.Println("Setup a buyer and make him bid on the unique auction")
@@ -95,5 +98,5 @@ func main() {
 	flow.ScriptFromFile("check_account").AccountArgument("marketplace").Run()
 
 	flow.ScriptFromFile("drop_status").UInt64Argument(1).Run()
-	flow.TransactionFromFile("destroy_versus").SignProposeAndPayAsService().UInt64Argument(1).RunPrintEventsFull()
+	flow.TransactionFromFile("destroy_versus").SignProposeAndPayAs("marketplace").UInt64Argument(1).RunPrintEventsFull()
 }

@@ -680,7 +680,7 @@ pub contract Versus {
         /*
           A stored Transaction to mintArt on versus to a given artist
          */
-        pub fun mintArt(artist: Address, artistName: String, artName: String, content:String, description: String) : @Art.NFT {
+        pub fun mintArt(artist: Address, artistName: String, artName: String, content:String, description: String, type:String, artistCut: UFix64, minterCut:UFix64) : @Art.NFT {
 
             pre {
                 self.server != nil : "Your client has not been linked to the server"
@@ -693,20 +693,23 @@ pub contract Versus {
             contentCapability.borrow()!.deposit(token: <- contentItem)
 
 
-            let artistWallet= artistAccount.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-            let versusWallet=  Versus.account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+						var walletPath :  PublicPath = /public/fusdReceiver
+						if type == "fusd" {
+							walletPath=/public/fusdReceiver
+						} 
 
-			//TODO: This should be configured from the outside IIRC, the percentages
+						let artistWallet= artistAccount.getCapability<&{FungibleToken.Receiver}>(walletPath)
+						let minterWallet=  Versus.account.getCapability<&{FungibleToken.Receiver}>(walletPath)
             let royalty = {
-                "artist" : Art.Royalty(wallet: artistWallet, cut: 0.05),
-                "minter" : Art.Royalty(wallet: versusWallet, cut: 0.025)
+                "artist" : Art.Royalty(wallet: artistWallet, cut: artistCut),
+                "minter" : Art.Royalty(wallet: minterWallet, cut: minterCut)
             }
             let art <- Art.createArtWithPointer(
                 name: artName,
                 artist:artistName,
                 artistAddress : artist,
                 description: description,
-                type: "png",
+                type: type,
                 contentCapability: contentCapability,
                 contentId: contentId,
                 royalty: royalty)
@@ -746,6 +749,14 @@ pub contract Versus {
           }
           return Versus.account.borrow<&FungibleToken.Vault>(from: /storage/flowTokenVault)!
         }
+
+        pub fun getFUSDWallet():&FungibleToken.Vault {
+          pre {
+            self.server != nil : "Your client has not been linked to the server"
+          }
+          return Versus.account.borrow<&FungibleToken.Vault>(from: /storage/fusdVault)!
+        }
+
 
         pub fun getArtCollection() : &NonFungibleToken.Collection {
           pre {

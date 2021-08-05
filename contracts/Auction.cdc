@@ -3,6 +3,7 @@
 
 import FungibleToken from "./standard/FungibleToken.cdc"
 import FlowToken from "./standard/FlowToken.cdc"
+import FUSD from "./standard/FUSD.cdc"
 import Art from "./Art.cdc"
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 
@@ -131,9 +132,14 @@ pub contract Auction {
             ownerVaultCap: Capability<&{FungibleToken.Receiver}>,
         ) {
 
+						if NFT.type() == "FUSD" {
+							self.bidVault <- FUSD.createEmptyVault()
+						} else {
+							self.bidVault <- FlowToken.createEmptyVault()
+						}
+
             Auction.totalAuctions = Auction.totalAuctions + (1 as UInt64)
             self.NFT <- NFT
-            self.bidVault <- FlowToken.createEmptyVault()
             self.auctionID = Auction.totalAuctions
             self.minimumBidIncrement = minimumBidIncrement
             self.auctionLength = auctionLength

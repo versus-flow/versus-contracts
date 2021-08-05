@@ -28,6 +28,7 @@ pub contract Art: NonFungibleToken {
         pub let schema: String? 
 
         pub fun content() : String?
+				pub fun type() : String
 
         pub let royalty: {String: Royalty}
         pub fun cacheKey() : String
@@ -104,6 +105,10 @@ pub contract Art: NonFungibleToken {
             self.name = metadata.name
             self.description=metadata.description
         }
+
+				pub fun type() : String {
+					return self.metadata.type
+				}
 
         pub fun cacheKey() : String {
             if self.url != nil {
@@ -315,20 +320,20 @@ pub contract Art: NonFungibleToken {
     //This method can only be called from another contract in the same account. In Versus case it is called from the VersusAdmin that is used to administer the solution
     access(account) fun makeEdition(original: &NFT, edition: UInt64, maxEdition:UInt64) : @Art.NFT {
         var newNFT <- create NFT(
-        initID: Art.totalSupply,
-        metadata: Metadata(
-            name: original.metadata.name,
-            artist:original.metadata.artist,
-            artistAddress:original.metadata.artistAddress,
-            description:original.metadata.description,
-            type:original.metadata.type,
-            edition: edition,
-            maxEdition:maxEdition
-        ),
-        contentCapability: original.contentCapability,
-        contentId:original.contentId,
-        url:original.url,
-        royalty:original.royalty
+			initID: Art.totalSupply,
+        	metadata: Metadata(
+        	    name: original.metadata.name,
+        	    artist:original.metadata.artist,
+        	    artistAddress:original.metadata.artistAddress,
+        	    description:original.metadata.description,
+        	    type:original.metadata.type,
+        	    edition: edition,
+        	    maxEdition:maxEdition
+        	),
+        	contentCapability: original.contentCapability,
+        	contentId:original.contentId,
+        	url:original.url,
+        	royalty:original.royalty
         )
         emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
         emit Editioned(id: Art.totalSupply, from: original.id, edition:edition, maxEdition:maxEdition)
