@@ -132,13 +132,11 @@ pub contract Auction {
             ownerVaultCap: Capability<&{FungibleToken.Receiver}>,
         ) {
 
-						if NFT.vaultType() == "FUSD" {
-							log("FUSD VAULT")
-							self.bidVault <- FUSD.createEmptyVault()
-						} else {
-							log("flow VAULT")
-							self.bidVault <- FlowToken.createEmptyVault()
-						}
+            if NFT.vaultType() == "FUSD" {
+              self.bidVault <- FUSD.createEmptyVault()
+            } else {
+              self.bidVault <- FlowToken.createEmptyVault()
+            }
             Auction.totalAuctions = Auction.totalAuctions + (1 as UInt64)
             self.NFT <- NFT
             self.auctionID = Auction.totalAuctions
@@ -203,12 +201,12 @@ pub contract Auction {
 
         //This method should probably use preconditions more 
         pub fun settleAuction(cutPercentage: UFix64, cutVault:Capability<&{FungibleToken.Receiver}> )  {
-						//NB! the cutVault here is not used anymore, we fetcht he vault from the minter of the art since it can vary in type
-            pre {
-                !self.auctionCompleted : "The auction is already settled"
+          //NB! the cutVault here is not used anymore, we fetcht he vault from the minter of the art since it can vary in type
+           pre {
+            !self.auctionCompleted : "The auction is already settled"
                 self.NFT != nil: "NFT in auction does not exist"
                 self.isAuctionExpired() : "Auction has not completed yet"
-            }
+           }
 
             // return if there are no bids to settle
             if self.currentPrice == 0.0{
@@ -219,9 +217,9 @@ pub contract Auction {
             //Withdraw cutPercentage to marketplace and put it in their vault
             let amount=self.currentPrice*cutPercentage
             let beneficiaryCut <- self.bidVault.withdraw(amount:amount )
-							
-						let cutCap=self.NFT?.getMinterVault()!
-						let cutVaultFromArt= cutCap.borrow()!
+
+            let cutCap=self.NFT?.getMinterVault()!
+            let cutVaultFromArt= cutCap.borrow()!
             emit MarketplaceEarned(amount: amount, owner: cutCap.address)
             cutVaultFromArt.deposit(from: <- beneficiaryCut)
 
@@ -507,10 +505,9 @@ pub contract Auction {
         // settleAuction sends the auction item to the highest bidder
         // and deposits the FungibleTokens into the auction owner's account
         pub fun settleAuction(_ id: UInt64) {
-            let itemRef = &self.auctionItems[id] as &AuctionItem
-            itemRef.settleAuction(cutPercentage: self.cutPercentage, cutVault: self.marketplaceVault)
-						//NB! the cutVault here is not used anymore, we fetch the vault from the minter of the art since it can vary in type
-
+          let itemRef = &self.auctionItems[id] as &AuctionItem
+          itemRef.settleAuction(cutPercentage: self.cutPercentage, cutVault: self.marketplaceVault)
+          //NB! the cutVault here is not used anymore, we fetch the vault from the minter of the art since it can vary in type
         }
 
         pub fun cancelAuction(_ id: UInt64) {

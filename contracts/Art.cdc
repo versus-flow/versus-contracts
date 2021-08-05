@@ -105,13 +105,13 @@ pub contract Art: NonFungibleToken {
             self.description=metadata.description
         }
 
-				pub fun vaultType() : String {
-					return self.metadata.type
-				}
+        pub fun vaultType() : String {
+          return self.metadata.type
+        }
 
-				pub fun getMinterVault() : Capability<&{FungibleToken.Receiver}>  {
-					return self.royalty["minter"]!.wallet
-				}
+        pub fun getMinterVault() : Capability<&{FungibleToken.Receiver}>  {
+          return self.royalty["minter"]!.wallet
+        }
 
 
         pub fun cacheKey() : String {
@@ -284,7 +284,7 @@ pub contract Art: NonFungibleToken {
 
         Art.totalSupply = Art.totalSupply + UInt64(1)
         return <- newNFT
-		}
+    }
 
 
     //This method can only be called from another contract in the same account. In Versus case it is called from the VersusAdmin that is used to administer the solution
@@ -323,20 +323,20 @@ pub contract Art: NonFungibleToken {
     //This method can only be called from another contract in the same account. In Versus case it is called from the VersusAdmin that is used to administer the solution
     access(account) fun makeEdition(original: &NFT, edition: UInt64, maxEdition:UInt64) : @Art.NFT {
         var newNFT <- create NFT(
-			initID: Art.totalSupply,
-        	metadata: Metadata(
-        	    name: original.metadata.name,
-        	    artist:original.metadata.artist,
-        	    artistAddress:original.metadata.artistAddress,
-        	    description:original.metadata.description,
-        	    type:original.metadata.type,
-        	    edition: edition,
-        	    maxEdition:maxEdition
-        	),
-        	contentCapability: original.contentCapability,
-        	contentId:original.contentId,
-        	url:original.url,
-        	royalty:original.royalty
+            initID: Art.totalSupply,
+            metadata: Metadata(
+              name: original.metadata.name,
+              artist:original.metadata.artist,
+              artistAddress:original.metadata.artistAddress,
+              description:original.metadata.description,
+              type:original.metadata.type,
+              edition: edition,
+              maxEdition:maxEdition
+              ),
+            contentCapability: original.contentCapability,
+            contentId:original.contentId,
+            url:original.url,
+            royalty:original.royalty
         )
         emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
         emit Editioned(id: Art.totalSupply, from: original.id, edition:edition, maxEdition:maxEdition)
@@ -346,7 +346,7 @@ pub contract Art: NonFungibleToken {
     }
  
 
-	init() {
+  init() {
         // Initialize the total supply
         self.totalSupply = 0
         self.CollectionPublicPath=/public/versusArtCollection
@@ -355,6 +355,6 @@ pub contract Art: NonFungibleToken {
         self.account.save<@NonFungibleToken.Collection>(<- Art.createEmptyCollection(), to: Art.CollectionStoragePath)
         self.account.link<&{Art.CollectionPublic}>(Art.CollectionPublicPath, target: Art.CollectionStoragePath)
         emit ContractInitialized()
-	}
+  }
 }
 

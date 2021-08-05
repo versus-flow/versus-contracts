@@ -449,7 +449,7 @@ pub contract Versus {
 
             let metadata= art.metadata
             //Sending in a NFTEditioner capability here and using that instead of this loop would probably make sense. 
-						//NB! the marketplaceVault here is not used anymore, we now fetch the vault from the art that is sold
+            //NB! the marketplaceVault here is not used anymore, we now fetch the vault from the art that is sold
             let editionedAuctions <- Auction.createAuctionCollection( 
                 marketplaceVault: self.marketplaceVault , 
                 cutPercentage: self.cutPercentage)
@@ -477,7 +477,7 @@ pub contract Versus {
                 collectionCap: self.marketplaceNFTTrash,
                 vaultCap: vaultCap
             )
-            
+
             let drop  <- create Drop(
                 uniqueAuction: <- item, 
                 editionAuctions:  <- editionedAuctions, 
@@ -568,7 +568,6 @@ pub contract Versus {
 
  /*
      Get an active drop in the versus marketplace 
-     
      */
     pub fun getDrops() : [Versus.DropStatus]{
         let account = Versus.account
@@ -695,17 +694,13 @@ pub contract Versus {
             contentCapability.borrow()!.deposit(token: <- contentItem)
 
 
-						var walletPath :  PublicPath = /public/flowTokenReceive
-						if type == "FUSD" {
-							walletPath=/public/fusdReceiver
-						} 
+            var walletPath :  PublicPath = /public/flowTokenReceive
+            if type == "FUSD" {
+              walletPath=/public/fusdReceiver
+            }
 
-						log("WALLET PATH")
-						log(walletPath)
-
-						let artistWallet= artistAccount.getCapability<&{FungibleToken.Receiver}>(walletPath)
-						let minterWallet=  Versus.account.getCapability<&{FungibleToken.Receiver}>(walletPath)
-						log(minterWallet)
+            let artistWallet= artistAccount.getCapability<&{FungibleToken.Receiver}>(walletPath)
+            let minterWallet=  Versus.account.getCapability<&{FungibleToken.Receiver}>(walletPath)
             let royalty = {
                 "artist" : Art.Royalty(wallet: artistWallet, cut: artistCut),
                 "minter" : Art.Royalty(wallet: minterWallet, cut: minterCut)
@@ -819,6 +814,5 @@ pub contract Versus {
         account.link<&{Versus.PublicDrop}>(Versus.CollectionPublicPath, target: Versus.CollectionStoragePath)
         account.link<&Versus.DropCollection>(Versus.CollectionPrivatePath, target: Versus.CollectionStoragePath)
     }
-     
 }
  
