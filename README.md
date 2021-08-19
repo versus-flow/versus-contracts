@@ -30,12 +30,13 @@ Start a terminal and run `make demo`
 
 ## Deploy to testnet
 
- 1. `flow keys generate`
- 2. `flow accounts create --host access.devnet.nodes.onflow.org:9000 --results --config-path ~/.flow-dev.json --key <pk from step 1>`
- 3. edit flow-testnet.json add an testnet-account with pk from step 1 and account from step 4
- 4. transfer flow to account
- 5. flow project deploy -f ~/.flow-testnet.json
+Run `testnet.sh` three times and replace the address for testnet-versus, testnet-admin, testnet-artist with the given addresses. Put the keys safe and export env vars where appropriate
 
- Repeat step 1-4 for the versus account that is going to hold the marketplace
+All user facing paths must be incremented for this to work if not old collections that point to old data will be used.
+ - Art
+ - Marketplace
+ - Profile
+
+run `make deploy-testnet` and `make testnet`
 
 
