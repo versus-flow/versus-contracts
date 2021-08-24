@@ -294,8 +294,8 @@ pub contract Art: NonFungibleToken {
 		init() {
 			// Initialize the total supply
 			self.totalSupply = 0
-			self.CollectionPublicPath=/public/versusArtCollection02
-			self.CollectionStoragePath=/storage/versusArtCollection02
+			self.CollectionPublicPath=/public/versusArtCollection
+			self.CollectionStoragePath=/storage/versusArtCollection
 
 			self.account.save<@NonFungibleToken.Collection>(<- Art.createEmptyCollection(), to: Art.CollectionStoragePath)
 			self.account.link<&{Art.CollectionPublic}>(Art.CollectionPublicPath, target: Art.CollectionStoragePath)

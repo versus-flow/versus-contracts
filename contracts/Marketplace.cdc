@@ -226,8 +226,8 @@ pub contract Marketplace {
     }
 
     pub init() {
-        self.CollectionPublicPath= /public/versusArtMarketplace02
-        self.CollectionStoragePath= /storage/versusArtMarketplace02
+        self.CollectionPublicPath= /public/versusArtMarketplace
+        self.CollectionStoragePath= /storage/versusArtMarketplace
     }
 
 }

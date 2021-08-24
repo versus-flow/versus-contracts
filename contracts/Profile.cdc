@@ -439,8 +439,8 @@ pub contract Profile {
   }
 
   init() {
-    self.publicPath = /public/VersusUserProfile02
-    self.storagePath = /storage/VersusUserProfile02
+    self.publicPath = /public/VersusUserProfile
+    self.storagePath = /storage/VersusUserProfile
   }
 
 
