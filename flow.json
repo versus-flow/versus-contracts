@@ -74,15 +74,15 @@
       "key": "${TESTNET_ACCOUNT}"
     },
     "testnet-versus" : {
-      "address": "69915b410cca3c65",
+      "address": "99ca04281098b33d",
       "key": "${TESTNET_VERSUS}"
     },
     "testnet-admin" : {
-      "address": "8df6e29c1d303cba",
+      "address": "6e6cc18a7e27eb19",
       "key": "${TESTNET_VERSUS_ADMIN}"
     },
     "testnet-artist" : {
-      "address": "6c04420dea8b6eff",
+      "address": "7838a4b9e723e178",
       "key": "${TESTNET_VERSUS_ARTIST}"
     },
     "mainnet-admin" : {
