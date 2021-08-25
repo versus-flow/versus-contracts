@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	"github.com/bwmarrin/discordgo"
@@ -45,7 +46,7 @@ func main() {
 					cacheKey := se.Fields["cacheKey"]
 					fields := map[string]interface{}{
 						"edition": fmt.Sprintf("%s of %s", se.Fields["edition"], se.Fields["maxEdition"]),
-						"price":   pe.Fields["price"],
+						"price":   strings.TrimSuffix(pe.Fields["price"].(string), "000000") + " Flow",
 						"seller":  se.Fields["seller"],
 						"buyer":   pe.Fields["to"],
 					}
