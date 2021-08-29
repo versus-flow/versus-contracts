@@ -56,7 +56,7 @@ func createDrop(nft NonFungibleToken.NFT, editions UInt64, minimumBidIncrement U
 ### fun `mintArt()`
 
 ```cadence
-func mintArt(artist Address, artistName String, artName String, content String, description String): Art.NFT
+func mintArt(artist Address, artistName String, artName String, content String, description String, type String, artistCut UFix64, minterCut UFix64, receiverPath PublicPath): Art.NFT
 ```
 
 ---
@@ -89,6 +89,14 @@ func getContent(): &Content.Collection
 
 ```cadence
 func getFlowWallet(): &FungibleToken.Vault
+```
+
+---
+
+### fun `getFUSDWallet()`
+
+```cadence
+func getFUSDWallet(): &FungibleToken.Vault
 ```
 
 ---

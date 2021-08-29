@@ -85,6 +85,9 @@ pub contract Versus {
 			emit DropDestroyed(dropId: self.dropID)
 		}
 
+		/// Get the image content as base64 encoded url
+		///
+		/// @return the image content for this drop as a base64 encoded image url
 		pub fun getContent() : String {
 			let contentCollection= self.contentCapability.borrow()!
 			return contentCollection.content(self.contentId)
@@ -418,6 +421,9 @@ pub contract Versus {
 			return <-token
 		}
 
+		/// Set the cut percentage for versus
+		
+		/// @param cut: The cut percentage as a Ufix64 that versus will take for each drop
 		pub fun setCutPercentage(_ cut: UFix64) {
 			self.cutPercentage=cut
 		}

@@ -38,6 +38,9 @@ func init(uniqueAuction Auction.AuctionItem, editionAuctions Auction.AuctionColl
 ```cadence
 func getContent(): String
 ```
+Get the image content as base64 encoded url
+
+Returns: the image content for this drop as a base64 encoded image url
 
 ---
 
@@ -45,6 +48,14 @@ func getContent(): String
 
 ```cadence
 func getDropStatus(): DropStatus
+```
+
+---
+
+### fun `calculateStatus()`
+
+```cadence
+func calculateStatus(edition UFix64, unique UFix64): String
 ```
 
 ---
