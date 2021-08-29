@@ -13,7 +13,7 @@ import Profile from "./Profile.cdc"
  Currently this is modeled as 1 vs x, but It could easily be modeled as x vs y  so you could have 5 editions vs 10 editions if you want to
 
  The auctions themselves are not implemented in this contract but rather in the Auction contract. The goal here is to be able to
- reuse the Auction contract for other things if somebody would want that.  
+ reuse the Auction contract for other things if somebody would want that.
 
  */
 pub contract Versus {
@@ -42,7 +42,7 @@ pub contract Versus {
     //emitted when a drop is settled, that is it ends and either the uniqe or the edition side wins
     pub event Settle(name: String, artist: String, winner: String, price:UFix64, dropId: UInt64)
 
-    //emitted when the winning side in the auction changes 
+    //emitted when the winning side in the auction changes
     pub event LeaderChanged(name: String, artist: String, winning: String, dropId:UInt64)
 
    //A Drop in versus represents a single auction vs an editioned auction
@@ -50,7 +50,7 @@ pub contract Versus {
 
         access(contract) let uniqueAuction: @Auction.AuctionItem
         access(contract) let editionAuctions: @Auction.AuctionCollection
-        pub let dropID: UInt64
+        access(contract) let dropID: UInt64
 
         //this is used to be able to query events for a drop from a given start point
         access(contract) var firstBidBlock: UInt64?
@@ -60,17 +60,17 @@ pub contract Versus {
 
 
         //Store metadata here would allow us to show this after the drop has ended. The NFTS are gone then but the  metadta remains here
-        pub let metadata: Art.Metadata
+        access(contract) let metadata: Art.Metadata
 
         //these two together are a pointer to the content in the Drop. Storing them here means we can show the art after the drop has ended
         access(contract) var contentId: UInt64
         access(contract) var contentCapability: Capability<&Content.Collection>
 
-        init( uniqueAuction: @Auction.AuctionItem, 
-            editionAuctions: @Auction.AuctionCollection, 
+        init( uniqueAuction: @Auction.AuctionItem,
+            editionAuctions: @Auction.AuctionCollection,
             extensionOnLateBid: UFix64,
             contentId: UInt64,
-            contentCapability: Capability<&Content.Collection>) { 
+            contentCapability: Capability<&Content.Collection>) {
 
             Versus.totalDrops = Versus.totalDrops + (1 as UInt64)
 
@@ -84,7 +84,7 @@ pub contract Versus {
             self.contentId=contentId
             self.contentCapability=contentCapability
         }
-            
+
         destroy(){
             log("Destroy versus")
             destroy self.uniqueAuction
@@ -118,7 +118,7 @@ pub contract Versus {
             var difference=0.0
             if editionPrice > uniqueStatus.price {
                 winningStatus="EDITIONED"
-                difference = editionPrice - uniqueStatus.price 
+                difference = editionPrice - uniqueStatus.price
             } else if (editionPrice == uniqueStatus.price) {
                 winningStatus="TIE"
                 difference=0.0
@@ -142,7 +142,7 @@ pub contract Versus {
             return DropStatus(
                 dropId: self.dropID,
                 uniqueStatus: uniqueStatus,
-                editionsStatuses: editionDropAcutionStatus, 
+                editionsStatuses: editionDropAcutionStatus,
                 editionPrice: editionPrice,
                 status: winningStatus,
                 firstBidBlock: self.firstBidBlock,
@@ -154,7 +154,17 @@ pub contract Versus {
             )
         }
 
-        pub fun settle(cutPercentage:UFix64, vault: Capability<&{FungibleToken.Receiver}> ) {
+        pub fun calculateStatus(edition:UFix64, unique: UFix64) : String{
+			var winningStatus=""
+			if edition> unique{
+				winningStatus="EDITIONED"
+			} else if (edition== unique) {
+				winningStatus="TIE"
+			} else {
+				winningStatus="UNIQUE"
+			}
+			return winningStatus
+		}pub fun settle(cutPercentage:UFix64, vault: Capability<&{FungibleToken.Receiver}> ) {
             let status=self.getDropStatus()
 
             if status.settledAt != nil {
@@ -187,15 +197,15 @@ pub contract Versus {
         pub fun settleAllEditionedAuctions() {
            for id in self.editionAuctions.keys() {
                self.editionAuctions.settleAuction(id)
-           } 
+           }
         }
 
         pub fun cancelAllEditionedAuctions() {
            for id in self.editionAuctions.keys() {
                self.editionAuctions.cancelAuction(id)
-           } 
+           }
         }
-        
+
          priv fun getAuction(auctionId:UInt64): &Auction.AuctionItem {
             let dropStatus = self.getDropStatus()
             if self.uniqueAuction.auctionID == auctionId {
@@ -213,14 +223,14 @@ pub contract Versus {
 
             let auction=self.getAuction(auctionId:auctionId)
             return auction.currentBidForUser(address: address)
-           
+
         }
 
         //place a bid on a given auction
         pub fun placeBid(
             auctionId:UInt64,
-            bidTokens: @FungibleToken.Vault, 
-            vaultCap: Capability<&{FungibleToken.Receiver}>, 
+            bidTokens: @FungibleToken.Vault,
+            vaultCap: Capability<&{FungibleToken.Receiver}>,
             collectionCap: Capability<&{Art.CollectionPublic}>) {
 
             pre {
@@ -229,7 +239,8 @@ pub contract Versus {
             }
 
             let dropStatus = self.getDropStatus()
-            let block=getCurrentBlock()
+            var editionPrice=dropStatus.editionPrice
+			var uniquePrice=dropStatus.uniquePricelet block=getCurrentBlock()
             let time=Fix64(block.timestamp)
 
             if dropStatus.startTime > time {
@@ -239,7 +250,7 @@ pub contract Versus {
             if dropStatus.endTime < time && dropStatus.winning != "TIE" {
                 panic("This drop has ended")
             }
-           
+
             let bidEndTime = time + Fix64(self.extensionOnLateBid)
 
             //we save the time of the first bid so that it can be used to fetch events from that given block
@@ -263,19 +274,21 @@ pub contract Versus {
             //the bid is on a unique auction so we place the bid there
             if self.uniqueAuction.auctionID == auctionId {
                 let auctionRef = &self.uniqueAuction as &Auction.AuctionItem
-                auctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
-            } else {
+                uniquePrice=bidTokens.balanceauctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
+            } else {editionPrice= editionPrice+bidTokens.balance
                 let editionStatus=dropStatus.editionsStatuses[auctionId]!
                 edition=editionStatus.edition.toString().concat( " of ").concat(editionStatus.maxEdition.toString())
-                let editionsRef = &self.editionAuctions as &Auction.AuctionCollection 
+                let editionsRef = &self.editionAuctions as &Auction.AuctionCollection
                 editionsRef.placeBid(id: auctionId, bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
             }
-            
+
             emit Bid(name: dropStatus.metadata.name, artist:dropStatus.metadata.artist, edition: edition, bidder:bidder, price:bidPrice, dropId:self.dropID, auctionId:auctionId)
 
             let dropStatusAfter = self.getDropStatus()
-            if dropStatus.winning != dropStatusAfter.winning {
-                emit LeaderChanged(name:dropStatus.metadata.name, artist: dropStatus.metadata.artist, winning:dropStatusAfter.winning, dropId: self.dropID)
+            let newStatus=self.calculateStatus(edition:editionPrice, unique: uniquePrice)
+
+			if dropStatus.winning != newStatus {
+                emit LeaderChanged(name:dropStatus.metadata.name, artist: dropStatus.metadata.artist, winning:newStatus, dropId: self.dropID)
             }
         }
 
@@ -286,7 +299,7 @@ pub contract Versus {
             self.uniqueAuction.extendWith(time)
             self.editionAuctions.extendAllAuctionsWith(time)
         }
-        
+
     }
 
 
@@ -314,7 +327,7 @@ pub contract Versus {
             }
     }
 
-    //The struct that holds status information of a drop. 
+    //The struct that holds status information of a drop.
     //this probably has some duplicated data that could go away. like do you need both a settled and settledAt? and active?
     pub struct DropStatus {
         pub let dropId: UInt64
@@ -338,7 +351,7 @@ pub contract Versus {
             dropId: UInt64,
             uniqueStatus: Auction.AuctionStatus,
             editionsStatuses: {UInt64: DropAuctionStatus},
-            editionPrice: UFix64, 
+            editionPrice: UFix64,
             status: String,
             firstBidBlock:UInt64?,
             difference:UFix64,
@@ -376,10 +389,10 @@ pub contract Versus {
         pub fun getArt(dropId: UInt64): String
 
         pub fun placeBid(
-            dropId: UInt64, 
+            dropId: UInt64,
             auctionId:UInt64,
-            bidTokens: @FungibleToken.Vault, 
-            vaultCap: Capability<&{FungibleToken.Receiver}>, 
+            bidTokens: @FungibleToken.Vault,
+            vaultCap: Capability<&{FungibleToken.Receiver}>,
             collectionCap: Capability<&{Art.CollectionPublic}>
         )
 
@@ -390,10 +403,10 @@ pub contract Versus {
         pub fun createDrop(
              nft: @NonFungibleToken.NFT,
              editions: UInt64,
-             minimumBidIncrement: UFix64, 
+             minimumBidIncrement: UFix64,
              minimumBidUniqueIncrement: UFix64,
-             startTime: UFix64, 
-             startPrice: UFix64,  
+             startTime: UFix64,
+             startPrice: UFix64,
              vaultCap: Capability<&{FungibleToken.Receiver}>,
              duration: UFix64,
              extensionOnLateBid:UFix64)
@@ -403,18 +416,18 @@ pub contract Versus {
 
     pub resource DropCollection: PublicDrop, AdminDrop {
 
-        pub var drops: @{UInt64: Drop}
+        access(account) var drops: @{UInt64: Drop}
 
         //it is possible to adjust the cutPercentage if you own a Versus.DropCollection
-        pub(set) var cutPercentage:UFix64 
+        access(account) var cutPercentage:UFix64
 
-        pub let marketplaceVault: Capability<&{FungibleToken.Receiver}>
+        access(account) let marketplaceVault: Capability<&{FungibleToken.Receiver}>
 
-        //NFTs that are not sold are put here when a bid is settled.  
-        pub let marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>
+        //NFTs that are not sold are put here when a bid is settled.
+        access(account) let marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>
 
         init(
-            marketplaceVault: Capability<&{FungibleToken.Receiver}>, 
+            marketplaceVault: Capability<&{FungibleToken.Receiver}>,
             marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>,
             cutPercentage: UFix64
         ) {
@@ -424,15 +437,22 @@ pub contract Versus {
             self.drops <- {}
         }
 
-        // When creating a drop you send in an NFT and the number of editions you want to sell vs the unique one
+        pub fun withdraw(_ withdrawID: UInt64): @Drop {
+			let token <- self.drops.remove(key: withdrawID) ?? panic("missing drop")
+			return <-token
+		}
+
+		pub fun setCutPercentage(_ cut: UFix64) {
+			self.cutPercentage=cut
+		}// When creating a drop you send in an NFT and the number of editions you want to sell vs the unique one
         // There will then be minted edition number of extra copies and put into the editions auction
         pub fun createDrop(
              nft: @NonFungibleToken.NFT,
              editions: UInt64,
-             minimumBidIncrement: UFix64, 
+             minimumBidIncrement: UFix64,
              minimumBidUniqueIncrement: UFix64,
-             startTime: UFix64, 
-             startPrice: UFix64,  
+             startTime: UFix64,
+             startPrice: UFix64,
              vaultCap: Capability<&{FungibleToken.Receiver}>,
              duration: UFix64,
              extensionOnLateBid: UFix64) {
@@ -447,20 +467,20 @@ pub contract Versus {
             let contentId= art.contentId!
 
             let metadata= art.metadata
-            //Sending in a NFTEditioner capability here and using that instead of this loop would probably make sense. 
-            let editionedAuctions <- Auction.createAuctionCollection( 
-                marketplaceVault: self.marketplaceVault , 
+            //Sending in a NFTEditioner capability here and using that instead of this loop would probably make sense.
+            let editionedAuctions <- Auction.createAuctionCollection(
+                marketplaceVault: self.marketplaceVault ,
                 cutPercentage: self.cutPercentage)
 
             var currentEdition=(1 as UInt64)
             while currentEdition <= editions {
                 editionedAuctions.createAuction(
                     token: <- Art.makeEdition(original: &art as &Art.NFT, edition: currentEdition, maxEdition: editions),
-                    minimumBidIncrement: minimumBidIncrement, 
+                    minimumBidIncrement: minimumBidIncrement,
                     auctionLength: duration,
                     auctionStartTime:startTime,
-                    startPrice: startPrice, 
-                    collectionCap: self.marketplaceNFTTrash, 
+                    startPrice: startPrice,
+                    collectionCap: self.marketplaceNFTTrash,
                     vaultCap: vaultCap)
                 currentEdition=currentEdition+(1 as UInt64)
             }
@@ -475,12 +495,12 @@ pub contract Versus {
                 collectionCap: self.marketplaceNFTTrash,
                 vaultCap: vaultCap
             )
-            
+
             let drop  <- create Drop(
-                uniqueAuction: <- item, 
-                editionAuctions:  <- editionedAuctions, 
-                extensionOnLateBid: extensionOnLateBid, 
-                contentId: contentId, 
+                uniqueAuction: <- item,
+                editionAuctions:  <- editionedAuctions,
+                extensionOnLateBid: extensionOnLateBid,
+                contentId: contentId,
                 contentCapability: contentCapability)
             emit DropCreated(name: metadata.name, artist: metadata.artist,  editions: editions, owner: vaultCap.address, dropId: drop.dropID)
 
@@ -529,28 +549,28 @@ pub contract Versus {
             address:Address
         ) : UFix64 {
             return  self.getDrop(dropId).currentBidForUser(
-                auctionId: auctionId, 
+                auctionId: auctionId,
                 address:address
             )
         }
 
         //place a bid, will just delegate to the method in the drop collection
         pub fun placeBid(
-            dropId: UInt64, 
+            dropId: UInt64,
             auctionId:UInt64,
-            bidTokens: @FungibleToken.Vault, 
-            vaultCap: Capability<&{FungibleToken.Receiver}>, 
+            bidTokens: @FungibleToken.Vault,
+            vaultCap: Capability<&{FungibleToken.Receiver}>,
             collectionCap: Capability<&{Art.CollectionPublic}>
         ) {
             self.getDrop(dropId).placeBid(
-                auctionId: auctionId, 
-                bidTokens: <- bidTokens, 
-                vaultCap: vaultCap, 
+                auctionId: auctionId,
+                bidTokens: <- bidTokens,
+                vaultCap: vaultCap,
                 collectionCap:collectionCap
             )
         }
 
-        destroy() {            
+        destroy() {
             destroy self.drops
         }
     }
@@ -565,8 +585,8 @@ pub contract Versus {
     }
 
  /*
-     Get an active drop in the versus marketplace 
-     
+     Get an active drop in the versus marketplace
+
      */
     pub fun getDrops() : [Versus.DropStatus]{
         let account = Versus.account
@@ -598,8 +618,8 @@ pub contract Versus {
                 if status.active != false {
                     return status
                 }
-            } 
-        } 
+            }
+        }
         return nil
     }
 
@@ -648,7 +668,7 @@ pub contract Versus {
            }
 
             let dc:&Versus.DropCollection=self.server!.borrow()!
-            dc.cutPercentage=num
+            dc.setCutPercentage(num)
         }
 
         pub fun createDrop(
@@ -815,6 +835,6 @@ pub contract Versus {
         account.link<&{Versus.PublicDrop}>(Versus.CollectionPublicPath, target: Versus.CollectionStoragePath)
         account.link<&Versus.DropCollection>(Versus.CollectionPrivatePath, target: Versus.CollectionStoragePath)
     }
-     
+
 }
- 
+
