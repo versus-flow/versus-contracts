@@ -49,9 +49,8 @@ pub contract Versus {
 
 		access(contract) let uniqueAuction: @Auction.AuctionItem
 		access(contract) let editionAuctions: @Auction.AuctionCollection
-		pub let dropID: UInt64
+		access(contract) let dropID: UInt64
 
-		//TODO: use this variable to total up the edition bids, cannot add a new one cannot change this, do not expose this. 
 		access(contract) var firstBidBlock: UInt64?
 		access(contract) var settledAt: UInt64?
 
@@ -59,7 +58,7 @@ pub contract Versus {
 
 
 		//Store metadata here would allow us to show this after the drop has ended. The NFTS are gone then but the  metadta remains here
-		pub let metadata: Art.Metadata
+		access(contract) let metadata: Art.Metadata
 
 		//these two together are a pointer to the content in the Drop. Storing them here means we can show the art after the drop has ended
 		access(contract) var contentId: UInt64
@@ -148,6 +147,18 @@ pub contract Versus {
 			)
 		}
 
+		pub fun calculateStatus(edition:UFix64, unique: UFix64) : String{
+			var winningStatus=""
+			if edition> unique{
+				winningStatus="EDITIONED"
+			} else if (edition== unique) {
+				winningStatus="TIE"
+			} else {
+				winningStatus="UNIQUE"
+			}
+			return winningStatus
+		}
+
 		pub fun settle(cutPercentage:UFix64, vault: Capability<&{FungibleToken.Receiver}> ) {
 			let status=self.getDropStatus()
 
@@ -220,6 +231,9 @@ pub contract Versus {
 			}
 
 			let dropStatus = self.getDropStatus()
+
+			var editionPrice=dropStatus.editionPrice
+			var uniquePrice=dropStatus.uniquePrice
 			let block=getCurrentBlock()
 			let time=Fix64(block.timestamp)
 
@@ -254,8 +268,10 @@ pub contract Versus {
 			//the bid is on a unique auction so we place the bid there
 			if self.uniqueAuction.auctionID == auctionId {
 				let auctionRef = &self.uniqueAuction as &Auction.AuctionItem
+				uniquePrice=bidTokens.balance
 				auctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
 			} else {
+				editionPrice= editionPrice+bidTokens.balance
 				let editionStatus=dropStatus.editionsStatuses[auctionId]!
 				edition=editionStatus.edition.toString().concat( " of ").concat(editionStatus.maxEdition.toString())
 				let editionsRef = &self.editionAuctions as &Auction.AuctionCollection 
@@ -265,8 +281,10 @@ pub contract Versus {
 			emit Bid(name: dropStatus.metadata.name, artist:dropStatus.metadata.artist, edition: edition, bidder:bidder, price:bidPrice, dropId:self.dropID, auctionId:auctionId)
 
 			let dropStatusAfter = self.getDropStatus()
-			if dropStatus.winning != dropStatusAfter.winning {
-				emit LeaderChanged(name:dropStatus.metadata.name, artist: dropStatus.metadata.artist, winning:dropStatusAfter.winning, dropId: self.dropID)
+			let newStatus=self.calculateStatus(edition:editionPrice, unique: uniquePrice)
+
+			if dropStatus.winning != newStatus {
+				emit LeaderChanged(name:dropStatus.metadata.name, artist: dropStatus.metadata.artist, winning:newStatus, dropId: self.dropID)
 			}
 		}
 
@@ -364,9 +382,7 @@ pub contract Versus {
 		pub fun currentBidForUser(dropId: UInt64, auctionId: UInt64, address:Address) : UFix64
 		pub fun getAllStatuses(): {UInt64: DropStatus}
 		pub fun getStatus(dropId: UInt64): DropStatus
-
 		pub fun getArt(dropId: UInt64): String
-
 		pub fun placeBid(dropId: UInt64, auctionId:UInt64, bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{Art.CollectionPublic}>)
 
 	}
@@ -380,21 +396,30 @@ pub contract Versus {
 
 	pub resource DropCollection: PublicDrop, AdminDrop {
 
-		pub var drops: @{UInt64: Drop}
+		access(account) var drops: @{UInt64: Drop}
 
 		//it is possible to adjust the cutPercentage if you own a Versus.DropCollection
-		pub(set) var cutPercentage:UFix64 
+		access(account) var cutPercentage:UFix64 
 
-		pub let marketplaceVault: Capability<&{FungibleToken.Receiver}>
+		access(account) let marketplaceVault: Capability<&{FungibleToken.Receiver}>
 
 		//NFTs that are not sold are put here when a bid is settled.  
-		pub let marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>
+		access(account) let marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>
 
 		init( marketplaceVault: Capability<&{FungibleToken.Receiver}>, marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>, cutPercentage: UFix64) {
 			self.marketplaceNFTTrash=marketplaceNFTTrash
 			self.cutPercentage= cutPercentage
 			self.marketplaceVault = marketplaceVault
 			self.drops <- {}
+		}
+
+		pub fun withdraw(_ withdrawID: UInt64): @Drop {
+			let token <- self.drops.remove(key: withdrawID) ?? panic("missing drop")
+			return <-token
+		}
+
+		pub fun setCutPercentage(_ cut: UFix64) {
+			self.cutPercentage=cut
 		}
 
 		// When creating a drop you send in an NFT and the number of editions you want to sell vs the unique one
@@ -589,7 +614,7 @@ pub contract Versus {
 			}
 
 			let dc:&Versus.DropCollection=self.server!.borrow()!
-			dc.cutPercentage=num
+			dc.setCutPercentage(num)
 		}
 
 		pub fun createDrop(
