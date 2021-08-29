@@ -2,7 +2,7 @@ import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 import FungibleToken from "./standard/FungibleToken.cdc"
 import Content from "./Content.cdc"
 
-//A NFT contract to store art
+/// A NFT contract to store art
 pub contract Art: NonFungibleToken {
 
 	pub let CollectionStoragePath: StoragePath
@@ -65,6 +65,7 @@ pub contract Art: NonFungibleToken {
 		pub let wallet:Capability<&{FungibleToken.Receiver}> 
 		pub let cut: UFix64
 
+		/// @param wallet : The wallet to send royalty too
 		init(wallet:Capability<&{FungibleToken.Receiver}>, cut: UFix64 ){
 			self.wallet=wallet
 			self.cut=cut
