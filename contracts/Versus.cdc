@@ -92,7 +92,9 @@ pub contract Versus {
             emit DropDestroyed(dropId: self.dropID)
         }
 
-        pub fun getContent() : String {
+        /// Get the image content as base64 encoded url
+		///
+		/// @return the image content for this drop as a base64 encoded image urlpub fun getContent() : String {
             let contentCollection= self.contentCapability.borrow()!
             return contentCollection.content(self.contentId)
         }
@@ -442,6 +444,9 @@ pub contract Versus {
 			return <-token
 		}
 
+		/// Set the cut percentage for versus
+
+		/// @param cut: The cut percentage as a Ufix64 that versus will take for each drop
 		pub fun setCutPercentage(_ cut: UFix64) {
 			self.cutPercentage=cut
 		}// When creating a drop you send in an NFT and the number of editions you want to sell vs the unique one

@@ -28,6 +28,26 @@ func init(marketplaceVault Capability<&{FungibleToken.Receiver}>, marketplaceNFT
 
 ## Functions
 
+### fun `withdraw()`
+
+```cadence
+func withdraw(_ UInt64): Drop
+```
+
+---
+
+### fun `setCutPercentage()`
+
+```cadence
+func setCutPercentage(_ UFix64)
+```
+Set the cut percentage for versus
+
+Parameters:
+  - cut : _The cut percentage as a Ufix64 that versus will take for each drop_
+
+---
+
 ### fun `createDrop()`
 
 ```cadence
