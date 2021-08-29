@@ -384,6 +384,7 @@ pub contract Versus {
 
 		pub fun currentBidForUser(dropId: UInt64, auctionId: UInt64, address:Address) : UFix64
 		pub fun getAllStatuses(): {UInt64: DropStatus}
+		pub fun getCacheKeyForDrop(_ dropId: UInt64) : UInt64
 		pub fun getStatus(dropId: UInt64): DropStatus
 		pub fun getArt(dropId: UInt64): String
 		pub fun placeBid(dropId: UInt64, auctionId:UInt64, bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{Art.CollectionPublic}>)
@@ -415,6 +416,7 @@ pub contract Versus {
 			self.marketplaceVault = marketplaceVault
 			self.drops <- {}
 		}
+
 
 		pub fun withdraw(_ withdrawID: UInt64): @Drop {
 			let token <- self.drops.remove(key: withdrawID) ?? panic("missing drop")
@@ -480,6 +482,21 @@ pub contract Versus {
 				"drop doesn't exist"
 			}
 			return &self.drops[dropId] as &Drop
+		}
+
+		pub fun getDropByCacheKey(_ cacheKey: UInt64) : DropStatus? {
+			var dropStatus: {UInt64: DropStatus }= {}
+			for id in self.drops.keys {
+				let itemRef = &self.drops[id] as? &Drop
+				if itemRef.contentId == cacheKey {
+					return itemRef.getDropStatus()
+				}
+			}
+			return nil
+		}
+
+		pub fun getCacheKeyForDrop(_ dropId: UInt64) : UInt64 {
+			return self.getDrop(dropId).contentId
 		}
 
 		pub fun getStatus(dropId:UInt64): DropStatus {
