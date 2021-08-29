@@ -86,12 +86,7 @@ pub contract Art: NonFungibleToken {
 		pub let metadata: Metadata
 		pub let royalty: {String: Royalty}
 
-		init(initID: UInt64,
-		metadata: Metadata,
-		contentCapability:Capability<&Content.Collection>?,
-		contentId: UInt64?,
-		url: String?,
-		royalty:{String: Royalty}) {
+		init(initID: UInt64, metadata: Metadata, contentCapability:Capability<&Content.Collection>?, contentId: UInt64?, url: String?, royalty:{String: Royalty}) {
 
 			self.id = initID
 			self.metadata=metadata
@@ -105,20 +100,20 @@ pub contract Art: NonFungibleToken {
 		}
 
 		pub fun vaultType() : String {
-          return self.metadata.type
-        }
+			return self.metadata.type
+		}
 
-        pub fun getMinterVault() : Capability<&{FungibleToken.Receiver}>  {
-          return self.royalty["minter"]!.wallet
-        }
+		pub fun getMinterVault() : Capability<&{FungibleToken.Receiver}>  {
+			return self.royalty["minter"]!.wallet
+		}
 
 
-        pub fun cacheKey() : String {
-            if self.url != nil {
-                return self.url!
-            }
-            return self.contentId!.toString()
-        }
+		pub fun cacheKey() : String {
+			if self.url != nil {
+				return self.url!
+			}
+			return self.contentId!.toString()
+		}
 
 		//return the content for this NFT
 		pub fun content() : String {
@@ -256,73 +251,72 @@ pub contract Art: NonFungibleToken {
 
 		//This method can only be called from another contract in the same account. In Versus case it is called from the VersusAdmin that is used to administer the solution
 		access(account) fun createArtWithContent(name: String, artist:String, artistAddress:Address, description: String, url: String, type: String, royalty: {String: Royalty}) : @Art.NFT {
-			var newNFT <- create NFT(
-				initID: Art.totalSupply,
-				metadata: Metadata(
-					name: name,
-					artist: artist,
-					artistAddress: artistAddress,
-					description:description,
-					type:type,
-					edition:1,
-					maxEdition:1
-				),
-				contentCapability:nil,
-				contentId:nil,
-				url:url,
-				royalty:royalty
-			)
-			emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
+			var newNFT <- create NFT( initID: Art.totalSupply,
+			metadata: Metadata(
+				name: name,
+				artist: artist,
+				artistAddress: artistAddress,
+				description:description,
+				type:type,
+				edition:1,
+				maxEdition:1
+			),
+			contentCapability:nil,
+			contentId:nil,
+			url:url,
+			royalty:royalty
+		)
+		emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
 
-        Art.totalSupply = Art.totalSupply + UInt64(1)
-        return <- newNFT
-    }
+		Art.totalSupply = Art.totalSupply + UInt64(1)
+		return <- newNFT
+	}
 
-		//This method can only be called from another contract in the same account. In Versus case it is called from the VersusAdmin that is used to administer the solution
-		access(account) fun createArtWithPointer(name: String, artist: String, artistAddress:Address, description: String, type: String, contentCapability:Capability<&Content.Collection>, contentId: UInt64, royalty: {String: Royalty}) : @Art.NFT{
+	//This method can only be called from another contract in the same account. In Versus case it is called from the VersusAdmin that is used to administer the solution
+	access(account) fun createArtWithPointer(name: String, artist: String, artistAddress:Address, description: String, type: String, contentCapability:Capability<&Content.Collection>, contentId: UInt64, royalty: {String: Royalty}) : @Art.NFT{
 
-			let metadata=Metadata( name: name, artist: artist, artistAddress: artistAddress, description:description, type:type, edition:1, maxEdition:1)
-			var newNFT <- create NFT(initID: Art.totalSupply,metadata: metadata, contentCapability:contentCapability, contentId:contentId, url:nil, royalty:royalty)
-			emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
+		let metadata=Metadata( name: name, artist: artist, artistAddress: artistAddress, description:description, type:type, edition:1, maxEdition:1)
+		var newNFT <- create NFT(initID: Art.totalSupply,metadata: metadata, contentCapability:contentCapability, contentId:contentId, url:nil, royalty:royalty)
+		emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
 
-			Art.totalSupply = Art.totalSupply + UInt64(1)
-			return <- newNFT
-		}
+		Art.totalSupply = Art.totalSupply + UInt64(1)
+		return <- newNFT
+	}
 
-		//This method can only be called from another contract in the same account. In Versus case it is called from the VersusAdmin that is used to administer the solution
-		access(account) fun makeEdition(original: &NFT, edition: UInt64, maxEdition:UInt64) : @Art.NFT {
-			let
-            metadata= Metadata(
-              name: original.metadata.name,
-              artist:original.metadata.artist,
-              artistAddress:original.metadata.artistAddress,
-              description:original.metadata.description,
-              type:original.metadata.type,
-              edition: edition,
-              maxEdition:maxEdition)
-              var newNFT <- create NFT(initID: Art.totalSupply, metadata: metadata ,
-            contentCapability: original.contentCapability,
-            contentId:original.contentId,
-            url:original.url,
-            royalty:original.royalty
-        )
-        emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
-        emit Editioned(id: Art.totalSupply, from: original.id, edition:edition, maxEdition:maxEdition)
+	//This method can only be called from another contract in the same account. In Versus case it is called from the VersusAdmin that is used to administer the solution
+	access(account) fun makeEdition(original: &NFT, edition: UInt64, maxEdition:UInt64) : @Art.NFT {
+		let
+		metadata= Metadata(
+			name: original.metadata.name,
+			artist:original.metadata.artist,
+			artistAddress:original.metadata.artistAddress,
+			description:original.metadata.description,
+			type:original.metadata.type,
+			edition: edition,
+			maxEdition:maxEdition)
+			var newNFT <- create NFT(initID: Art.totalSupply, metadata: metadata ,
+			contentCapability: original.contentCapability,
+			contentId:original.contentId,
+			url:original.url,
+			royalty:original.royalty
+		)
+		emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
+		emit Editioned(id: Art.totalSupply, from: original.id, edition:edition, maxEdition:maxEdition)
 
-			Art.totalSupply = Art.totalSupply + UInt64(1)
-			return <- newNFT
-		}
+		Art.totalSupply = Art.totalSupply + UInt64(1)
+		return <- newNFT
+	}
 
 
-  init() {
-        // Initialize the total supply
-        self.totalSupply = 0
-        self.CollectionPublicPath=/public/versusArtCollection
-        self.CollectionStoragePath=/storage/versusArtCollection
+	init() {
+		// Initialize the total supply
+		self.totalSupply = 0
+		self.CollectionPublicPath=/public/versusArtCollection
+		self.CollectionStoragePath=/storage/versusArtCollection
 
-        self.account.save<@NonFungibleToken.Collection>(<- Art.createEmptyCollection(), to: Art.CollectionStoragePath)
-        self.account.link<&{Art.CollectionPublic}>(Art.CollectionPublicPath, target: Art.CollectionStoragePath)
-        emit ContractInitialized()
-  }
+		self.account.save<@NonFungibleToken.Collection>(<- Art.createEmptyCollection(), to: Art.CollectionStoragePath)
+		self.account.link<&{Art.CollectionPublic}>(Art.CollectionPublicPath, target: Art.CollectionStoragePath)
+		emit ContractInitialized()
+	}
 }
 
