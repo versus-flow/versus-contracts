@@ -8,15 +8,17 @@ import (
 
 func main() {
 
-	startTime := "August 5, 2021 08:00:00 AM"
+	startTime := "September 2, 2021 08:00:00 AM"
 	durationHrs := 4
-	artistAddress := "0xb1510e68de5655e5"
-	artist := "LOREM"
-	name := "PATH"
-	editions := 15
-	description := `The process of creating art feels like a path that helps me to escape from negativity. It helps me to disconnect, decompress, and finally to define the emotions I want to express. I'd love to bring you with me on this path.`
+	artistAddress := "0xfb1b4662ca2f6dbd"
+	artist := "Zigor"
+	name := "CoKing"
+	editions := 10
+	description := `You may have heard of it, it is known to humans as COVID-19, SARS-CoV-2 or CORONA. There has been much speculation about his origins, about his creation, but what no human being knows is that his real name is CoKing, a creation of the clumsy and evil Mago Rata Pollo, in his effort to create a magical army of minions.
 
-	imageUrl := "https://dl.dropboxusercontent.com/s/bi3n8c5jwn4ki0c/PATH_LOREM.jpg"
+CoKing has turned out to be the only efficient soldier created by Rata Pollo, a great success. In the year 2057 there are almost no humans left. Only a tiny expression of what they once were: the resistance. CoKing has lost count of the waves he has surfed but he reinvents himself in each one to continue his mission. He doesn't have much left, or so he thinks...`
+
+	imageUrl := "https://uploads.linear.app/b5013517-8161-4940-b2a0-d5fc21b1fafb/68cf741b-4a68-4483-af31-0195b6443eb3/41dc133d-2136-4bea-b251-116fce4850d1"
 
 	flow := gwtf.NewGoWithTheFlowMainNet()
 	//	flow := gwtf.NewGoWithTheFlowDevNet()

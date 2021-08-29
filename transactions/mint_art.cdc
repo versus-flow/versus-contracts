@@ -7,25 +7,27 @@ transaction(
     artist: Address,
     artistName: String, 
     artName: String, 
-    content: String, 
-    description: String, 
-    type: String, 
-    artistCut: UFix64, 
+    description: String,
+    type: String,
+    artistCut: UFix64,
     minterCut: UFix64,
     receiverPath: PublicPath
     ) {
 
     let artistCollection: Capability<&{Art.CollectionPublic}>
     let client: &Versus.Admin
+		let content: String
 
     prepare(account: AuthAccount) {
+        let path = /storage/upload
+        self.content= account.load<String>(from: path) ?? panic("could not load content")
 
       self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
         self.artistCollection= getAccount(artist).getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath)
     }
 
   execute {
-      let art <-  self.client.mintArt(artist: artist, artistName: artistName, artName: artName, content:content, description: description, type:type, artistCut: artistCut, minterCut:minterCut, receiverPath: receiverPath)
+      let art <-  self.client.mintArt(artist: artist, artistName: artistName, artName: artName, content:self.content, description: description, type:type, artistCut: artistCut, minterCut:minterCut, receiverPath: receiverPath)
       self.artistCollection.borrow()!.deposit(token: <- art)
   }
 }

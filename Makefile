@@ -47,7 +47,7 @@ testnet:
 #this goal deployes all the contracts to emulator
 .PHONY: deploy-testnet
 deploy-testnet: setup-testnet
-	flow project deploy  -n testnet -f ~/.flow-dev.json
+	flow project deploy  -n testnet 
 
 .PHONY: get-drop
 get-drop:
