@@ -7,7 +7,8 @@ transaction(
     artist: Address,
     artistName: String, 
     artName: String, 
-    description: String) {
+    description: String,
+	  target:Address) {
 
     let artistCollection: Capability<&{Art.CollectionPublic}>
     let client: &Versus.Admin
@@ -18,7 +19,7 @@ transaction(
         self.content= account.load<String>(from: path) ?? panic("could not load content")
  
         self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
-        self.artistCollection= getAccount(artist).getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath)
+        self.artistCollection= getAccount(target).getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath)
     }
 
     execute {

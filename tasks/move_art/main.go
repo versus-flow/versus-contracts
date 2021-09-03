@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	flow := gwtf.NewGoWithTheFlowDevNet()
+	flow := gwtf.NewGoWithTheFlowMainNet()
 
 	account, ok := os.LookupEnv("account")
 	if !ok {
@@ -26,7 +26,6 @@ func main() {
 	if err != nil {
 		fmt.Println("could not parse drop as number")
 	}
-
 
 	flow.TransactionFromFile("move_art").
 		SignProposeAndPayAs("admin").
