@@ -12,7 +12,7 @@ A versions auction contains a single auction and a group of auctions and either 
 Currently this is modeled as 1 vs x, but It could easily be modeled as x vs y  so you could have 5 editions vs 10 editions if you want to
 
 The auctions themselves are not implemented in this contract but rather in the Auction contract. The goal here is to be able to
-reuse the Auction contract for other things if somebody would want that.  
+reuse the Auction contract for other things if somebody would want that.
 
 */
 pub contract Versus {
@@ -41,7 +41,7 @@ pub contract Versus {
 	//emitted when a drop is settled, that is it ends and either the uniqe or the edition side wins
 	pub event Settle(name: String, artist: String, winner: String, price:UFix64, dropId: UInt64)
 
-	//emitted when the winning side in the auction changes 
+	//emitted when the winning side in the auction changes
 	pub event LeaderChanged(name: String, artist: String, winning: String, dropId:UInt64)
 
 	//A Drop in versus represents a single auction vs an editioned auction
@@ -64,7 +64,7 @@ pub contract Versus {
 		access(contract) var contentId: UInt64
 		access(contract) var contentCapability: Capability<&Content.Collection>
 
-		init(uniqueAuction: @Auction.AuctionItem, editionAuctions: @Auction.AuctionCollection, extensionOnLateBid: UFix64, contentId: UInt64, contentCapability: Capability<&Content.Collection>) { 
+		init(uniqueAuction: @Auction.AuctionItem, editionAuctions: @Auction.AuctionCollection, extensionOnLateBid: UFix64, contentId: UInt64, contentCapability: Capability<&Content.Collection>) {
 			Versus.totalDrops = Versus.totalDrops + (1 as UInt64)
 
 			self.dropID=Versus.totalDrops
@@ -114,7 +114,7 @@ pub contract Versus {
 			var difference=0.0
 			if editionPrice > uniqueStatus.price {
 				winningStatus="EDITIONED"
-				difference = editionPrice - uniqueStatus.price 
+				difference = editionPrice - uniqueStatus.price
 			} else if (editionPrice == uniqueStatus.price) {
 				winningStatus="TIE"
 				difference=0.0
@@ -138,7 +138,7 @@ pub contract Versus {
 			return DropStatus(
 				dropId: self.dropID,
 				uniqueStatus: uniqueStatus,
-				editionsStatuses: editionDropAcutionStatus, 
+				editionsStatuses: editionDropAcutionStatus,
 				editionPrice: editionPrice,
 				status: winningStatus,
 				firstBidBlock: self.firstBidBlock,
@@ -196,13 +196,13 @@ pub contract Versus {
 		pub fun settleAllEditionedAuctions() {
 			for id in self.editionAuctions.keys() {
 				self.editionAuctions.settleAuction(id)
-			} 
+			}
 		}
 
 		pub fun cancelAllEditionedAuctions() {
 			for id in self.editionAuctions.keys() {
 				self.editionAuctions.cancelAuction(id)
-			} 
+			}
 		}
 
 		priv fun getAuction(auctionId:UInt64): &Auction.AuctionItem {
@@ -277,7 +277,7 @@ pub contract Versus {
 				editionPrice= editionPrice+bidTokens.balance
 				let editionStatus=dropStatus.editionsStatuses[auctionId]!
 				edition=editionStatus.edition.toString().concat( " of ").concat(editionStatus.maxEdition.toString())
-				let editionsRef = &self.editionAuctions as &Auction.AuctionCollection 
+				let editionsRef = &self.editionAuctions as &Auction.AuctionCollection
 				editionsRef.placeBid(id: auctionId, bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
 			}
 
@@ -327,7 +327,7 @@ pub contract Versus {
 	}
 
 	//TODO: this struct is deprecated, create a new struct that is cheap to calculate and one that has all details
-	//The struct that holds status information of a drop. 
+	//The struct that holds status information of a drop.
 	//this probably has some duplicated data that could go away. like do you need both a settled and settledAt? and active?
 	pub struct DropStatus {
 		pub let dropId: UInt64
@@ -351,7 +351,7 @@ pub contract Versus {
 			dropId: UInt64,
 			uniqueStatus: Auction.AuctionStatus,
 			editionsStatuses: {UInt64: DropAuctionStatus},
-			editionPrice: UFix64, 
+			editionPrice: UFix64,
 			status: String,
 			firstBidBlock:UInt64?,
 			difference:UFix64,
@@ -403,11 +403,11 @@ pub contract Versus {
 		access(account) var drops: @{UInt64: Drop}
 
 		//it is possible to adjust the cutPercentage if you own a Versus.DropCollection
-		access(account) var cutPercentage:UFix64 
+		access(account) var cutPercentage:UFix64
 
 		access(account) let marketplaceVault: Capability<&{FungibleToken.Receiver}>
 
-		//NFTs that are not sold are put here when a bid is settled.  
+		//NFTs that are not sold are put here when a bid is settled.
 		access(account) let marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>
 
 		init( marketplaceVault: Capability<&{FungibleToken.Receiver}>, marketplaceNFTTrash: Capability<&{Art.CollectionPublic}>, cutPercentage: UFix64) {
@@ -424,7 +424,7 @@ pub contract Versus {
 		}
 
 		/// Set the cut percentage for versus
-		
+
 		/// @param cut: The cut percentage as a Ufix64 that versus will take for each drop
 		pub fun setCutPercentage(_ cut: UFix64) {
 			self.cutPercentage=cut
@@ -444,13 +444,13 @@ pub contract Versus {
 			let contentId= art.contentId!
 
 			let metadata= art.metadata
-			//Sending in a NFTEditioner capability here and using that instead of this loop would probably make sense. 
+			//Sending in a NFTEditioner capability here and using that instead of this loop would probably make sense.
 			//NB! the marketplaceVault here is not used anymore, we now fetch the vault from the art that is sold
 			let editionedAuctions <- Auction.createAuctionCollection( marketplaceVault: self.marketplaceVault , cutPercentage: self.cutPercentage)
 
 			var currentEdition=(1 as UInt64)
 			while currentEdition <= editions {
-				editionedAuctions.createAuction(token: <- Art.makeEdition(original: &art as &Art.NFT, edition: currentEdition, maxEdition: editions), minimumBidIncrement: minimumBidIncrement, auctionLength: duration, auctionStartTime:startTime, startPrice: startPrice, collectionCap: self.marketplaceNFTTrash, vaultCap: vaultCap) 
+				editionedAuctions.createAuction(token: <- Art.makeEdition(original: &art as &Art.NFT, edition: currentEdition, maxEdition: editions), minimumBidIncrement: minimumBidIncrement, auctionLength: duration, auctionStartTime:startTime, startPrice: startPrice, collectionCap: self.marketplaceNFTTrash, vaultCap: vaultCap)
 				currentEdition=currentEdition+(1 as UInt64)
 			}
 
@@ -519,28 +519,28 @@ pub contract Versus {
 			address:Address
 		) : UFix64 {
 			return  self.getDrop(dropId).currentBidForUser(
-				auctionId: auctionId, 
+				auctionId: auctionId,
 				address:address
 			)
 		}
 
 		//place a bid, will just delegate to the method in the drop collection
 		pub fun placeBid(
-			dropId: UInt64, 
+			dropId: UInt64,
 			auctionId:UInt64,
-			bidTokens: @FungibleToken.Vault, 
-			vaultCap: Capability<&{FungibleToken.Receiver}>, 
+			bidTokens: @FungibleToken.Vault,
+			vaultCap: Capability<&{FungibleToken.Receiver}>,
 			collectionCap: Capability<&{Art.CollectionPublic}>
 		) {
 			self.getDrop(dropId).placeBid(
-				auctionId: auctionId, 
-				bidTokens: <- bidTokens, 
-				vaultCap: vaultCap, 
+				auctionId: auctionId,
+				bidTokens: <- bidTokens,
+				vaultCap: vaultCap,
 				collectionCap:collectionCap
 			)
 		}
 
-		destroy() {            
+		destroy() {
 			destroy self.drops
 		}
 	}
@@ -555,7 +555,7 @@ pub contract Versus {
 	}
 
 	/*
-	Get an active drop in the versus marketplace 
+	Get an active drop in the versus marketplace
 	*/
 	pub fun getDrops() : [Versus.DropStatus]{
 		let account = Versus.account
@@ -587,8 +587,8 @@ pub contract Versus {
 				if status.active != false {
 					return status
 				}
-			} 
-		} 
+			}
+		}
 		return nil
 	}
 
@@ -666,8 +666,20 @@ pub contract Versus {
 				extensionOnLateBid: extensionOnLateBid
 			)
 		}
+
 		/*
-		A stored Transaction to mintArt on versus to a given artist
+          A stored Transaction to mintArt on versus to a given artist
+         */
+				 pub fun mintSimpleArt(artist: Address, artistName: String, artName: String, content:String, description: String, type: String, royalty: {String: Art.Royalty}, edition: UInt64, maxEdition:UInt64) : @Art.NFT {
+
+            pre {
+                self.server != nil : "Your client has not been linked to the server"
+            }
+
+						return <- Art.createArtWithContent(name: artName, artist: artistName, artistAddress: artist, description: description, url: content, type: type, royalty: royalty, edition:edition, maxEdition:maxEdition)
+        }
+
+        /*A stored Transaction to mintArt on versus to a given artist
 		*/
 		pub fun mintArt(artist: Address, artistName: String, artName: String, content:String, description: String, type:String, artistCut: UFix64, minterCut:UFix64, receiverPath:PublicPath) : @Art.NFT {
 

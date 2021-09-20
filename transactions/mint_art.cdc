@@ -8,6 +8,7 @@ transaction(
     artistName: String, 
     artName: String, 
     description: String,
+    target:Address,
     type: String,
     artistCut: UFix64,
     minterCut: UFix64,
@@ -21,9 +22,8 @@ transaction(
     prepare(account: AuthAccount) {
         let path = /storage/upload
         self.content= account.load<String>(from: path) ?? panic("could not load content")
-
-      self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
-        self.artistCollection= getAccount(artist).getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath)
+        self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
+        self.artistCollection= getAccount(target).getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath)
     }
 
   execute {
