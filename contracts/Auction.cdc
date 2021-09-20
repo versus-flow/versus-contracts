@@ -470,10 +470,6 @@ pub contract Auction {
 
         // getAuctionPrices returns a dictionary of available NFT IDs with their current price
         pub fun getAuctionStatuses(): {UInt64: AuctionStatus} {
-            pre {
-                self.auctionItems.keys.length > 0: "There are no auction items"
-            }
-
             let priceList: {UInt64: AuctionStatus} = {}
 
             for id in self.auctionItems.keys {
