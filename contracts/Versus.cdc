@@ -92,6 +92,10 @@ pub contract Versus {
             emit DropDestroyed(dropId: self.dropID)
         }
 
+				 pub fun getContent() : String {
+            let contentCollection= self.contentCapability.borrow()!
+            return contentCollection.content(self.contentId)
+        }
 
         //Returns a DropStatus struct that could be used in a script to show information about the drop
         pub fun getDropStatus() : DropStatus {

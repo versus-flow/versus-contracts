@@ -34,7 +34,7 @@ func main() {
 		RunPrintEventsFull()
 
 	fmt.Println("Upload image")
-	flow.UploadImageAsDataUrl("ekaitza.png", "marketplace")
+	flow.UploadImageAsDataUrl("bull.png", "marketplace")
 
 	fmt.Println("Create a drop in versus that is already started with 10 editions")
 	flow.TransactionFromFile("drop").
@@ -95,5 +95,5 @@ func main() {
 	flow.ScriptFromFile("check_account").AccountArgument("marketplace").Run()
 
 	flow.ScriptFromFile("drop_status").UInt64Argument(1).Run()
-	flow.TransactionFromFile("destroy_versus").SignProposeAndPayAsService().UInt64Argument(1).RunPrintEventsFull()
+	flow.TransactionFromFile("destroy_versus").SignProposeAndPayAs("marketplace").UInt64Argument(1).RunPrintEventsFull()
 }
