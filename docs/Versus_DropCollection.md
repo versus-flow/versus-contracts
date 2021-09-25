@@ -104,6 +104,14 @@ func getArt(dropId UInt64): String
 
 ---
 
+### fun `getArtType()`
+
+```cadence
+func getArtType(dropId UInt64): String
+```
+
+---
+
 ### fun `settle()`
 
 ```cadence
