@@ -50,6 +50,9 @@ func main() {
 		UFix64Argument("10.0").                                                                         //min bid increment unique
 		UFix64Argument("5.0").                                                                          //duration
 		UFix64Argument("5.0").                                                                          //extensionOnLateBid
+		StringArgument("image/dataurl").                                                                //type
+		UFix64Argument("0.05").                                                                         //artistCut 5%
+		UFix64Argument("0.025").                                                                        //minterCut 2.5%
 		RunPrintEventsFull()
 
 	fmt.Println("Setup a buyer and make him bid on the unique auction")

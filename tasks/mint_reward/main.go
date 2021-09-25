@@ -31,6 +31,9 @@ func main() {
 		StringArgument("Bryan Brinkman").
 		StringArgument("Cloudy Thoughts"). //artist name
 		StringArgument(`An explosion of ideas, built on past creations with references to “Explode”, “Wired”, “Overcast” and “NimBuds”.`).
+		StringArgument("image/dataurl"). //type
+		UFix64Argument("0.05").          //artistCut 5%
+		UFix64Argument("0.025").         //minterCut 2.5%
 		Argument(cadenceArray).
 		RunPrintEventsFull()
 

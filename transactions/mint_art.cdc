@@ -8,7 +8,11 @@ transaction(
     artistName: String, 
     artName: String, 
     description: String,
-	  target:Address) {
+	  target:Address,
+    type: String,
+    artistCut: UFix64,
+    minterCut: UFix64
+	) {
 
     let artistCollection: Capability<&{Art.CollectionPublic}>
     let client: &Versus.Admin
@@ -23,7 +27,7 @@ transaction(
     }
 
     execute {
-        let art <-  self.client.mintArt(artist: artist, artistName: artistName, artName: artName, content:self.content, description: description)
+			let art <-  self.client.mintArt(artist: artist, artistName: artistName, artName: artName, content:self.content, description: description, type:type, artistCut: artistCut, minterCut:minterCut)
         self.artistCollection.borrow()!.deposit(token: <- art)
     }
 }

@@ -36,9 +36,9 @@ func main() {
 		UFix64Argument("4.0").                                    //min bid increment unique
 		UFix64Argument(fmt.Sprintf("%d.0", durationHrs*60*60)).   //duration 60 * 60 * 24 1 day
 		UFix64Argument("300.0").                                  //extensionOnLateBid 5 * 60 5 min
-		StringArgument("flow").
-		UFix64Argument("0.05").  //artistCut 5%
-		UFix64Argument("0.025"). //minterCut 2.5%
+		StringArgument("ipfs/audio").                             //type
+		UFix64Argument("0.05").                                   //artistCut 5%
+		UFix64Argument("0.025").                                  //minterCut 2.5%
 		Argument(cadence.Path{Domain: "public", Identifier: "flowTokenReceiver"}).
 		RunPrintEventsFull()
 

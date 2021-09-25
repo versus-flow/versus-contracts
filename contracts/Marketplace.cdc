@@ -77,6 +77,10 @@ pub contract Marketplace {
         pub fun getContent(tokenID: UInt64) : String {
             return self.forSale[tokenID]?.content()!
         }
+
+				pub fun getArtType(tokenID: UInt64) : String {
+					return self.forSale[tokenID]?.metadata?.type!
+				}
              
         pub fun listSaleItems() : [MarketplaceData] {
           var saleItems: [MarketplaceData] = []

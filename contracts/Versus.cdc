@@ -452,71 +452,71 @@ pub contract Versus {
 		/// @param cut: The cut percentage as a Ufix64 that versus will take for each drop
 		pub fun setCutPercentage(_ cut: UFix64) {
 			self.cutPercentage=cut
-		}// When creating a drop you send in an NFT and the number of editions you want to sell vs the unique one
-        // There will then be minted edition number of extra copies and put into the editions auction
-        pub fun createDrop(
-             nft: @NonFungibleToken.NFT,
-             editions: UInt64,
-             minimumBidIncrement: UFix64,
-             minimumBidUniqueIncrement: UFix64,
-             startTime: UFix64,
-             startPrice: UFix64,
-             vaultCap: Capability<&{FungibleToken.Receiver}>,
-             duration: UFix64,
-             extensionOnLateBid: UFix64) {
+		}
 
-            pre {
-                vaultCap.check() == true : "Vault capability should exist"
-            }
+		// When creating a drop you send in an NFT and the number of editions you want to sell vs the unique one
+   // There will then be minted edition number of extra copies and put into the editions auction
+      pub fun createDrop(
+           nft: @NonFungibleToken.NFT,
+           editions: UInt64,
+           minimumBidIncrement: UFix64,
+           minimumBidUniqueIncrement: UFix64,
+           startTime: UFix64,
+           startPrice: UFix64,
+           vaultCap: Capability<&{FungibleToken.Receiver}>,
+           duration: UFix64,
+           extensionOnLateBid: UFix64) {
 
-            let art <- nft as! @Art.NFT
+          pre {
+              vaultCap.check() == true : "Vault capability should exist"
+          }
 
-            let contentCapability= art.contentCapability!
-            let contentId= art.contentId!
+          let art <- nft as! @Art.NFT
 
-            let metadata= art.metadata
-            //Sending in a NFTEditioner capability here and using that instead of this loop would probably make sense.
-            let editionedAuctions <- Auction.createAuctionCollection(
-                marketplaceVault: self.marketplaceVault ,
-                cutPercentage: self.cutPercentage)
+          let contentCapability= art.contentCapability!
+          let contentId= art.contentId!
 
-            var currentEdition=(1 as UInt64)
-            while currentEdition <= editions {
-                editionedAuctions.createAuction(
-                    token: <- Art.makeEdition(original: &art as &Art.NFT, edition: currentEdition, maxEdition: editions),
-                    minimumBidIncrement: minimumBidIncrement,
-                    auctionLength: duration,
-                    auctionStartTime:startTime,
-                    startPrice: startPrice,
-                    collectionCap: self.marketplaceNFTTrash,
-                    vaultCap: vaultCap)
-                currentEdition=currentEdition+(1 as UInt64)
-            }
+          let metadata= art.metadata
+          //Sending in a NFTEditioner capability here and using that instead of this loop would probably make sense.
+          let editionedAuctions <- Auction.createAuctionCollection(
+              marketplaceVault: self.marketplaceVault ,
+              cutPercentage: self.cutPercentage)
 
-            //copy the metadata of the previous art since that is used to mint the copies
-            let item <- Auction.createStandaloneAuction(
-                token: <- art,
-                minimumBidIncrement: minimumBidUniqueIncrement,
-                auctionLength: duration,
-                auctionStartTime: startTime,
-                startPrice: startPrice,
-                collectionCap: self.marketplaceNFTTrash,
-                vaultCap: vaultCap
-            )
+          var currentEdition=(1 as UInt64)
+          while currentEdition <= editions {
+              editionedAuctions.createAuction(
+                  token: <- Art.makeEdition(original: &art as &Art.NFT, edition: currentEdition, maxEdition: editions),
+                  minimumBidIncrement: minimumBidIncrement,
+                  auctionLength: duration,
+                  auctionStartTime:startTime,
+                  startPrice: startPrice,
+                  collectionCap: self.marketplaceNFTTrash,
+                  vaultCap: vaultCap)
+              currentEdition=currentEdition+(1 as UInt64)
+          }
 
-            let drop  <- create Drop(
-                uniqueAuction: <- item,
-                editionAuctions:  <- editionedAuctions,
-                extensionOnLateBid: extensionOnLateBid,
-                contentId: contentId,
-                contentCapability: contentCapability)
-            emit DropCreated(name: metadata.name, artist: metadata.artist,  editions: editions, owner: vaultCap.address, dropId: drop.dropID)
+          //copy the metadata of the previous art since that is used to mint the copies
+          let item <- Auction.createStandaloneAuction(
+              token: <- art,
+              minimumBidIncrement: minimumBidUniqueIncrement,
+              auctionLength: duration,
+              auctionStartTime: startTime,
+              startPrice: startPrice,
+              collectionCap: self.marketplaceNFTTrash,
+              vaultCap: vaultCap
+          )
 
-            let oldDrop <- self.drops[drop.dropID] <- drop
-            destroy oldDrop
-        }
+          let drop  <- create Drop(
+              uniqueAuction: <- item,
+              editionAuctions:  <- editionedAuctions,
+              extensionOnLateBid: extensionOnLateBid,
+              contentId: contentId,
+              contentCapability: contentCapability)
+          emit DropCreated(name: metadata.name, artist: metadata.artist,  editions: editions, owner: vaultCap.address, dropId: drop.dropID)
 
-
+          let oldDrop <- self.drops[drop.dropID] <- drop
+          destroy oldDrop
+      }
 
         //Get all the drop statuses
         pub fun getAllStatuses(): {UInt64: DropStatus} {
@@ -537,46 +537,52 @@ pub contract Versus {
             return &self.drops[dropId] as &Drop
         }
 
-        pub fun getDropByCacheKey(_ cacheKey: UInt64) : DropStatus? {
-			var dropStatus: {UInt64: DropStatus }= {}
-			for id in self.drops.keys {
-				let itemRef = &self.drops[id] as? &Drop
-				if itemRef.contentId == cacheKey {
-					return itemRef.getDropStatus()
+				pub fun getDropByCacheKey(_ cacheKey: UInt64) : DropStatus? {
+					var dropStatus: {UInt64: DropStatus }= {}
+					for id in self.drops.keys {
+						let itemRef = &self.drops[id] as? &Drop
+						if itemRef.contentId == cacheKey {
+							return itemRef.getDropStatus()
+						}
+					}
+					return nil
 				}
+
+			pub fun getCacheKeyForDrop(_ dropId: UInt64) : UInt64 {
+				return self.getDrop(dropId).contentId
 			}
-			return nil
-		}
 
-		pub fun getCacheKeyForDrop(_ dropId: UInt64) : UInt64 {
-			return self.getDrop(dropId).contentId
-		}pub fun getStatus(dropId:UInt64): DropStatus {
-            return self.getDrop(dropId).getDropStatus()
-        }
+			pub fun getStatus(dropId:UInt64): DropStatus {
+				return self.getDrop(dropId).getDropStatus()
+			}
 
-        //get the art for this drop
-        pub fun getArt(dropId:UInt64) : String {
-            return self.getDrop(dropId).getContent()
-        }
+					//get the art for this drop
+			 pub fun getArt(dropId:UInt64) : String {
+							return self.getDrop(dropId).getContent()
+			 }
 
-        //settle a drop
-        pub fun settle(_ dropId: UInt64) {
-            self.getDrop(dropId).settle(cutPercentage: self.cutPercentage, vault: self.marketplaceVault)
-       }
+			 pub fun getArtType(dropId:UInt64): String {
+					return self.getDrop(dropId).metadata.type
+				}
 
-        pub fun currentBidForUser(
-            dropId: UInt64,
-            auctionId: UInt64,
-            address:Address
-        ) : UFix64 {
-            return  self.getDrop(dropId).currentBidForUser(
-                auctionId: auctionId,
-                address:address
-            )
-        }
+			 //settle a drop
+				pub fun settle(_ dropId: UInt64) {
+							self.getDrop(dropId).settle(cutPercentage: self.cutPercentage, vault: self.marketplaceVault)
+			 }
+
+			 pub fun currentBidForUser(
+				 dropId: UInt64,
+				 auctionId: UInt64,
+				 address:Address
+			 ) : UFix64 {
+				 return  self.getDrop(dropId).currentBidForUser(
+					 auctionId: auctionId,
+					 address:address
+				 )
+			 }
 
         //place a bid, will just delegate to the method in the drop collection
-        pub fun placeBid(
+     pub fun placeBid(
             dropId: UInt64,
             auctionId:UInt64,
             bidTokens: @FungibleToken.Vault,
@@ -719,49 +725,36 @@ pub contract Versus {
           )
         }
 
-				/*
-          A stored Transaction to mintArt on versus to a given artist
+			 /* A stored Transaction to mintArt on versus to a given artist */
+			 pub fun mintArt(artist: Address, artistName: String, artName: String, content:String, description: String, type:String, artistCut: UFix64, minterCut:UFix64) : @Art.NFT{
 
-         */
-        pub fun mintArt(artist: Address, artistName: String, artName: String, content:String, description: String) : @Art.NFT {
+				pre {
+					self.server != nil : "Your client has not been linked to the server"
+				}
 
-            pre {
-                self.server != nil : "Your client has not been linked to the server"
-            }
+				let artistAccount = getAccount(artist)
+				var contentItem  <- Content.createContent(content)
+				let contentId= contentItem.id
+				let contentCapability=Versus.account.getCapability<&Content.Collection>(Content.CollectionPrivatePath)
+				contentCapability.borrow()!.deposit(token: <- contentItem)
 
-            let artistAccount = getAccount(artist)
-            var contentItem  <- Content.createContent(content)
-            let contentId= contentItem.id
-            let contentCapability=Versus.account.getCapability<&Content.Collection>(Content.CollectionPrivatePath)
-            contentCapability.borrow()!.deposit(token: <- contentItem)
+				let artistWallet= artistAccount.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+				let minterWallet= Versus.account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
 
-
-            let artistWallet= artistAccount.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-            let versusWallet=  Versus.account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-
-			//TODO: This should be configured from the outside IIRC, the percentages
-            let royalty = {
-                "artist" : Art.Royalty(wallet: artistWallet, cut: 0.05),
-                "minter" : Art.Royalty(wallet: versusWallet, cut: 0.025)
-            }
-            let art <- Art.createArtWithPointer(
-                name: artName,
-                artist:artistName,
-                artistAddress : artist,
-                description: description,
-                type: "png",
-                contentCapability: contentCapability,
-                contentId: contentId,
-                royalty: royalty)
-            return <- art
-        }
+				let royalty = {
+					"artist" : Art.Royalty(wallet: artistWallet, cut: artistCut),
+					"minter" : Art.Royalty(wallet: minterWallet, cut: minterCut)
+				}
+				let art <- Art.createArtWithPointer(name: artName, artist:artistName, artistAddress : artist, description: description, type: type, contentCapability: contentCapability, contentId: contentId, royalty: royalty)
+				return <- art
+			}
 
 
-        pub fun editionArt(art: &Art.NFT, edition: UInt64, maxEdition: UInt64) : @Art.NFT {
-            return <- Art.makeEdition(original: art, edition: edition, maxEdition: maxEdition)
-        }
+       pub fun editionArt(art: &Art.NFT, edition: UInt64, maxEdition: UInt64) : @Art.NFT {
+           return <- Art.makeEdition(original: art, edition: edition, maxEdition: maxEdition)
+       }
 
-        pub fun editionAndDepositArt(art: &Art.NFT, to: [Address]) {
+       pub fun editionAndDepositArt(art: &Art.NFT, to: [Address]) {
 
             let maxEdition:UInt64=UInt64(to.length)
 
@@ -774,9 +767,9 @@ pub contract Versus {
                 collectionCap.borrow()!.deposit(token: <- editionedArt)
                 i=i+(1 as UInt64)
             }
-        }
+       }
 
-        pub fun getContent():&Content.Collection {
+       pub fun getContent():&Content.Collection {
           pre {
             self.server != nil : "Your client has not been linked to the server"
           }
@@ -847,4 +840,3 @@ pub contract Versus {
     }
 
 }
-

@@ -32,7 +32,10 @@ func main() {
 		StringArgument(`"Invasion" is the memory of an event that never happened, like the postcard you receive from a place that never existed. But if at some point on September 7, 1948, alien ships had attacked New York City to abduct its citizens, it might have looked like this.
 
 This collage, composed of photographs and materials from different sources, is one of my best-known illustrations, and one of my best-selling prints with copies spread all over the world.`).
-		RawAccountArgument("0x80cd9c6d1ff10590").
+		RawAccountArgument("0x80cd9c6d1ff10590"). //target
+		StringArgument("image/dataurl").          //type
+		UFix64Argument("0.05").                   //artistCut 5%
+		UFix64Argument("0.025").                  //minterCut 2.5%
 		RunPrintEventsFull()
 
 }

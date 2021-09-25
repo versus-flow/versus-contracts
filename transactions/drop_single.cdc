@@ -21,7 +21,6 @@ transaction(
     type: String, 
     artistCut: UFix64,
     minterCut: UFix64
-    ftReceiverPath: PublicPath
     ) {
 
 
@@ -30,7 +29,7 @@ transaction(
 
     prepare(account: AuthAccount) {
       self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
-      self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(ftReceiverPath)
+      self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
     }
 
   execute {
@@ -44,8 +43,7 @@ transaction(
         description: description, 
         type: type, 
         artistCut: artistCut, 
-        minterCut:minterCut, 
-        receiverPath: ftReceiverPath)
+        minterCut:minterCut)
 
        self.client.createDrop(
           nft:  <- art,

@@ -15,6 +15,10 @@ transaction(
     minimumBidUniqueIncrement:UFix64,
     duration:UFix64,
     extensionOnLateBid:UFix64,
+    type: String, 
+    artistCut: UFix64,
+    minterCut: UFix64
+
     ) {
 
 
@@ -37,7 +41,10 @@ transaction(
             artistName: artistName,
             artName: artName,
             content:self.content,
-            description: description)
+            description: description, 
+						type: type, 
+						artistCut: artistCut, 
+					 	minterCut:minterCut)
 
         self.client.createDrop(
            nft:  <- art,
