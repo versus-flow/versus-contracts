@@ -154,7 +154,7 @@ pub contract Versus {
             )
         }
 
-        pub fun calculateStatus(edition:UFix64, unique: UFix64) : String{
+    pub fun calculateStatus(edition:UFix64, unique: UFix64) : String{
 			var winningStatus=""
 			if edition> unique{
 				winningStatus="EDITIONED"
@@ -164,7 +164,9 @@ pub contract Versus {
 				winningStatus="UNIQUE"
 			}
 			return winningStatus
-		}pub fun settle(cutPercentage:UFix64, vault: Capability<&{FungibleToken.Receiver}> ) {
+		}
+
+		pub fun settle(cutPercentage:UFix64, vault: Capability<&{FungibleToken.Receiver}> ) {
             let status=self.getDropStatus()
 
             if status.settledAt != nil {
