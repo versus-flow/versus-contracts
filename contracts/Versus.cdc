@@ -92,12 +92,6 @@ pub contract Versus {
             emit DropDestroyed(dropId: self.dropID)
         }
 
-        /// Get the image content as base64 encoded url
-		///
-		/// @return the image content for this drop as a base64 encoded image urlpub fun getContent() : String {
-            let contentCollection= self.contentCapability.borrow()!
-            return contentCollection.content(self.contentId)
-        }
 
         //Returns a DropStatus struct that could be used in a script to show information about the drop
         pub fun getDropStatus() : DropStatus {
@@ -242,7 +236,8 @@ pub contract Versus {
 
             let dropStatus = self.getDropStatus()
             var editionPrice=dropStatus.editionPrice
-			var uniquePrice=dropStatus.uniquePricelet block=getCurrentBlock()
+						var uniquePrice=dropStatus.uniquePrice
+						let block=getCurrentBlock()
             let time=Fix64(block.timestamp)
 
             if dropStatus.startTime > time {
@@ -276,7 +271,8 @@ pub contract Versus {
             //the bid is on a unique auction so we place the bid there
             if self.uniqueAuction.auctionID == auctionId {
                 let auctionRef = &self.uniqueAuction as &Auction.AuctionItem
-                uniquePrice=bidTokens.balanceauctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
+                uniquePrice=bidTokens.balance
+								auctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
             } else {editionPrice= editionPrice+bidTokens.balance
                 let editionStatus=dropStatus.editionsStatuses[auctionId]!
                 edition=editionStatus.edition.toString().concat( " of ").concat(editionStatus.maxEdition.toString())
