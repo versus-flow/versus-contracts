@@ -27,32 +27,25 @@ transaction(
 
     let client: &Versus.Admin
     let artistWallet: Capability<&{FungibleToken.Receiver}>
-		let minterWallet: Capability<&{FungibleToken.Receiver}>
 
     prepare(account: AuthAccount) {
       self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
       self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(ftReceiverPath)
-			self.minterWallet=  getAccount(minter).getCapability<&{FungibleToken.Receiver}>(ftReceiverPath)
     }
 
   execute {
 
-			let royalty = {
-				"artist" : Art.Royalty(wallet: self.artistWallet, cut: artistCut),
-				"minter" : Art.Royalty(wallet: self.minterWallet, cut: minterCut)
-			}
 
-	 let art <- self.client.mintSimpleArt(
+    let art <-  self.client.mintArt(
         artist: artist,
         artistName: artistName,
         artName: artName,
-				content: ipfsHash,
-				description: description, 
+        content:ipfsHash,
+        description: description, 
         type: type, 
-				royalty: royalty,
-				edition: 1,
-				maxEdition:1)
-
+        artistCut: artistCut, 
+        minterCut:minterCut, 
+        receiverPath: ftReceiverPath)
 
        self.client.createDrop(
           nft:  <- art,
