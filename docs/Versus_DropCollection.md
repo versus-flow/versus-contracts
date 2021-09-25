@@ -72,6 +72,22 @@ func getDrop(_ UInt64): &Drop
 
 ---
 
+### fun `getDropByCacheKey()`
+
+```cadence
+func getDropByCacheKey(_ UInt64): DropStatus?
+```
+
+---
+
+### fun `getCacheKeyForDrop()`
+
+```cadence
+func getCacheKeyForDrop(_ UInt64): UInt64
+```
+
+---
+
 ### fun `getStatus()`
 
 ```cadence

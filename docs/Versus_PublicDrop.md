@@ -23,6 +23,14 @@ func getAllStatuses(): {UInt64: DropStatus}
 
 ---
 
+### fun `getCacheKeyForDrop()`
+
+```cadence
+func getCacheKeyForDrop(_ UInt64): UInt64
+```
+
+---
+
 ### fun `getStatus()`
 
 ```cadence

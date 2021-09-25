@@ -180,7 +180,7 @@ func getArt(address Address): [ArtData]
 ### fun `createArtWithContent()`
 
 ```cadence
-func createArtWithContent(name String, artist String, artistAddress Address, description String, url String, type String, royalty {String: Royalty}): Art.NFT
+func createArtWithContent(name String, artist String, artistAddress Address, description String, url String, type String, royalty {String: Royalty}, edition UInt64, maxEdition UInt64): Art.NFT
 ```
 
 ---
