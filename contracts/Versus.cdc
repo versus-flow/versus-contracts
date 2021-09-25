@@ -667,20 +667,7 @@ pub contract Versus {
 			)
 		}
 
-		/*
-          A stored Transaction to mintArt on versus to a given artist
-         */
-				 pub fun mintSimpleArt(artist: Address, artistName: String, artName: String, content:String, description: String, type: String, royalty: {String: Art.Royalty}, edition: UInt64, maxEdition:UInt64) : @Art.NFT {
-
-            pre {
-                self.server != nil : "Your client has not been linked to the server"
-            }
-
-						return <- Art.createArtWithContent(name: artName, artist: artistName, artistAddress: artist, description: description, url: content, type: type, royalty: royalty, edition:edition, maxEdition:maxEdition)
-        }
-
-        /*A stored Transaction to mintArt on versus to a given artist
-		*/
+		/*A stored Transaction to mintArt on versus to a given artist */
 		pub fun mintArt(artist: Address, artistName: String, artName: String, content:String, description: String, type:String, artistCut: UFix64, minterCut:UFix64, receiverPath:PublicPath) : @Art.NFT {
 
 			pre {

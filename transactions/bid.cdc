@@ -5,52 +5,57 @@ import Art from "../contracts/Art.cdc"
 
 // Transaction to make a bid in a marketplace for the given dropId and auctionId
 transaction(
-    marketplace: Address, 
-    dropId: UInt64, 
-    auctionId: UInt64, 
-    bidAmount: UFix64,
-    receiverPath: PublicPath,
-    vaultPath: StoragePath) {
-  // reference to the buyer's NFT collection where they
-  // will store the bought NFT
+	marketplace: Address, 
+	dropId: UInt64, 
+	auctionId: UInt64, 
+	bidAmount: UFix64,
+	receiverPath: PublicPath,
+	vaultPath: StoragePath) {
+		// reference to the buyer's NFT collection where they
+		// will store the bought NFT
 
-  let vaultCap: Capability<&{FungibleToken.Receiver}>
-    let collectionCap: Capability<&{Art.CollectionPublic}> 
-    let versusCap: Capability<&{Versus.PublicDrop}>
-    let temporaryVault: @FungibleToken.Vault
+		let vaultCap: Capability<&{FungibleToken.Receiver}>
+		let collectionCap: Capability<&{Art.CollectionPublic}> 
+		let versusCap: Capability<&{Versus.PublicDrop}>
+		let temporaryVault: @FungibleToken.Vault
 
-    prepare(account: AuthAccount) {
+		prepare(account: AuthAccount) {
 
-      // get the references to the buyer's Vault and NFT Collection receiver
-      var collectionCap = account.getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath)
+			// get the references to the buyer's Vault and NFT Collection receiver
+			var collectionCap = account.getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath)
 
-        // if collection is not created yet we make it.
-        if !collectionCap.check() {
-          // store an empty NFT Collection in account storage
-          account.save<@NonFungibleToken.Collection>(<- Art.createEmptyCollection(), to: Art.CollectionStoragePath)
+			// if collection is not created yet we make it.
+			if !collectionCap.check() {
 
-            // publish a capability to the Collection in storage
-            account.link<&{Art.CollectionPublic}>(Art.CollectionPublicPath, target: Art.CollectionStoragePath)
-        }
+				//unlink and unload, if this is linked to old path it will work
+				account.unlink(Art.CollectionPublicPath)
+				destroy <- account.load<@AnyResource>(from:Art.CollectionStoragePath)
 
-      self.collectionCap=collectionCap
+				// store an empty NFT Collection in account storage
+				account.save<@NonFungibleToken.Collection>(<- Art.createEmptyCollection(), to: Art.CollectionStoragePath)
 
-        self.vaultCap = account.getCapability<&{FungibleToken.Receiver}>(receiverPath)
+				// publish a capability to the Collection in storage
+				account.link<&{Art.CollectionPublic}>(Art.CollectionPublicPath, target: Art.CollectionStoragePath)
+			}
 
-        let vaultRef = account.borrow<&FungibleToken.Vault>(from: vaultPath)
-        ?? panic("Could not borrow owner's Vault reference")
+			self.collectionCap=collectionCap
 
-        let seller = getAccount(marketplace)
-        self.versusCap = seller.getCapability<&{Versus.PublicDrop}>(Versus.CollectionPublicPath)
-        let currentBid=self.versusCap.borrow()!.currentBidForUser(dropId: dropId, auctionId: auctionId, address: account.address)
-        //if your capability is the leader you only have to send in the difference
+			self.vaultCap = account.getCapability<&{FungibleToken.Receiver}>(receiverPath)
 
-        // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: bidAmount - currentBid)
-    }
+			let vaultRef = account.borrow<&FungibleToken.Vault>(from: vaultPath)
+			?? panic("Could not borrow owner's Vault reference")
 
-  execute {
-    self.versusCap.borrow()!.placeBid(dropId: dropId, auctionId: auctionId, bidTokens: <- self.temporaryVault, vaultCap: self.vaultCap, collectionCap: self.collectionCap)
-  }
-}
+			let seller = getAccount(marketplace)
+			self.versusCap = seller.getCapability<&{Versus.PublicDrop}>(Versus.CollectionPublicPath)
+			let currentBid=self.versusCap.borrow()!.currentBidForUser(dropId: dropId, auctionId: auctionId, address: account.address)
+			//if your capability is the leader you only have to send in the difference
+
+			// withdraw tokens from the buyer's Vault
+			self.temporaryVault <- vaultRef.withdraw(amount: bidAmount - currentBid)
+		}
+
+		execute {
+			self.versusCap.borrow()!.placeBid(dropId: dropId, auctionId: auctionId, bidTokens: <- self.temporaryVault, vaultCap: self.vaultCap, collectionCap: self.collectionCap)
+		}
+	}
 

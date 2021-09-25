@@ -19,6 +19,9 @@ transaction(
              let wallet=  account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
              let sale <- Marketplace.createSaleCollection(ownerVault: wallet)
 
+						account.unlink(Marketplace.CollectionPublicPath)
+						destroy <- account.load<@AnyResource>(from:Marketplace.CollectionStoragePath)
+
             // store an empty NFT Collection in account storage
             account.save<@Marketplace.SaleCollection>(<- sale, to:Marketplace.CollectionStoragePath)
 

@@ -9,13 +9,17 @@ import Auction from "../contracts/Auction.cdc"
 //versusAdmin client and create the empty content and art collection
 transaction() {
 
-    prepare(account: AuthAccount) {
-
-        
-        //create versus admin client
-        account.save(<- Versus.createAdminClient(), to:Versus.VersusAdminStoragePath)
-        account.link<&{Versus.AdminPublic}>(Versus.VersusAdminPublicPath, target: Versus.VersusAdminStoragePath)
+	prepare(account: AuthAccount) {
 
 
-    }
+		if account.getCapability(Versus.VersusAdminPublicPath).check<&AnyResource>() {
+			account.unlink(Versus.VersusAdminPublicPath)
+			destroy <- account.load<@AnyResource>(from: Versus.VersusAdminStoragePath)
+		}
+		//create versus admin client
+		account.save(<- Versus.createAdminClient(), to:Versus.VersusAdminStoragePath)
+		account.link<&{Versus.AdminPublic}>(Versus.VersusAdminPublicPath, target: Versus.VersusAdminStoragePath)
+
+
+	}
 }
