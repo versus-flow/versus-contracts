@@ -209,13 +209,15 @@ pub contract Auction {
                 return
             }            
 
-            //Withdraw cutPercentage to marketplace and put it in their vault
-            let amount=self.currentPrice*cutPercentage
-            let beneficiaryCut <- self.bidVault.withdraw(amount:amount )
+						if cutPercentage != 0.0 {
+							//Withdraw cutPercentage to marketplace and put it in their vault
+							let amount=self.currentPrice*cutPercentage
+							let beneficiaryCut <- self.bidVault.withdraw(amount:amount )
 
-            let cutVault=cutVault.borrow()!
-            emit MarketplaceEarned(amount: amount, owner: cutVault.owner!.address)
-            cutVault.deposit(from: <- beneficiaryCut)
+							let cutVault=cutVault.borrow()!
+							emit MarketplaceEarned(amount: amount, owner: cutVault.owner!.address)
+							cutVault.deposit(from: <- beneficiaryCut)
+						}
 
             let artId=self.NFT?.id 
 
