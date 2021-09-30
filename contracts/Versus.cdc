@@ -5,6 +5,7 @@ import Art from "./Art.cdc"
 import Content from "./Content.cdc"
 import Auction from "./Auction.cdc"
 import Profile from "./Profile.cdc"
+import DutchAuction from "./DutchAuction.cdc"
 
 /*
  The main contract in the Versus auction system.
@@ -724,6 +725,22 @@ pub contract Versus {
             extensionOnLateBid: extensionOnLateBid
           )
         }
+
+
+			pub fun createDutchAuction(
+				nfts: @{UInt64:Art.NFT},
+				startAt: UFix64
+				startPrice: UFix64,
+				floorPrice: UFix64,
+				decreasePriceFactor: UFix64,
+				ownerVaultCap: Capability<&{FungibleToken.Receiver}>, 
+				ownerNFTCap: Capability<&{NonFungibleToken.Receiver}>, 
+				royaltyVaultCap: Capability<&{FungibleToken.Receiver}>, 
+				royaltyPercentage: UFix64
+			) {
+
+				Versus.account.borrow<&DutchAuction.Collection>(from: DutchAuction.CollectionStoragePath)!.createAuction(nfts: <- nfts, startAt: startAt, startPrice: startPrice, floorPrice: floorPrice, decreasePriceFactor: decreasePriceFactor, ownerVaultCap: ownerVaultCap, ownerNFTCap: ownerNFTCap, royaltyVaultCap: royaltyVaultCap, royaltyPercentage: royaltyPercentage)
+			}
 
 			 /* A stored Transaction to mintArt on versus to a given artist */
 			 pub fun mintArt(artist: Address, artistName: String, artName: String, content:String, description: String, type:String, artistCut: UFix64, minterCut:UFix64) : @Art.NFT{
