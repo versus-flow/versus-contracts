@@ -733,13 +733,14 @@ pub contract Versus {
 				startPrice: UFix64,
 				floorPrice: UFix64,
 				decreasePriceFactor: UFix64,
+				decreasePriceAmount: UFix64,
+				tickDuration: UFix64,
 				ownerVaultCap: Capability<&{FungibleToken.Receiver}>, 
 				ownerNFTCap: Capability<&{NonFungibleToken.Receiver}>, 
 				royaltyVaultCap: Capability<&{FungibleToken.Receiver}>, 
 				royaltyPercentage: UFix64
 			) {
-
-				Versus.account.borrow<&DutchAuction.Collection>(from: DutchAuction.CollectionStoragePath)!.createAuction(nfts: <- nfts, startAt: startAt, startPrice: startPrice, floorPrice: floorPrice, decreasePriceFactor: decreasePriceFactor, ownerVaultCap: ownerVaultCap, ownerNFTCap: ownerNFTCap, royaltyVaultCap: royaltyVaultCap, royaltyPercentage: royaltyPercentage)
+					Versus.account.borrow<&DutchAuction.Collection>(from: DutchAuction.CollectionStoragePath)!.createAuction(nfts: <- nfts, startAt: startAt, startPrice: startPrice, floorPrice: floorPrice, decreasePriceFactor: decreasePriceFactor, decreasePriceAmount: decreasePriceAmount, tickDuration: tickDuration, ownerVaultCap: ownerVaultCap, ownerNFTCap: ownerNFTCap, royaltyVaultCap: royaltyVaultCap, royaltyPercentage: royaltyPercentage)
 			}
 
 			 /* A stored Transaction to mintArt on versus to a given artist */

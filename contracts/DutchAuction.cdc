@@ -8,6 +8,11 @@ pub contract DutchAuction {
 	pub let CollectionStoragePath: StoragePath
 	pub let CollectionPublicPath: PublicPath
 
+
+	pub event DutchAuctionCreated(name: String, artist: String, number: Int, owner:Address, id: UInt64)
+	//TODO: add human readable inptut to events
+	pub event DutchAuctionBid(amount: UFix64, bidder: Address, tick: UFix64, order: Int, auction: UInt64, bid: UInt64)
+
 	pub struct DutchAuctionStatus {
 
 		pub let status: String
@@ -61,6 +66,8 @@ pub contract DutchAuction {
 		//TODO: this cannot be very large depending on gas and complexity
 		access(contract) let nfts: @{UInt64:Art.NFT}
 
+		//TODO: add metadata dictionary
+
 		// bids are put into buckets based on the tick they are in.
 		// tick 1 will be the first tick, 
 
@@ -99,7 +106,11 @@ pub contract DutchAuction {
 			self.ticks=ticks
 			//create the ticks
 			self.nfts <- nfts
-			self.bids = {}
+			var emptyBids : {UFix64: [Bid]}={}
+			for tick in ticks {
+				emptyBids[tick.startedAt]=[]
+			}
+			self.bids = emptyBids
 			self.escrow <- {}
 			self.ownerVaultCap=ownerVaultCap
 			self.ownerNFTCap=ownerNFTCap
@@ -114,6 +125,7 @@ pub contract DutchAuction {
 		pub fun fullfill() {
 			let winners=self.findWinners()
 
+			//TODO: calculate the winning price
 			let nftIds= self.nfts.keys
 
 			for winner in winners {
@@ -134,7 +146,6 @@ pub contract DutchAuction {
 			//let just return all other money here and fix the issue with gas later
 			//this will blow the gas limit on high number of bids
 			for tick in self.ticks {
-				let localBids=self.bids[tick.startedAt]!
 				for bid in self.bids[tick.startedAt]! {
 					if let vault <- self.escrow[bid.id] <- nil {
 						//TODO: check that it is still linked
@@ -148,20 +159,20 @@ pub contract DutchAuction {
 
 			var bids: [Bid] =[]
 			for tick in self.ticks {
-					if bids.length == self.numberOfItems {
-						return bids
+				if bids.length == self.numberOfItems {
+					return bids
+				}
+				let localBids=self.bids[tick.startedAt]!
+				if bids.length+localBids.length <= self.numberOfItems {
+					bids.appendAll(localBids)
+					//we have to remove the bids
+					self.bids.remove(key: tick.startedAt)
+				} else {
+					while bids.length < self.numberOfItems {
+						bids.append(localBids.removeFirst())
 					}
-					let localBids=self.bids[tick.startedAt]!
-					if bids.length+localBids.length <= self.numberOfItems {
-						bids.appendAll(localBids)
-						//we have to remove the bids
-						self.bids.remove(key: tick.startedAt)
-					} else {
-						while bids.length < self.numberOfItems {
-							bids.append(localBids.removeFirst())
-						}
-						//do we have to set the others back?
-					}
+					//do we have to set the others back?
+				}
 			}
 			return bids
 		}
@@ -169,7 +180,7 @@ pub contract DutchAuction {
 		pub fun isAuctionFinished() : Bool {
 			//if we are on the last tick we do not increment the tick anymore we just check again and again if we have the right amount of bids
 			if !self.isLastTick() {
-			//if the startedAt of the next tick is larger then current time not time to tick yet
+				//if the startedAt of the next tick is larger then current time not time to tick yet
 				if self.ticks[self.currentTickIndex+1].startedAt > getCurrentBlock().timestamp {
 					return false
 				}
@@ -202,23 +213,29 @@ pub contract DutchAuction {
 				}
 				let bucket= self.bids[tick.startedAt]!
 				var bidIndex=0
+				//TODO: implement more efficient sorting algorithm
 				while bidIndex < bucket.length {
 					let oldBid=bucket[bidIndex]
 
 					//new bid is larger then the old one so we insert it before
 					if oldBid.balance < bid.balance {
 						bucket.insert(at: bidIndex, bid)
+						emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
 						return
 						//new bid is same balance but made earlier so we insert before
 					}
 
 					if oldBid.balance==bid.balance && oldBid.time < bid.time {
 						bucket.insert(at: bidIndex, bid)
+						emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
 						return
 					}
 				}
+
+				emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
 				//we did not find anything so we append
 				bucket.append(bid)
+				return 
 			}
 		}
 
@@ -340,15 +357,23 @@ pub contract DutchAuction {
 			var currentStartAt=startAt
 			while(currentPrice > floorPrice) {
 				//TODO: is this correct?
-				currentPrice=currentPrice - (currentPrice * decreasePriceFactor - decreasePriceAmount) 
+				currentPrice=currentPrice * decreasePriceFactor - decreasePriceAmount 
 				if currentPrice < floorPrice {
 					currentPrice=floorPrice
 				}
 				currentStartAt=currentStartAt+tickDuration
 				ticks.append(Tick(price: currentPrice, startedAt:currentStartAt))
+				log("======")
+				log(currentStartAt)
+				log(currentPrice)
 			}
+			log(ticks)
+
+			let length=nfts.keys.length
 
 			let auction <- create Auction(nfts: <- nfts,ownerVaultCap:ownerVaultCap, ownerNFTCap:ownerNFTCap, royaltyVaultCap:royaltyVaultCap, royaltyPercentage: royaltyPercentage, ticks: ticks)
+
+			emit DutchAuctionCreated(name: "TODO", artist: "TODO",  number: length, owner: ownerVaultCap.address, id: auction.uuid)
 
 			let oldAuction <- self.auctions[auction.uuid] <- auction
 			destroy oldAuction

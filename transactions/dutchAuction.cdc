@@ -1,0 +1,73 @@
+import FungibleToken from "../contracts/standard/FungibleToken.cdc"
+import NonFungibleToken from "../contracts/standard/NonFungibleToken.cdc"
+import Versus from "../contracts/Versus.cdc"
+import Art from "../contracts/Art.cdc"
+
+//This transaction will setup a drop in a versus auction
+transaction(
+    artist: Address, 
+    startPrice: UFix64, 
+    startTime: UFix64,
+    artistName: String, 
+    artName: String,
+    description: String, 
+    editions: UInt64,
+    floorPrice: UFix64, 
+    decreasePriceFactor:UFix64,
+		decreasePriceAmount:UFix64,
+    tickDuration:UFix64,
+    artistCut: UFix64,
+    minterCut: UFix64
+    ) {
+
+
+    let client: &Versus.Admin
+    let artistWallet: Capability<&{FungibleToken.Receiver}>
+		let artistNFTCap: Capability<&{NonFungibleToken.Receiver}>
+		let royaltyVaultCap: Capability<&{FungibleToken.Receiver}>
+    let content: String
+
+    prepare(account: AuthAccount) {
+        let path = /storage/upload
+        self.content= account.load<String>(from: path) ?? panic("could not load content")
+        self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
+        self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+				//TODO this needs to be linked before somehow
+				self.artistNFTCap=  getAccount(artist).getCapability<&{NonFungibleToken.Receiver}>(Art.CollectionPublicPathStandard)
+			  self.royaltyVaultCap= account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+    }
+    
+    execute {
+
+			var artMap : @{UInt64:Art.NFT} <- {}
+			var i =(0 as UInt64)
+			while i < editions {
+				let art <-  self.client.mintArt(
+            artist: artist,
+            artistName: artistName,
+            artName: artName,
+            content:self.content,
+            description: description, 
+						type: "type", 
+						artistCut: artistCut, 
+					 	minterCut:minterCut)
+
+						artMap[art.id] <-! art
+						i=i+1
+			}
+			self.client.createDutchAuction(
+				nfts: <- artMap,
+				startAt: startTime,
+				startPrice: startPrice,
+				floorPrice: floorPrice,
+				decreasePriceFactor: decreasePriceFactor,
+				decreasePriceAmount: decreasePriceAmount,
+				tickDuration: tickDuration,
+				ownerVaultCap: self.artistWallet,
+				ownerNFTCap: self.artistNFTCap,
+				royaltyVaultCap: self.royaltyVaultCap,
+				royaltyPercentage: minterCut)
+    }
+}
+
+
