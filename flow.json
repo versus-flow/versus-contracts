@@ -42,7 +42,9 @@
 		"Auction": "./contracts/Auction.cdc",
 		"Versus": "./contracts/Versus.cdc",
 		"Marketplace": "./contracts/Marketplace.cdc",
-		"Profile": "./contracts/Profile.cdc"
+		"Profile": "./contracts/Profile.cdc",
+		"Debug": "./contracts/Debug.cdc",
+		"Clock": "./contracts/Clock.cdc"
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -110,7 +112,9 @@
 				"Versus",
 				"Marketplace",
 				"Profile",
-				"DutchAuction"
+				"DutchAuction",
+				"Clock",
+				"Debug"
 			]
 		},
 		"mainnet" : {
@@ -121,7 +125,9 @@
 				"Versus",
 				"Marketplace",
 				"Profile",
-				"DutchAuction"
+				"DutchAuction",
+				"Clock",
+				"Debug"
 			]
 		},
 		"emulator": {
@@ -134,7 +140,9 @@
 				"Marketplace",
 				"Profile",
 				"FUSD",
-				"DutchAuction"
+				"DutchAuction",
+				"Clock",
+				"Debug"
 			],
 			"emulator-artist" : [],
 			"emulator-buyer1" : [],

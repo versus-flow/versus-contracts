@@ -38,7 +38,7 @@ func main() {
 	fmt.Println("Demo of Versus@Flow")
 	//flow.CreateAccountWithContracts("accounts", "NonFungibleToken", "Content", "Art", "Auction", "Versus")
 
-	flow.CreateAccount("marketplace", "artist", "buyer1", "buyer2")
+//	flow.CreateAccount("marketplace", "artist", "buyer1", "buyer2")
 	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("artist").UFix64Argument("1000.0").RunPrintEventsFull()
 	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("marketplace").UFix64Argument("1000.0").RunPrintEventsFull()
 	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("buyer1").UFix64Argument("1000.0").RunPrintEventsFull()

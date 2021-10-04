@@ -6,6 +6,8 @@ import Content from "./Content.cdc"
 import Auction from "./Auction.cdc"
 import Profile from "./Profile.cdc"
 import DutchAuction from "./DutchAuction.cdc"
+import Debug from "./Debug.cdc"
+import Clock from "./Clock.cdc"
 
 /*
  The main contract in the Versus auction system.
@@ -821,6 +823,17 @@ pub contract Versus {
           }
           return Versus.account.borrow<&Profile.User>(from: Profile.storagePath)!
         }
+
+
+		//this is used to mock the clock, NB! Should consider removing this before deploying to mainnet?
+		pub fun advanceClock(_ time: UFix64) {
+			pre {
+				self.server != nil: "Cannot create FIND, capability is not set"
+			}
+			Debug.enable()
+			Clock.enable()
+			Clock.tick(time)
+		}
 
     }
 
