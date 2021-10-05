@@ -129,11 +129,16 @@ pub contract DutchAuction {
 		pub fun fullfill() {
 			let winners=self.findWinners()
 
-			//TODO: calculate the winning price
+			let winningBid=winners[winners.length-1].balance
+
 			let nftIds= self.nfts.keys
 
 			for winner in winners {
 				if let vault <- self.escrow[winner.id] <- nil {
+
+					if vault.balance > winningBid {
+						self.ownerVaultCap.borrow()!.deposit(from: <- vault.withdraw(amount: vault.balance-winningBid))
+					}
 					if self.royaltyPercentage != 0.0 {
 						self.royaltyVaultCap.borrow()!.deposit(from: <- vault.withdraw(amount: vault.balance*self.royaltyPercentage))
 					}
