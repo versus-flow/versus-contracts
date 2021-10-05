@@ -252,17 +252,18 @@ pub contract DutchAuction {
 				if oldBid.balance < bid.balance {
 					bucket.insert(at: bidIndex, bid)
 					//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
+					self.bids[tick.startedAt] = bucket
 					Debug.log("Bid larger index=".concat(bidIndex.toString())
 						.concat(" amount=").concat(bid.balance.toString())
 						.concat(" tick=").concat(tick.price.toString())
 						.concat(" bidder=").concat(bid.nftCap.address.toString())
 						.concat(" bidid=").concat(bid.id.toString())
 						.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
-					self.bids[tick.startedAt] = bucket
 					return
 					//new bid is same balance but made earlier so we insert before
 				}
 
+				//TODO: This will never happen I think
 				if oldBid.balance==bid.balance && oldBid.time < bid.time {
 					bucket.insert(at: bidIndex, bid)
 					self.bids[tick.startedAt] = bucket
@@ -281,7 +282,7 @@ pub contract DutchAuction {
 			self.bids[tick.startedAt]!.append(bid)
 
 			let lastIndex=self.bids[tick.startedAt]!.length-1 
-Debug.log("Bid smallest index=".concat(bidIndex.toString())
+Debug.log("Bid smallest index=".concat(lastIndex.toString())
 						.concat(" amount=").concat(bid.balance.toString())
 						.concat(" tick=").concat(tick.price.toString())
 						.concat(" bidder=").concat(bid.nftCap.address.toString())
@@ -302,7 +303,6 @@ Debug.log("Bid smallest index=".concat(bidIndex.toString())
 		self.totalBids=self.totalBids+(1 as UInt64)			
 		destroy oldEscrow
 	}
-
 
 	pub fun  hasEnoughBids() : Bool {
 		return self.numberOfItems==self.acceptedBids
@@ -414,11 +414,7 @@ pub resource Collection: Public {
 			}
 			currentStartAt=currentStartAt+tickDuration
 			ticks.append(Tick(price: currentPrice, startedAt:currentStartAt))
-			log("======")
-			log(currentStartAt)
-			log(currentPrice)
 		}
-		log(ticks)
 
 		let length=nfts.keys.length
 
