@@ -13,7 +13,8 @@ pub contract DutchAuction {
 
 	pub event DutchAuctionCreated(name: String, artist: String, number: Int, owner:Address, id: UInt64)
 	//TODO: add human readable inptut to events
-	pub event DutchAuctionBid(amount: UFix64, bidder: Address, tick: UFix64, order: Int, auction: UInt64, bid: UInt64)
+	//Not sure if we want to emit for this
+	//pub event DutchAuctionBid(amount: UFix64, bidder: Address, tick: UFix64, order: Int, auction: UInt64, bid: UInt64)
 
 	pub event DutchAuctionTick(tickPrice: UFix64, acceptedBids: Int, totalItems: Int, tickTime: UFix64, auction: UInt64)
 	pub event DutchAuctionSettle(price: UFix64, auction: UInt64)
@@ -250,7 +251,13 @@ pub contract DutchAuction {
 				//new bid is larger then the old one so we insert it before
 				if oldBid.balance < bid.balance {
 					bucket.insert(at: bidIndex, bid)
-					emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
+					//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
+					Debug.log("Bid larger index=".concat(bidIndex.toString())
+						.concat(" amount=").concat(bid.balance.toString())
+						.concat(" tick=").concat(tick.price.toString())
+						.concat(" bidder=").concat(bid.nftCap.address.toString())
+						.concat(" bidid=").concat(bid.id.toString())
+						.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
 					self.bids[tick.startedAt] = bucket
 					return
 					//new bid is same balance but made earlier so we insert before
@@ -259,7 +266,13 @@ pub contract DutchAuction {
 				if oldBid.balance==bid.balance && oldBid.time < bid.time {
 					bucket.insert(at: bidIndex, bid)
 					self.bids[tick.startedAt] = bucket
-					emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id )
+					//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
+					Debug.log("Bid earlier index=".concat(bidIndex.toString())
+						.concat(" amount=").concat(bid.balance.toString())
+						.concat(" tick=").concat(tick.price.toString())
+						.concat(" bidder=").concat(bid.nftCap.address.toString())
+						.concat(" bidid=").concat(bid.id.toString())
+						.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
 					return
 				}
 				bidIndex=bidIndex+1
@@ -268,7 +281,13 @@ pub contract DutchAuction {
 			self.bids[tick.startedAt]!.append(bid)
 
 			let lastIndex=self.bids[tick.startedAt]!.length-1 
-			emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: lastIndex, auction: self.uuid, bid: bid.id)
+Debug.log("Bid smallest index=".concat(bidIndex.toString())
+						.concat(" amount=").concat(bid.balance.toString())
+						.concat(" tick=").concat(tick.price.toString())
+						.concat(" bidder=").concat(bid.nftCap.address.toString())
+						.concat(" bidid=").concat(bid.id.toString())
+						.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
+			//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: lastIndex, auction: self.uuid, bid: bid.id)
 			return 
 		}
 	}

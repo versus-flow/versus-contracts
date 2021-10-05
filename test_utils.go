@@ -128,9 +128,10 @@ func (gt *GWTFTestUtils) dutchTickNotFullfilled(id uint64, acceptedBids int, amo
 	return gt
 }
 
-func (gt *GWTFTestUtils) dutchBid(account string, auctionId uint64, amount string, bidNumber uint64, order uint64, tick string) *GWTFTestUtils {
+func (gt *GWTFTestUtils) dutchBid(account string, auctionId uint64, amount string, bidNumber uint64, order uint64, tick string, bidType string, bidSize uint64) *GWTFTestUtils {
 
 	bidderAddress := fmt.Sprintf("0x%s", gt.GWTF.Account(account).Address().String())
+	debugMessage := fmt.Sprintf("Bid %s index=%d amount=%s0000000 tick=%s bidder=%s bidid=%d bidSize=%d", bidType, order, amount, tick, bidderAddress, bidNumber, bidSize)
 	flow := gt.GWTF
 	flow.TransactionFromFile("dutchBid").
 		SignProposeAndPayAs(account).
@@ -138,14 +139,16 @@ func (gt *GWTFTestUtils) dutchBid(account string, auctionId uint64, amount strin
 		UInt64Argument(auctionId). //id of auction
 		UFix64Argument(amount).    //amount to bid
 		Test(gt.T).AssertSuccess().
-		AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionBid", map[string]interface{}{
-			"amount":  fmt.Sprintf("%s0000000", amount),
-			"bid":     fmt.Sprintf("%d", bidNumber),
-			"bidder":  bidderAddress,
-			"auction": fmt.Sprintf("%d", auctionId),
-			"order":   fmt.Sprintf("%d", order),
-			"tick":    tick,
-		}))
+		AssertDebugLog(debugMessage)
+		/*		AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionBid", map[string]interface{}{
+					"amount":  fmt.Sprintf("%s0000000", amount),
+					"bid":     fmt.Sprintf("%d", bidNumber),
+					"bidder":  bidderAddress,
+					"auction": fmt.Sprintf("%d", auctionId),
+					"order":   fmt.Sprintf("%d", order),
+					"tick":    tick,
+				}))
+		*/
 
 	return gt
 }
