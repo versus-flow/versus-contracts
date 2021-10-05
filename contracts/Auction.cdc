@@ -5,6 +5,7 @@ import FungibleToken from "./standard/FungibleToken.cdc"
 import FlowToken from "./standard/FlowToken.cdc"
 import Art from "./Art.cdc"
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
+import Clock from "./Clock.cdc"
 
 //This contract was made during OWB so the code here is some of the first cadence code we (0xAlchemist and 0xBjartek wrote)
 pub contract Auction {
@@ -250,7 +251,7 @@ pub contract Auction {
             let auctionLength = self.auctionLength
 
             let startTime = self.auctionStartTime
-            let currentTime = getCurrentBlock().timestamp
+            let currentTime = Clock.time()
 
             let remaining= Fix64(startTime+auctionLength) - Fix64(currentTime)
             return remaining

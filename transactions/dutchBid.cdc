@@ -31,7 +31,7 @@ transaction(marketplace: Address, id: UInt64, bidAmount: UFix64) {
 			account.link<&{Art.CollectionPublic}>(Art.CollectionPublicPath, target: Art.CollectionStoragePath)
 
 			//publish the standard link
-			account.link<&{NonFungibleToken.CollectionPublic}>(Art.CollectionPublicPathStandard, target: Art.CollectionStoragePath)
+			account.link<&{NonFungibleToken.Receiver}>(Art.CollectionPublicPathStandard, target: Art.CollectionStoragePath)
 		}
 
 		self.collectionCap=collectionCap

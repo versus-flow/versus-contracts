@@ -71,15 +71,15 @@ func main() {
 	flow.TransactionFromFile("dutchBid").
 		SignProposeAndPayAs("buyer1").
 		AccountArgument("account").
-		UInt64Argument(60).      //id of auction
-		UFix64Argument("10.01"). //amount to bid
+		UInt64Argument(60).     //id of auction
+		UFix64Argument("9.00"). //amount to bid
 		RunPrintEventsFull()
 
 	flow.TransactionFromFile("dutchBid").
 		SignProposeAndPayAs("buyer1").
 		AccountArgument("account").
 		UInt64Argument(60).     //id of auction
-		UFix64Argument("7.01"). //amount to bid
+		UFix64Argument("8.01"). //amount to bid
 		RunPrintEventsFull()
 
 }

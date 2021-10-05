@@ -57,7 +57,7 @@ func (gt *GWTFTestUtils) setupDutchAuction() uint64 {
 		StringArgument("Teh bull").      //description
 		UInt64Argument(10).              //number of art
 		UFix64Argument("1.0").           //floor price
-		UFix64Argument("0.995").         //decreasePriceFactor
+		UFix64Argument("0.9").           //decreasePriceFactor
 		UFix64Argument("0.0").           //decreasePriceAmount
 		UFix64Argument("2.0").           //duration
 		UFix64Argument("0.05").          //artistCut 5%
@@ -97,6 +97,23 @@ pub fun main() :  UFix64 {
 	return res
 }
 
+func (gt *GWTFTestUtils) dutchTickNotFullfilled(id uint64, acceptedBids int, amount string, startedAt string) *GWTFTestUtils {
+
+	flow := gt.GWTF
+	flow.TransactionFromFile("dutchAuctionTick").
+		SignProposeAndPayAs("marketplace").
+		UInt64Argument(id).
+		Test(gt.T).AssertSuccess().
+		AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionTick", map[string]interface{}{
+			"acceptedBids": fmt.Sprintf("%d", acceptedBids),
+			"tickPrice":    amount,
+			"auction":      fmt.Sprintf("%d", id),
+			"tickTime":     fmt.Sprintf("%s0000000", startedAt),
+			"totalItems":   "10",
+		}))
+	return gt
+}
+
 func (gt *GWTFTestUtils) dutchBid(account string, auctionId uint64, amount string, bidNumber uint64, order uint64, tick string) *GWTFTestUtils {
 
 	bidderAddress := fmt.Sprintf("0x%s", gt.GWTF.Account(account).Address().String())
@@ -116,15 +133,5 @@ func (gt *GWTFTestUtils) dutchBid(account string, auctionId uint64, amount strin
 			"tick":    tick,
 		}))
 
-	//todo events
-
-	/*
-			 "amount": "9.00000000",
-		            "auction": "66",
-		            "bid": "2",
-		            "bidder": "0xf3fcd2c1a78f5eee",
-		            "order": "0",
-		            "tick": "8.95586981"
-	*/
 	return gt
 }
