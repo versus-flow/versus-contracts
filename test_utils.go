@@ -97,6 +97,20 @@ pub fun main() :  UFix64 {
 	return res
 }
 
+func (gt *GWTFTestUtils) dutchTickFullfilled(id uint64, amount string) *GWTFTestUtils {
+
+	flow := gt.GWTF
+	flow.TransactionFromFile("dutchAuctionTick").
+		SignProposeAndPayAs("marketplace").
+		UInt64Argument(id).
+		Test(gt.T).AssertSuccess().
+		AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionSettle", map[string]interface{}{
+			"price":   amount,
+			"auction": fmt.Sprintf("%d", id),
+		}))
+	return gt
+}
+
 func (gt *GWTFTestUtils) dutchTickNotFullfilled(id uint64, acceptedBids int, amount string, startedAt string) *GWTFTestUtils {
 
 	flow := gt.GWTF

@@ -16,6 +16,7 @@ pub contract DutchAuction {
 	pub event DutchAuctionBid(amount: UFix64, bidder: Address, tick: UFix64, order: Int, auction: UInt64, bid: UInt64)
 
 	pub event DutchAuctionTick(tickPrice: UFix64, acceptedBids: Int, totalItems: Int, tickTime: UFix64, auction: UInt64)
+	pub event DutchAuctionSettle(price: UFix64, auction: UInt64)
 
 	pub struct DutchAuctionStatus {
 
@@ -164,6 +165,8 @@ pub contract DutchAuction {
 					}
 				}
 			}
+
+			emit DutchAuctionSettle(price: winningBid, auction: self.uuid)
 		}
 
 		pub fun findWinners() : [Bid] {

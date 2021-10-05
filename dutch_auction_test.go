@@ -30,7 +30,7 @@ func TestDutchAuction(t *testing.T) {
 		gwtfTest.dutchBid("buyer2", auctionId, "9.0", 9, 7, "9.00000000")
 		gwtfTest.dutchBid("buyer2", auctionId, "9.0", 10, 8, "9.00000000")
 		gwtfTest.tickClock("3.0")
-		gwtfTest.dutchTickNotFullfilled(auctionId, 1, "9.95000000", "3.0")
+		gwtfTest.dutchTickFullfilled(auctionId, "9.00000000")
 
 	})
 
