@@ -60,8 +60,7 @@ pub contract DutchAuction {
 
 	}
 
-	pub resource Auction{
-
+	pub resource Auction {
 		access(contract) let nfts: @{UInt64:NonFungibleToken.NFT}
 
 		access(contract) let metadata: {String:String}
@@ -204,270 +203,268 @@ pub contract DutchAuction {
 				Debug.log("We are not on last tick current tick is "
 				.concat(self.currentTickIndex.toString())
 				.concat(" time=").concat(time.toString())
-				.concat(" nextTickStart=").concat(nextTickStartAt.toString())
-			)
-			if  nextTickStartAt > time {
-				return false
+				.concat(" nextTickStart=").concat(nextTickStartAt.toString()))
+				if  nextTickStartAt > time {
+					return false
+				}
+
+			}
+			Debug.log("we are on or after next tick")
+
+			//TODO: need to figure out what will happen if this is the last tick
+			let tick= self.getTick()
+
+			//calculate number of acceptedBids
+			let bids=self.bids[tick.startedAt]!
+			let previousAcceptedBids=self.acceptedBids
+			self.acceptedBids=self.acceptedBids+bids.length
+
+			//lets advance the tick
+			self.currentTickIndex=self.currentTickIndex+1
+
+			//we have exactly or over the number of accepted bids. The auction can end!
+			if self.acceptedBids >= self.numberOfItems {
+				//this could be done later, but i will just do it here for ease of reading
+				self.auctionStatus[tick.startedAt] = TickStatus(price:tick.price, startedAt: tick.startedAt, acceptedBids: self.numberOfItems - previousAcceptedBids, cumulativeAcceptedBids: self.numberOfItems)
+				log(self.auctionStatus)
+
+				return true
 			}
 
-		}
-		Debug.log("we are on or after next tick")
-
-		//TODO: need to figure out what will happen if this is the last tick
-		let tick= self.getTick()
-
-		//calculate number of acceptedBids
-		let bids=self.bids[tick.startedAt]!
-		let previousAcceptedBids=self.acceptedBids
-		self.acceptedBids=self.acceptedBids+bids.length
-
-		//lets advance the tick
-		self.currentTickIndex=self.currentTickIndex+1
-
-		//we have exactly or over the number of accepted bids. The auction can end!
-		if self.acceptedBids >= self.numberOfItems {
-			//this could be done later, but i will just do it here for ease of reading
-			self.auctionStatus[tick.startedAt] = TickStatus(price:tick.price, startedAt: tick.startedAt, acceptedBids: self.numberOfItems - previousAcceptedBids, cumulativeAcceptedBids: self.numberOfItems)
+			self.auctionStatus[tick.startedAt] = TickStatus(price:tick.price, startedAt: tick.startedAt, acceptedBids: bids.length, cumulativeAcceptedBids: self.acceptedBids)
 			log(self.auctionStatus)
 
-			return true
+
+			return false
 		}
 
-		self.auctionStatus[tick.startedAt] = TickStatus(price:tick.price, startedAt: tick.startedAt, acceptedBids: bids.length, cumulativeAcceptedBids: self.acceptedBids)
-		log(self.auctionStatus)
+		pub fun isLastTick() : Bool {
+			let tickLength = UInt64(self.ticks.length-1)
+			return self.currentTickIndex==tickLength
+		}
 
+		priv fun insertBid(_ bid: Bid) {
+			for tick in self.ticks {
+				if tick.price > bid.balance {
+					continue
+				}
+				let bucket= self.bids[tick.startedAt]!
+				var bidIndex=0
+				//TODO: implement more efficient sorting algorithm
+				while bidIndex < bucket.length {
+					let oldBid=bucket[bidIndex]
 
-		return false
-	}
+					//new bid is larger then the old one so we insert it before
+					if oldBid.balance < bid.balance {
+						bucket.insert(at: bidIndex, bid)
+						//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
+						self.bids[tick.startedAt] = bucket
+						Debug.log("Bid larger index=".concat(bidIndex.toString())
+						.concat(" amount=").concat(bid.balance.toString())
+						.concat(" tick=").concat(tick.price.toString())
+						.concat(" bidder=").concat(bid.nftCap.address.toString())
+						.concat(" bidid=").concat(bid.id.toString())
+						.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
+						return
+						//new bid is same balance but made earlier so we insert before
+					}
 
-	pub fun isLastTick() : Bool {
-		let tickLength = UInt64(self.ticks.length-1)
-		return self.currentTickIndex==tickLength
-	}
-
-	priv fun insertBid(_ bid: Bid) {
-		for tick in self.ticks {
-			if tick.price > bid.balance {
-				continue
-			}
-			let bucket= self.bids[tick.startedAt]!
-			var bidIndex=0
-			//TODO: implement more efficient sorting algorithm
-			while bidIndex < bucket.length {
-				let oldBid=bucket[bidIndex]
-
-				//new bid is larger then the old one so we insert it before
-				if oldBid.balance < bid.balance {
-					bucket.insert(at: bidIndex, bid)
-					//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
-					self.bids[tick.startedAt] = bucket
-					Debug.log("Bid larger index=".concat(bidIndex.toString())
-					.concat(" amount=").concat(bid.balance.toString())
-					.concat(" tick=").concat(tick.price.toString())
-					.concat(" bidder=").concat(bid.nftCap.address.toString())
-					.concat(" bidid=").concat(bid.id.toString())
-					.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
-					return
-					//new bid is same balance but made earlier so we insert before
+					//TODO: This will never happen I think
+					/*
+					if oldBid.balance==bid.balance && oldBid.time < bid.time {
+						bucket.insert(at: bidIndex, bid)
+						self.bids[tick.startedAt] = bucket
+						//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
+						Debug.log("Bid earlier index=".concat(bidIndex.toString())
+						.concat(" amount=").concat(bid.balance.toString())
+						.concat(" tick=").concat(tick.price.toString())
+						.concat(" bidder=").concat(bid.nftCap.address.toString())
+						.concat(" bidid=").concat(bid.id.toString())
+						.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
+						return
+					}
+					*/
+					bidIndex=bidIndex+1
 				}
 
-				//TODO: This will never happen I think
-				/*
-				if oldBid.balance==bid.balance && oldBid.time < bid.time {
-					bucket.insert(at: bidIndex, bid)
-					self.bids[tick.startedAt] = bucket
-					//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
-					Debug.log("Bid earlier index=".concat(bidIndex.toString())
-					.concat(" amount=").concat(bid.balance.toString())
-					.concat(" tick=").concat(tick.price.toString())
-					.concat(" bidder=").concat(bid.nftCap.address.toString())
-					.concat(" bidid=").concat(bid.id.toString())
-					.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
-					return
-				}
-				*/
-				bidIndex=bidIndex+1
+				self.bids[tick.startedAt]!.append(bid)
+
+				let lastIndex=self.bids[tick.startedAt]!.length-1 
+				Debug.log("Bid smallest index=".concat(lastIndex.toString())
+				.concat(" amount=").concat(bid.balance.toString())
+				.concat(" tick=").concat(tick.price.toString())
+				.concat(" bidder=").concat(bid.nftCap.address.toString())
+				.concat(" bidid=").concat(bid.id.toString())
+				.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
+				//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: lastIndex, auction: self.uuid, bid: bid.id)
+				return 
+			}
+		}
+
+		pub fun addBid(vault: @FlowToken.Vault, nftCap: Capability<&{NonFungibleToken.Receiver}>, vaultCap: Capability<&{FungibleToken.Receiver}>, time: UFix64) {
+
+			let bidId=self.totalBids
+
+			let bid=Bid(id: bidId, nftCap: nftCap, vaultCap:vaultCap, time: time, balance: vault.balance)
+			self.insertBid(bid)
+			let oldEscrow <- self.escrow[self.totalBids] <- vault
+			self.totalBids=self.totalBids+(1 as UInt64)			
+			destroy oldEscrow
+		}
+
+		pub fun calculatePrice() : UFix64{
+			return self.ticks[self.currentTickIndex].price
+		}
+
+		destroy() {
+			//TODO: deposity to ownerNFTCap
+			destroy self.nfts
+			//todo transfer back
+			destroy self.escrow
+		}
+	}
+
+	pub resource interface Public {
+		pub fun bid(id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>)
+		pub fun getIds() : [UInt64] 
+		pub fun getStatus(_ id: UInt64) : DutchAuctionStatus
+	}
+
+
+	pub struct DutchAuctionStatus {
+
+		pub let status: String
+		pub let startTime: UFix64
+		pub let currentTime: UFix64
+		pub let currentPrice: UFix64
+		pub let totalItems: Int
+		pub let acceptedBids: Int
+		pub let tickStatus: {UFix64:TickStatus}
+		pub let metadata: {String:String}
+
+		init(status:String, currentPrice: UFix64, totalItems: Int, acceptedBids:Int,  startTime: UFix64, tickStatus: {UFix64:TickStatus}, metadata: {String:String}){
+			self.status=status
+			self.currentPrice=currentPrice
+			self.totalItems=totalItems
+			self.acceptedBids=acceptedBids
+			self.startTime=startTime
+			self.currentTime=Clock.time()
+			self.tickStatus=tickStatus
+			self.metadata=metadata
+		}
+	}
+
+	pub resource Collection: Public {
+
+		//TODO: what to do with ended auctions? put them in another collection?
+		//NFTS are gone but we might want to keep some information about it?		
+
+		pub let auctions: @{UInt64: Auction}
+
+		init() {
+			self.auctions <- {}
+		}
+
+		pub fun getIds() : [UInt64] {
+			return self.auctions.keys
+		}
+
+		pub fun getStatus(_ id: UInt64) : DutchAuctionStatus{
+			let item= self.getAuction(id)
+			let currentTime=Clock.time()
+
+			var status="Ongoing"
+			var currentPrice= item.calculatePrice()
+			if currentTime < item.startAt() {
+				status="NotStarted"
+			} else if item.winningBid != nil {
+				status="Finished"
+				currentPrice=item.winningBid!
 			}
 
-			self.bids[tick.startedAt]!.append(bid)
 
-			let lastIndex=self.bids[tick.startedAt]!.length-1 
-			Debug.log("Bid smallest index=".concat(lastIndex.toString())
-			.concat(" amount=").concat(bid.balance.toString())
-			.concat(" tick=").concat(tick.price.toString())
-			.concat(" bidder=").concat(bid.nftCap.address.toString())
-			.concat(" bidid=").concat(bid.id.toString())
-			.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
-			//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: lastIndex, auction: self.uuid, bid: bid.id)
-			return 
-		}
-	}
-
-	pub fun addBid(vault: @FlowToken.Vault, nftCap: Capability<&{NonFungibleToken.Receiver}>, vaultCap: Capability<&{FungibleToken.Receiver}>, time: UFix64) {
-
-		let bidId=self.totalBids
-
-		let bid=Bid(id: bidId, nftCap: nftCap, vaultCap:vaultCap, time: time, balance: vault.balance)
-		self.insertBid(bid)
-		let oldEscrow <- self.escrow[self.totalBids] <- vault
-		self.totalBids=self.totalBids+(1 as UInt64)			
-		destroy oldEscrow
-	}
-
-	pub fun calculatePrice() : UFix64{
-		return self.ticks[self.currentTickIndex].price
-	}
-
-	destroy() {
-		//TODO: deposity to ownerNFTCap
-		destroy self.nfts
-		//todo transfer back
-		destroy self.escrow
-	}
-}
-
-pub resource interface Public {
-	pub fun bid(id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>)
-	pub fun getIds() : [UInt64] 
-	pub fun getStatus(_ id: UInt64) : DutchAuctionStatus
-}
-
-
-pub struct DutchAuctionStatus {
-
-	pub let status: String
-	pub let startTime: UFix64
-	pub let currentTime: UFix64
-	pub let currentPrice: UFix64
-	pub let totalItems: Int
-	pub let acceptedBids: Int
-	pub let tickStatus: {UFix64:TickStatus}
-	pub let metadata: {String:String}
-
-	init(status:String, currentPrice: UFix64, totalItems: Int, acceptedBids:Int,  startTime: UFix64, tickStatus: {UFix64:TickStatus}, metadata: {String:String}){
-		self.status=status
-		self.currentPrice=currentPrice
-		self.totalItems=totalItems
-		self.acceptedBids=acceptedBids
-		self.startTime=startTime
-		self.currentTime=Clock.time()
-		self.tickStatus=tickStatus
-		self.metadata=metadata
-	}
-}
-
-pub resource Collection: Public {
-
-	//TODO: what to do with ended auctions? put them in another collection?
-	//NFTS are gone but we might want to keep some information about it?		
-
-	pub let auctions: @{UInt64: Auction}
-
-	init() {
-		self.auctions <- {}
-	}
-
-	pub fun getIds() : [UInt64] {
-		return self.auctions.keys
-	}
-
-	pub fun getStatus(_ id: UInt64) : DutchAuctionStatus{
-		let item= self.getAuction(id)
-		let currentTime=Clock.time()
-
-		var status="Ongoing"
-		var currentPrice= item.calculatePrice()
-		if currentTime < item.startAt() {
-			status="NotStarted"
-		} else if item.winningBid != nil {
-			status="Finished"
-			currentPrice=item.winningBid!
+			return DutchAuctionStatus(status: status, 
+			currentPrice: currentPrice,
+			totalItems: item.numberOfItems, 
+			acceptedBids: item.acceptedBids, 
+			startTime: item.startAt(),
+			tickStatus: item.auctionStatus,
+			metadata:item.metadata)
 		}
 
 
-		return DutchAuctionStatus(status: status, 
-		currentPrice: currentPrice,
-		totalItems: item.numberOfItems, 
-		acceptedBids: item.acceptedBids, 
-		startTime: item.startAt(),
-		tickStatus: item.auctionStatus,
-		metadata:item.metadata
-	)
-}
-
-
-access(contract) fun getAuction(_ id:UInt64) : &Auction {
-	pre {
-		self.auctions[id] != nil: "drop doesn't exist"
-	}
-	return &self.auctions[id] as &Auction
-}
-
-pub fun bid(id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>) {
-	//TODO: pre id should exist
-
-	let time=Clock.time()
-	let vault <- vault as! @FlowToken.Vault
-	let auction=self.getAuction(id)
-
-	let price=auction.calculatePrice()
-
-	//the currentPrice is still higher then your bid, this is find we just add your bid to the correct tick bucket
-	if price > vault.balance {
-		auction.addBid(vault: <- vault, nftCap:nftCap, vaultCap: vaultCap, time: time)
-		return
-	}
-
-	let tooMuchCash=vault.balance - price
-	//you sent in too much flow when you bid so we return some to you and add a valid accepted bid
-	if tooMuchCash != 0.0 {
-		vaultCap.borrow()!.deposit(from: <- vault.withdraw(amount: tooMuchCash))
-	}
-
-	auction.addBid(vault: <- vault, nftCap:nftCap, vaultCap: vaultCap, time: time)
-
-}
-
-pub fun tickOrFullfill(_ id:UInt64) {
-	let time=Clock.time()
-	let auction=self.getAuction(id)
-
-	if !auction.isAuctionFinished() {
-		let tick=auction.getTick()
-		emit DutchAuctionTick(tickPrice: tick.price, acceptedBids: auction.acceptedBids, totalItems: auction.numberOfItems, tickTime: tick.startedAt, auction: id)
-		return
-	}
-	auction.fullfill()
-}
-
-
-pub fun createAuction( nfts: @{UInt64: NonFungibleToken.NFT}, metadata: {String: String}, startAt: UFix64 startPrice: UFix64, floorPrice: UFix64, decreasePriceFactor: UFix64, decreasePriceAmount: UFix64, tickDuration: UFix64, ownerVaultCap: Capability<&{FungibleToken.Receiver}>, ownerNFTCap: Capability<&{NonFungibleToken.Receiver}> royaltyVaultCap: Capability<&{FungibleToken.Receiver}>, royaltyPercentage: UFix64) {
-
-	let ticks: [Tick] = [Tick(price: startPrice, startedAt: startAt)]
-	var currentPrice=startPrice
-	var currentStartAt=startAt
-	while(currentPrice > floorPrice) {
-		currentPrice=currentPrice * decreasePriceFactor - decreasePriceAmount 
-		if currentPrice < floorPrice {
-			currentPrice=floorPrice
+		access(contract) fun getAuction(_ id:UInt64) : &Auction {
+			pre {
+				self.auctions[id] != nil: "drop doesn't exist"
+			}
+			return &self.auctions[id] as &Auction
 		}
-		currentStartAt=currentStartAt+tickDuration
-		ticks.append(Tick(price: currentPrice, startedAt:currentStartAt))
-	}
 
-	let length=nfts.keys.length
+		pub fun bid(id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>) {
+			//TODO: pre id should exist
 
-	let auction <- create Auction(nfts: <- nfts, metadata: metadata, ownerVaultCap:ownerVaultCap, ownerNFTCap:ownerNFTCap, royaltyVaultCap:royaltyVaultCap, royaltyPercentage: royaltyPercentage, ticks: ticks)
+			let time=Clock.time()
+			let vault <- vault as! @FlowToken.Vault
+			let auction=self.getAuction(id)
 
-	emit DutchAuctionCreated(name: metadata["name"] ?? "Unknown name", artist: metadata["artist"] ?? "Unknown artist",  number: length, owner: ownerVaultCap.address, id: auction.uuid)
+			let price=auction.calculatePrice()
 
-	let oldAuction <- self.auctions[auction.uuid] <- auction
-	destroy oldAuction
-}
+			//the currentPrice is still higher then your bid, this is find we just add your bid to the correct tick bucket
+			if price > vault.balance {
+				auction.addBid(vault: <- vault, nftCap:nftCap, vaultCap: vaultCap, time: time)
+				return
+			}
 
-destroy () {
-	destroy self.auctions
-}
+			let tooMuchCash=vault.balance - price
+			//you sent in too much flow when you bid so we return some to you and add a valid accepted bid
+			if tooMuchCash != 0.0 {
+				vaultCap.borrow()!.deposit(from: <- vault.withdraw(amount: tooMuchCash))
+			}
+
+			auction.addBid(vault: <- vault, nftCap:nftCap, vaultCap: vaultCap, time: time)
+
+		}
+
+		pub fun tickOrFullfill(_ id:UInt64) {
+			let time=Clock.time()
+			let auction=self.getAuction(id)
+
+			if !auction.isAuctionFinished() {
+				let tick=auction.getTick()
+				emit DutchAuctionTick(tickPrice: tick.price, acceptedBids: auction.acceptedBids, totalItems: auction.numberOfItems, tickTime: tick.startedAt, auction: id)
+				return
+			}
+			auction.fullfill()
+		}
+
+
+		pub fun createAuction( nfts: @{UInt64: NonFungibleToken.NFT}, metadata: {String: String}, startAt: UFix64 startPrice: UFix64, floorPrice: UFix64, decreasePriceFactor: UFix64, decreasePriceAmount: UFix64, tickDuration: UFix64, ownerVaultCap: Capability<&{FungibleToken.Receiver}>, ownerNFTCap: Capability<&{NonFungibleToken.Receiver}> royaltyVaultCap: Capability<&{FungibleToken.Receiver}>, royaltyPercentage: UFix64) {
+
+			let ticks: [Tick] = [Tick(price: startPrice, startedAt: startAt)]
+			var currentPrice=startPrice
+			var currentStartAt=startAt
+			while(currentPrice > floorPrice) {
+				currentPrice=currentPrice * decreasePriceFactor - decreasePriceAmount 
+				if currentPrice < floorPrice {
+					currentPrice=floorPrice
+				}
+				currentStartAt=currentStartAt+tickDuration
+				ticks.append(Tick(price: currentPrice, startedAt:currentStartAt))
+			}
+
+			let length=nfts.keys.length
+
+			let auction <- create Auction(nfts: <- nfts, metadata: metadata, ownerVaultCap:ownerVaultCap, ownerNFTCap:ownerNFTCap, royaltyVaultCap:royaltyVaultCap, royaltyPercentage: royaltyPercentage, ticks: ticks)
+
+			emit DutchAuctionCreated(name: metadata["name"] ?? "Unknown name", artist: metadata["artist"] ?? "Unknown artist",  number: length, owner: ownerVaultCap.address, id: auction.uuid)
+
+			let oldAuction <- self.auctions[auction.uuid] <- auction
+			destroy oldAuction
+		}
+
+		destroy () {
+			destroy self.auctions
+		}
 
 	}
 
