@@ -39,8 +39,12 @@ transaction(
     
     execute {
 
-			var artMap : @{UInt64:Art.NFT} <- {}
+			var nftMap : @{UInt64:NonFungibleToken.NFT} <- {}
 			var i =(0 as UInt64)
+
+
+			//I use a string:string here so that we can add other information and are not bound to a speicify NFTs type of metadata
+			var metadata: { String:String}={}
 			while i < editions {
 				let art <-  self.client.mintArt(
             artist: artist,
@@ -52,11 +56,24 @@ transaction(
 						artistCut: artistCut, 
 					 	minterCut:minterCut)
 
-						artMap[art.id] <-! art
+						if i == 0 {
+							  let artData=art.metadata
+								metadata["nftType"] = art.getType().identifier
+								metadata["name"] = artData.name
+								metadata["artist"] = artData.artist
+								metadata["artistAddress"] = artData.artistAddress.toString()
+								metadata["description"] = artData.description
+								metadata["type"] = artData.type
+								metadata["contentId"] = art.contentId?.toString() ?? ""
+								metadata["url"] = art.url ?? ""
+
+						}
+						nftMap[art.id] <-! art
 						i=i+1
 			}
 			self.client.createDutchAuction(
-				nfts: <- artMap,
+				nfts: <- nftMap,
+				metadata: metadata,
 				startAt: startTime,
 				startPrice: startPrice,
 				floorPrice: floorPrice,

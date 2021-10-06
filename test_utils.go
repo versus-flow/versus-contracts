@@ -152,3 +152,9 @@ func (gt *GWTFTestUtils) dutchBid(account string, auctionId uint64, amount strin
 
 	return gt
 }
+
+func (gt *GWTFTestUtils) auctionStatus(id uint64) interface{} {
+	value, err := gt.GWTF.ScriptFromFile("dutchAuctionStatus").UInt64Argument(id).RunReturns()
+	assert.NoError(gt.T, err)
+	return value.String()
+}
