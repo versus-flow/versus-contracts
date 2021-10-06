@@ -42,7 +42,6 @@ transaction(
 			var nftMap : @{UInt64:NonFungibleToken.NFT} <- {}
 			var i =(0 as UInt64)
 
-
 			//I use a string:string here so that we can add other information and are not bound to a speicify NFTs type of metadata
 			var metadata: { String:String}={}
 			while i < editions {

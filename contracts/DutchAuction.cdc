@@ -342,8 +342,9 @@ pub struct DutchAuctionStatus {
 	pub let totalItems: Int
 	pub let acceptedBids: Int
 	pub let tickStatus: {UFix64:TickStatus}
+	pub let metadata: {String:String}
 
-	init(status:String, currentPrice: UFix64, totalItems: Int, acceptedBids:Int,  startTime: UFix64, tickStatus: {UFix64:TickStatus}){
+	init(status:String, currentPrice: UFix64, totalItems: Int, acceptedBids:Int,  startTime: UFix64, tickStatus: {UFix64:TickStatus}, metadata: {String:String}){
 		self.status=status
 		self.currentPrice=currentPrice
 		self.totalItems=totalItems
@@ -351,6 +352,7 @@ pub struct DutchAuctionStatus {
 		self.startTime=startTime
 		self.currentTime=Clock.time()
 		self.tickStatus=tickStatus
+		self.metadata=metadata
 	}
 }
 
@@ -388,7 +390,8 @@ pub resource Collection: Public {
 		totalItems: item.numberOfItems, 
 		acceptedBids: item.acceptedBids, 
 		startTime: item.startAt(),
-		tickStatus: item.auctionStatus
+		tickStatus: item.auctionStatus,
+		metadata:item.metadata
 	)
 }
 
