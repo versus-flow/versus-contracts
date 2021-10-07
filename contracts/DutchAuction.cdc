@@ -13,12 +13,12 @@ pub contract DutchAuction {
 	pub event DutchAuctionCreated(name: String, artist: String, number: Int, owner:Address, id: UInt64)
 	//TODO: add human readable inptut to events
 	//Not sure if we want to emit for this
-	//pub event DutchAuctionBid(amount: UFix64, bidder: Address, tick: UFix64, order: Int, auction: UInt64, bid: UInt64)
+	pub event DutchAuctionBid(amount: UFix64, bidder: Address, tick: UFix64, order: Int, auction: UInt64, bid: UInt64)
 
 	pub event DutchAuctionTick(tickPrice: UFix64, acceptedBids: Int, totalItems: Int, tickTime: UFix64, auction: UInt64)
 	pub event DutchAuctionSettle(price: UFix64, auction: UInt64)
 
-	pub struct Bid {
+	pub struct BidInfo {
 		access(contract) let id: UInt64
 		access(contract) let vaultCap: Capability<&{FungibleToken.Receiver}>
 		access(contract) let nftCap: Capability<&{NonFungibleToken.Receiver}>
@@ -79,7 +79,7 @@ pub contract DutchAuction {
 		access(contract) let auctionStatus: {UFix64: TickStatus}
 		access(contract) var currentTickIndex: UInt64
 
-		access(contract) let bids: {UFix64: [Bid]}
+		access(contract) let bids: {UFix64: [BidInfo]}
 
 		access(contract) let escrow: @{UInt64: FlowToken.Vault}
 
@@ -109,7 +109,7 @@ pub contract DutchAuction {
 			//create the ticks
 			self.nfts <- nfts
 			self.winningBid=nil
-			var emptyBids : {UFix64: [Bid]}={}
+			var emptyBids : {UFix64: [BidInfo]}={}
 			for tick in ticks {
 				emptyBids[tick.startedAt]=[]
 			}
@@ -168,9 +168,9 @@ pub contract DutchAuction {
 			emit DutchAuctionSettle(price: winningBid, auction: self.uuid)
 		}
 
-		pub fun findWinners() : [Bid] {
+		pub fun findWinners() : [BidInfo] {
 
-			var bids: [Bid] =[]
+			var bids: [BidInfo] =[]
 			for tick in self.ticks {
 				if bids.length == self.numberOfItems {
 					return bids
@@ -243,7 +243,10 @@ pub contract DutchAuction {
 			return self.currentTickIndex==tickLength
 		}
 
-		priv fun insertBid(_ bid: Bid) {
+
+
+		//this will not work well with cancelling of bids or increasing bids. I am thinking just add to tick array and sort it.
+		priv fun insertBid(_ bid: BidInfo) {
 			for tick in self.ticks {
 				if tick.price > bid.balance {
 					continue
@@ -257,7 +260,7 @@ pub contract DutchAuction {
 					//new bid is larger then the old one so we insert it before
 					if oldBid.balance < bid.balance {
 						bucket.insert(at: bidIndex, bid)
-						//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
+						emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
 						self.bids[tick.startedAt] = bucket
 						Debug.log("Bid larger index=".concat(bidIndex.toString())
 						.concat(" amount=").concat(bid.balance.toString())
@@ -269,12 +272,11 @@ pub contract DutchAuction {
 						//new bid is same balance but made earlier so we insert before
 					}
 
-					//TODO: This will never happen I think
-					/*
-					if oldBid.balance==bid.balance && oldBid.time < bid.time {
+					//if price is the same use id since bid made before have lower id
+					if oldBid.balance==bid.balance && oldBid.id < bid.id {
 						bucket.insert(at: bidIndex, bid)
 						self.bids[tick.startedAt] = bucket
-						//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
+						emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
 						Debug.log("Bid earlier index=".concat(bidIndex.toString())
 						.concat(" amount=").concat(bid.balance.toString())
 						.concat(" tick=").concat(tick.price.toString())
@@ -283,7 +285,6 @@ pub contract DutchAuction {
 						.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
 						return
 					}
-					*/
 					bidIndex=bidIndex+1
 				}
 
@@ -296,7 +297,7 @@ pub contract DutchAuction {
 				.concat(" bidder=").concat(bid.nftCap.address.toString())
 				.concat(" bidid=").concat(bid.id.toString())
 				.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
-				//emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: lastIndex, auction: self.uuid, bid: bid.id)
+				emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: lastIndex, auction: self.uuid, bid: bid.id)
 				return 
 			}
 		}
@@ -305,7 +306,7 @@ pub contract DutchAuction {
 
 			let bidId=self.totalBids
 
-			let bid=Bid(id: bidId, nftCap: nftCap, vaultCap:vaultCap, time: time, balance: vault.balance)
+			let bid=BidInfo(id: bidId, nftCap: nftCap, vaultCap:vaultCap, time: time, balance: vault.balance)
 			self.insertBid(bid)
 			let oldEscrow <- self.escrow[self.totalBids] <- vault
 			self.totalBids=self.totalBids+(1 as UInt64)			
@@ -400,6 +401,7 @@ pub contract DutchAuction {
 			return &self.auctions[id] as &Auction
 		}
 
+		//TODO: This needs to return a resource that has the Cap to this collection, auctionid and bidId.
 		pub fun bid(id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>) {
 			//TODO: pre id should exist
 
@@ -477,6 +479,70 @@ pub contract DutchAuction {
 		return nil
 	}
 
+	pub resource Bid {
+
+		pub let capability:Capability<&Collection{Public}>
+		pub let auctionId: UInt64
+		pub let bidId: UInt64
+
+		init(capability:Capability<&Collection{Public}>, auctionId: UInt64, bidId:UInt64) {
+			self.capability=capability
+			self.auctionId=auctionId
+			self.bidId=bidId
+		}
+
+		pub fun getBidBalance() : UFix64 {
+			return 0.0 //todo
+		}
+
+		pub fun increaseBid(vault: @FungibleToken.Vault) {
+
+			//TODO
+			destroy vault
+		}
+		pub fun cancelBid() {
+
+		}
+	}
+
+	pub resource BidCollection {
+
+		access(contract) let bids : @{UInt64: Bid}
+
+		init() {
+			self.bids <- {}
+		}
+
+		pub fun addBid(_ bid: @Bid) {
+			self.bids[bid.uuid] <-! bid
+
+		}
+
+		pub fun increaseBid(_ id: UInt64, vault: @FungibleToken.Vault) {
+			let bid = self.getBid(id)
+
+
+			destroy vault
+		}
+
+		access(contract) fun getBid(_ id:UInt64) : &Bid {
+			pre {
+				self.bids[id] != nil: "bid doesn't exist"
+			}
+			return &self.bids[id] as &Bid
+		}
+
+		pub fun createEmptyBidCollection() : @BidCollection {
+			return <- create BidCollection()
+		}
+
+
+		destroy() {
+			destroy  self.bids
+		}
+
+	}
+
 	init() {
 		self.CollectionPublicPath= /public/versusDutchAuctionCollection
 		self.CollectionStoragePath= /storage/versusDutchAuctionCollection
@@ -488,4 +554,26 @@ pub contract DutchAuction {
 		account.link<&Collection{Public}>(DutchAuction.CollectionPublicPath, target: DutchAuction.CollectionStoragePath)
 
 	}
+
+	pub fun bubbleSort(_ list: [BidInfo]) : [BidInfo]{
+		var changed=true
+		while changed {
+			changed=false
+			var index=0
+			while index < list.length-1 {
+				var curr = list[index]
+				var next= list[index+1]
+
+				//the current item has lower price or same price and higher id.
+				if curr.balance < next.balance || next.balance==curr.balance && curr.id > next.id {
+					list[index]=next
+					list[index+1]=curr
+					changed=true
+				}
+				index=index+1
+			}
+		}
+		return list
+	}
+
 }
