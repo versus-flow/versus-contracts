@@ -45,21 +45,23 @@ pub struct BidInfo{
 
 	pub let balance: UFix64
 	pub let id: UInt64
+	pub let desc:String
 
-	init(balance:UFix64, id: UInt64) {
+	init(balance:UFix64, id: UInt64, desc:String) {
 		self.balance =balance
 		self.id=id
+		self.desc=desc
 	}
 }
 
 
 pub fun main() {
 
-	var bids :[BidInfo] = [BidInfo(balance: 1.0, id:2), BidInfo(balance: 1.0, id:3), BidInfo(balance: 0.9, id:4 )]
+	var bids :[BidInfo] = [BidInfo(balance: 1.0, id:2, desc:"1"), BidInfo(balance: 1.0, id:3, desc:"1"), BidInfo(balance: 0.9, id:4, desc:"1" )]
 
 	log(bids)
 
-	bids= insertBid(items: bids, new: BidInfo(balance: 0.8 , id:1))
+	bids= insertBid(items: bids, new: BidInfo(balance: 1.0 , id:3, desc:"BOO"))
 	log(bids)
 
 }
