@@ -79,7 +79,11 @@ pub contract DutchAuction {
 		access(contract) let auctionStatus: {UFix64: TickStatus}
 		access(contract) var currentTickIndex: UInt64
 
-		access(contract) let bids: {UFix64: [BidInfo]}
+		//this is a lookup table for the bid
+		access(contract) let bidInfo: {UInt64: BidInfo}
+
+		//this is a table of ticks to ordered list of bid ids
+		access(contract) let bids: {UFix64: [UInt64]}
 
 		access(contract) let escrow: @{UInt64: FlowToken.Vault}
 
@@ -109,11 +113,12 @@ pub contract DutchAuction {
 			//create the ticks
 			self.nfts <- nfts
 			self.winningBid=nil
-			var emptyBids : {UFix64: [BidInfo]}={}
+			var emptyBids : {UFix64: [UInt64]}={}
 			for tick in ticks {
 				emptyBids[tick.startedAt]=[]
 			}
 			self.bids = emptyBids
+			self.bidInfo= {}
 			self.escrow <- {}
 			self.ownerVaultCap=ownerVaultCap
 			self.ownerNFTCap=ownerNFTCap
@@ -128,13 +133,14 @@ pub contract DutchAuction {
 		pub fun fullfill() {
 			let winners=self.findWinners()
 
-			let winningBid=winners[winners.length-1].balance
+			let winningBidIndex=winners[winners.length-1]
+			let winningBid=self.bidInfo[winningBidIndex]!.balance
 			self.winningBid=winningBid
 
 			let nftIds= self.nfts.keys
 
 			for winner in winners {
-				if let vault <- self.escrow[winner.id] <- nil {
+				if let vault <- self.escrow[winner] <- nil {
 
 					if vault.balance > winningBid {
 						self.ownerVaultCap.borrow()!.deposit(from: <- vault.withdraw(amount: vault.balance-winningBid))
@@ -148,7 +154,7 @@ pub contract DutchAuction {
 
 					let nftId=nftIds.removeFirst()
 					if let nft <- self.nfts[nftId] <- nil {
-						winner.nftCap.borrow()!.deposit(token: <- nft)
+						self.bidInfo[winner]!.nftCap.borrow()!.deposit(token: <- nft)
 					}
 				}
 			}
@@ -156,8 +162,9 @@ pub contract DutchAuction {
 			//this will blow the gas limit on high number of bids
 			for tick in self.ticks {
 				if let bids=self.bids[tick.startedAt]{
-					for bid in bids {
-						if let vault <- self.escrow[bid.id] <- nil {
+					for bidId in bids {
+						let bid= self.bidInfo[bidId]!
+						if let vault <- self.escrow[bidId] <- nil {
 							//TODO: check that it is still linked
 							bid.vaultCap.borrow()!.deposit(from: <- vault)		
 						}
@@ -168,9 +175,9 @@ pub contract DutchAuction {
 			emit DutchAuctionSettle(price: winningBid, auction: self.uuid)
 		}
 
-		pub fun findWinners() : [BidInfo] {
+		pub fun findWinners() : [UInt64] {
 
-			var bids: [BidInfo] =[]
+			var bids: [UInt64] =[]
 			for tick in self.ticks {
 				if bids.length == self.numberOfItems {
 					return bids
@@ -243,27 +250,24 @@ pub contract DutchAuction {
 			return self.currentTickIndex==tickLength
 		}
 
-
 		// taken from bisect_right in  pthon https://stackoverflow.com/questions/2945017/javas-equivalent-to-bisect-in-python
-		pub fun bisect(items: [BidInfo], new: BidInfo) : Int{
 
-			fun inner(items: [BidInfo], new: BidInfo, lo: Int, hi:Int) : Int {
-				var high=hi
-				var low=lo
-				while low < high {
-					let mid =(low+high)/2
-					let midBid=items[mid]
-					if midBid.balance < new.balance || midBid.balance==new.balance && midBid.id > new.id {
-						high=mid
-					} else {
-						low=mid+1
-					}
+		pub fun bisect(items: [UInt64], new: BidInfo) : Int {
+			var high=items.length
+			var low=0
+			while low < high {
+				let mid =(low+high)/2
+				let midBidId=items[mid]
+				let midBid=self.bidInfo[midBidId]!
+				if midBid.balance < new.balance || midBid.balance==new.balance && midBid.id > new.id {
+					high=mid
+				} else {
+					low=mid+1
 				}
-				return low
 			}
-
-			return inner(items: items, new:new, lo:0, hi: items.length)
+			return low
 		}
+
 
 
 		//this will not work well with cancelling of bids or increasing bids. I am thinking just add to tick array and sort it.
@@ -273,11 +277,27 @@ pub contract DutchAuction {
 					continue
 				}
 
+				//add the bid to the lookup table
+				self.bidInfo[bid.id]=bid
+
 				let bucket= self.bids[tick.startedAt]!
+				//find the index of the new bid in the ordred bucket bid list
 				let index= self.bisect(items:bucket, new: bid)
+
+				//insert bid and mutate state
+				bucket.insert(at: index, bid.id)
+				self.bids[tick.startedAt]= bucket
+
 				emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: index, auction: self.uuid, bid: bid.id)
 				return 
 			}
+		}
+
+		access(contract) fun  increaseBid(id: UInt64, vault: @FlowToken.Vault) {
+			//todo: pre that the bid exist
+			//let bid= self.b
+			destroy vault
+
 		}
 
 		pub fun addBid(vault: @FlowToken.Vault, nftCap: Capability<&{NonFungibleToken.Receiver}>, vaultCap: Capability<&{FungibleToken.Receiver}>, time: UFix64) {
@@ -286,7 +306,7 @@ pub contract DutchAuction {
 
 			let bid=BidInfo(id: bidId, nftCap: nftCap, vaultCap:vaultCap, time: time, balance: vault.balance)
 			self.insertBid(bid)
-			let oldEscrow <- self.escrow[self.totalBids] <- vault
+			let oldEscrow <- self.escrow[bidId] <- vault
 			self.totalBids=self.totalBids+(1 as UInt64)			
 			destroy oldEscrow
 		}

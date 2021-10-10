@@ -22,7 +22,7 @@ func TestDutchAuction(t *testing.T) {
 
 		gwtfTest.dutchBid("buyer1", auctionId, "10.0", 1, 0, "10.00000000", "smallest", 1).tickClock("2.0")
 		gwtfTest.dutchTickNotFullfilled(auctionId, 1, "9.00000000", "3.0")
-		expectedStatus := `A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionStatus(status: \"Finished\", startTime: 1.00000000, currentTime: 6.00000000, currentPrice: 9.00000000, totalItems: 10, acceptedBids: 10, tickStatus: {1.00000000: A.f8d6e0586b0a20c7.DutchAuction.TickStatus(price: 10.00000000, startedAt: 1.00000000, acceptedBids: 1, cumulativeAcceptedBids: 1), 3.00000000: A.f8d6e0586b0a20c7.DutchAuction.TickStatus(price: 9.00000000, startedAt: 3.00000000, acceptedBids: 9, cumulativeAcceptedBids: 10)}, metadata: {\"nftType\": \"A.f8d6e0586b0a20c7.Art.NFT\", \"name\": \"BULL\", \"artist\": \"Kinger9999\", \"artistAddress\": \"0x1cf0e2f2f715450\", \"description\": \"Teh bull\", \"type\": \"type\", \"contentId\": \"0\", \"url\": \"\"})`
+		expectedStatus := `A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionStatus(status: "Ongoing", startTime: 1.00000000, currentTime: 3.00000000, currentPrice: 9.00000000, totalItems: 10, acceptedBids: 1, tickStatus: {1.00000000: A.f8d6e0586b0a20c7.DutchAuction.TickStatus(price: 10.00000000, startedAt: 1.00000000, acceptedBids: 1, cumulativeAcceptedBids: 1)}, metadata: {"nftType": "A.f8d6e0586b0a20c7.Art.NFT", "name": "BULL", "artist": "Kinger9999", "artistAddress": "0x1cf0e2f2f715450", "description": "Teh bull", "type": "type", "contentId": "0", "url": ""})`
 
 		assert.Equal(gwtfTest.T, expectedStatus, gwtfTest.auctionStatus(auctionId))
 
@@ -38,8 +38,7 @@ func TestDutchAuction(t *testing.T) {
 		gwtfTest.tickClock("3.0")
 		gwtfTest.dutchTickFullfilled(auctionId, "9.00000000")
 
-		expectedStatus = `A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionStatus(status: \"Finished\", startTime: 1.00000000, currentTime: 6.00000000, currentPrice: 9.00000000, totalItems: 10, acceptedBids: 10, tickStatus: {1.00000000: A.f8d6e0586b0a20c7.DutchAuction.TickStatus(price: 10.00000000, startedAt: 1.00000000, acceptedBids: 1, cumulativeAcceptedBids: 1), 3.00000000: A.f8d6e0586b0a20c7.DutchAuction.TickStatus(price: 9.00000000, startedAt: 3.00000000, acceptedBids: 9, cumulativeAcceptedBids: 10)}, metadata: {\"nftType\": \"A.f8d6e0586b0a20c7.Art.NFT\", \"name\": \"BULL\", \"artist\": \"Kinger9999\", \"artistAddress\": \"0x1cf0e2f2f715450\", \"description\": \"Teh bull\", \"type\": \"type\", \"contentId\": \"0\", \"url\": \"\"})`
-
+		expectedStatus = `A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionStatus(status: "Finished", startTime: 1.00000000, currentTime: 6.00000000, currentPrice: 9.00000000, totalItems: 10, acceptedBids: 10, tickStatus: {1.00000000: A.f8d6e0586b0a20c7.DutchAuction.TickStatus(price: 10.00000000, startedAt: 1.00000000, acceptedBids: 1, cumulativeAcceptedBids: 1), 3.00000000: A.f8d6e0586b0a20c7.DutchAuction.TickStatus(price: 9.00000000, startedAt: 3.00000000, acceptedBids: 9, cumulativeAcceptedBids: 10)}, metadata: {"nftType": "A.f8d6e0586b0a20c7.Art.NFT", "name": "BULL", "artist": "Kinger9999", "artistAddress": "0x1cf0e2f2f715450", "description": "Teh bull", "type": "type", "contentId": "0", "url": ""})`
 		assert.Equal(gwtfTest.T, expectedStatus, gwtfTest.auctionStatus(auctionId))
 
 	})
@@ -67,13 +66,21 @@ func TestDutchAuction(t *testing.T) {
 		bidderAddress := fmt.Sprintf("0x%s", gwtfTest.GWTF.Account("buyer1").Address().String())
 		auctionId := gwtfTest.setupDutchAuction()
 		amount := "11.0"
+		bidNumber := 1
 		gwtfTest.GWTF.TransactionFromFile("dutchBid").
 			SignProposeAndPayAs("buyer1").
 			AccountArgument("account").
 			UInt64Argument(auctionId). //id of auction
 			UFix64Argument(amount).    //amount to bid
 			Test(gwtfTest.T).AssertSuccess().
-			AssertDebugLog("Bid smallest index=0 amount=10.00000000 tick=10.00000000 bidder=0x179b6b1cb6755e31 bidid=1 bidSize=1").
+			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionBid", map[string]interface{}{
+				"amount":  "10.00000000",
+				"bid":     fmt.Sprintf("%d", bidNumber),
+				"bidder":  bidderAddress,
+				"auction": fmt.Sprintf("%d", auctionId),
+				"order":   fmt.Sprintf("%d", 0),
+				"tick":    "10.00000000",
+			})).
 			AssertEmitEvent(gwtf.NewTestEvent("A.0ae53cb6e3f42a79.FlowToken.TokensDeposited", map[string]interface{}{
 				"amount": "1.00000000",
 				"to":     bidderAddress,
