@@ -19,6 +19,28 @@ pub fun bubbleSort(_ list: [BidInfo]) : [BidInfo]{
 	return list
 }
 
+pub fun insertBid(items: [BidInfo], new: BidInfo) : [BidInfo]{
+
+	fun inner(items: [BidInfo], new: BidInfo, lo: Int, hi:Int) : Int {
+		var high=hi
+		var low=lo
+		while low < high {
+			let mid =(low+high)/2
+			let midBid=items[mid]
+			if midBid.balance < new.balance || midBid.balance==new.balance && midBid.id > new.id {
+				high=mid
+			} else {
+				low=mid+1
+			}
+		}
+		return low
+	}
+
+	let index= inner(items: items, new:new, lo:0, hi: items.length)
+	items.insert(at: index, new)
+	return items
+}
+
 pub struct BidInfo{
 
 	pub let balance: UFix64
@@ -29,13 +51,15 @@ pub struct BidInfo{
 		self.id=id
 	}
 }
+
+
 pub fun main() {
 
+	var bids :[BidInfo] = [BidInfo(balance: 1.0, id:2), BidInfo(balance: 1.0, id:3), BidInfo(balance: 0.9, id:4 )]
 
-	var bids :[BidInfo] = [BidInfo(balance: 0.9, id:3), BidInfo(balance: 1.0, id:2), BidInfo(balance: 0.9, id:1 )]
 	log(bids)
 
-	bids=bubbleSort(bids)
+	bids= insertBid(items: bids, new: BidInfo(balance: 0.8 , id:1))
 	log(bids)
 
 }

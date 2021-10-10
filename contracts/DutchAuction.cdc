@@ -244,6 +244,27 @@ pub contract DutchAuction {
 		}
 
 
+		// taken from bisect_right in  pthon https://stackoverflow.com/questions/2945017/javas-equivalent-to-bisect-in-python
+		pub fun bisect(items: [BidInfo], new: BidInfo) : Int{
+
+			fun inner(items: [BidInfo], new: BidInfo, lo: Int, hi:Int) : Int {
+				var high=hi
+				var low=lo
+				while low < high {
+					let mid =(low+high)/2
+					let midBid=items[mid]
+					if midBid.balance < new.balance || midBid.balance==new.balance && midBid.id > new.id {
+						high=mid
+					} else {
+						low=mid+1
+					}
+				}
+				return low
+			}
+
+			return inner(items: items, new:new, lo:0, hi: items.length)
+		}
+
 
 		//this will not work well with cancelling of bids or increasing bids. I am thinking just add to tick array and sort it.
 		priv fun insertBid(_ bid: BidInfo) {
@@ -251,53 +272,10 @@ pub contract DutchAuction {
 				if tick.price > bid.balance {
 					continue
 				}
+
 				let bucket= self.bids[tick.startedAt]!
-				var bidIndex=0
-				//TODO: implement more efficient sorting algorithm
-				while bidIndex < bucket.length {
-					let oldBid=bucket[bidIndex]
-
-					//new bid is larger then the old one so we insert it before
-					if oldBid.balance < bid.balance {
-						bucket.insert(at: bidIndex, bid)
-						emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
-						self.bids[tick.startedAt] = bucket
-						Debug.log("Bid larger index=".concat(bidIndex.toString())
-						.concat(" amount=").concat(bid.balance.toString())
-						.concat(" tick=").concat(tick.price.toString())
-						.concat(" bidder=").concat(bid.nftCap.address.toString())
-						.concat(" bidid=").concat(bid.id.toString())
-						.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
-						return
-						//new bid is same balance but made earlier so we insert before
-					}
-
-					//if price is the same use id since bid made before have lower id
-					if oldBid.balance==bid.balance && oldBid.id < bid.id {
-						bucket.insert(at: bidIndex, bid)
-						self.bids[tick.startedAt] = bucket
-						emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: bidIndex, auction: self.uuid, bid: bid.id)
-						Debug.log("Bid earlier index=".concat(bidIndex.toString())
-						.concat(" amount=").concat(bid.balance.toString())
-						.concat(" tick=").concat(tick.price.toString())
-						.concat(" bidder=").concat(bid.nftCap.address.toString())
-						.concat(" bidid=").concat(bid.id.toString())
-						.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
-						return
-					}
-					bidIndex=bidIndex+1
-				}
-
-				self.bids[tick.startedAt]!.append(bid)
-
-				let lastIndex=self.bids[tick.startedAt]!.length-1 
-				Debug.log("Bid smallest index=".concat(lastIndex.toString())
-				.concat(" amount=").concat(bid.balance.toString())
-				.concat(" tick=").concat(tick.price.toString())
-				.concat(" bidder=").concat(bid.nftCap.address.toString())
-				.concat(" bidid=").concat(bid.id.toString())
-				.concat(" bidSize=").concat(self.bids[tick.startedAt]!.length.toString()))
-				emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: lastIndex, auction: self.uuid, bid: bid.id)
+				let index= self.bisect(items:bucket, new: bid)
+				emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: index, auction: self.uuid, bid: bid.id)
 				return 
 			}
 		}
@@ -554,26 +532,4 @@ pub contract DutchAuction {
 		account.link<&Collection{Public}>(DutchAuction.CollectionPublicPath, target: DutchAuction.CollectionStoragePath)
 
 	}
-
-	pub fun bubbleSort(_ list: [BidInfo]) : [BidInfo]{
-		var changed=true
-		while changed {
-			changed=false
-			var index=0
-			while index < list.length-1 {
-				var curr = list[index]
-				var next= list[index+1]
-
-				//the current item has lower price or same price and higher id.
-				if curr.balance < next.balance || next.balance==curr.balance && curr.id > next.id {
-					list[index]=next
-					list[index+1]=curr
-					changed=true
-				}
-				index=index+1
-			}
-		}
-		return list
-	}
-
 }

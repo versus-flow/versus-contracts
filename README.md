@@ -32,11 +32,6 @@ Start a terminal and run `make demo`
 
 Run `testnet.sh` three times and replace the address for testnet-versus, testnet-admin, testnet-artist with the given addresses. Put the keys safe and export env vars where appropriate
 
-All user facing paths must be incremented for this to work if not old collections that point to old data will be used.
- - Art
- - Marketplace
- - Profile
-
 run `make deploy-testnet` and `make testnet`
 
 
