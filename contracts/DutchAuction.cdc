@@ -9,6 +9,9 @@ pub contract DutchAuction {
 	pub let CollectionStoragePath: StoragePath
 	pub let CollectionPublicPath: PublicPath
 
+	pub let BidCollectionStoragePath: StoragePath
+	pub let BidCollectionPublicPath: PublicPath
+
 
 	pub event DutchAuctionCreated(name: String, artist: String, number: Int, owner:Address, id: UInt64)
 	//TODO: add human readable inptut to events
@@ -320,7 +323,7 @@ pub contract DutchAuction {
 				index=index+1
 			}
 		}
-			
+
 		access(contract) fun  cancelBid(id: UInt64) {
 			//todo: pre that the bid exist and escrow exist
 			//TODO: pre check that the bid has not been accepted already, that the tick has passed
@@ -400,10 +403,11 @@ pub contract DutchAuction {
 	}
 
 	pub resource interface Public {
-		pub fun bid(id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>) : @Bid
 		pub fun getIds() : [UInt64] 
 		pub fun getStatus(_ id: UInt64) : DutchAuctionStatus
+		//these methods are only allowed to be called from within this contract, but we want to call them on another users resource
 		access(contract) fun getAuction(_ id:UInt64) : &Auction
+		access(contract) fun bid(id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>) : @Bid
 	}
 
 
@@ -580,7 +584,16 @@ pub contract DutchAuction {
 		}
 	}
 
-	pub resource BidCollection {
+	pub fun createEmptyBidCollection() : @BidCollection {
+		return <- create BidCollection()
+	}
+
+
+	pub resource interface BidCollectionPublic {
+		pub fun bid(marketplace: Address, id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>) 
+	}
+
+	pub resource BidCollection:BidCollectionPublic {
 
 		access(contract) let bids : @{UInt64: Bid}
 
@@ -588,9 +601,11 @@ pub contract DutchAuction {
 			self.bids <- {}
 		}
 
-		pub fun addBid(_ bid: @Bid) {
-			self.bids[bid.uuid] <-! bid
+		pub fun bid(marketplace: Address, id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>)  {
 
+			let dutchAuctionCap=getAccount(marketplace).getCapability<&DutchAuction.Collection{DutchAuction.Public}>(DutchAuction.CollectionPublicPath)
+			let bid <- dutchAuctionCap.borrow()!.bid(id: id, vault: <- vault, vaultCap: vaultCap, nftCap: nftCap)
+			self.bids[bid.uuid] <-! bid
 		}
 
 		pub fun cancelBid(_ id: UInt64) {
@@ -612,10 +627,6 @@ pub contract DutchAuction {
 			return &self.bids[id] as &Bid
 		}
 
-		pub fun createEmptyBidCollection() : @BidCollection {
-			return <- create BidCollection()
-		}
-
 
 		destroy() {
 			destroy  self.bids
@@ -626,6 +637,9 @@ pub contract DutchAuction {
 	init() {
 		self.CollectionPublicPath= /public/versusDutchAuctionCollection
 		self.CollectionStoragePath= /storage/versusDutchAuctionCollection
+
+		self.BidCollectionPublicPath= /public/versusDutchAuctionBidCollection
+		self.BidCollectionStoragePath= /storage/versusDutchAuctionBidCollection
 
 
 		let account=self.account

@@ -11,7 +11,7 @@ transaction(marketplace: Address, id: UInt64, bidAmount: UFix64) {
 
 	let vaultCap: Capability<&{FungibleToken.Receiver}>
 	let collectionCap: Capability<&{NonFungibleToken.Receiver}> 
-	let dutchAuctionCap: Capability<&DutchAuction.Collection{DutchAuction.Public}>
+	let dutchAuctionCap: Capability<&DutchAuction.BidCollection{DutchAuction.BidCollectionPublic}>
 	let temporaryVault: @FungibleToken.Vault
 
 	prepare(account: AuthAccount) {
@@ -34,10 +34,21 @@ transaction(marketplace: Address, id: UInt64, bidAmount: UFix64) {
 			account.link<&{NonFungibleToken.Receiver}>(Art.CollectionPublicPathStandard, target: Art.CollectionStoragePath)
 		}
 
+		let bidCap=account.getCapability<&DutchAuction.BidCollection{DutchAuction.BidCollectionPublic}>(DutchAuction.BidCollectionPublicPath)
+		if ! bidCap.check() {
+
+			account.unlink(DutchAuction.BidCollectionPublicPath)
+			destroy <- account.load<@AnyResource>(from:DutchAuction.BidCollectionStoragePath)
+
+			let collection <- DutchAuction.createEmptyBidCollection()
+			account.save(<- collection, to: DutchAuction.BidCollectionStoragePath)
+			account.link<&DutchAuction.BidCollection{DutchAuction.BidCollectionPublic}>(DutchAuction.BidCollectionPublicPath, target: DutchAuction.BidCollectionStoragePath)
+		}
+
+		self.dutchAuctionCap=bidCap
 		self.collectionCap=collectionCap
 
 		self.vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-		self.dutchAuctionCap=	getAccount(marketplace).getCapability<&DutchAuction.Collection{DutchAuction.Public}>(DutchAuction.CollectionPublicPath)
 
 		let vaultRef = account.borrow<&FungibleToken.Vault>(from: /storage/flowTokenVault) ?? panic("Could not borrow owner's Vault reference")
 
@@ -45,7 +56,7 @@ transaction(marketplace: Address, id: UInt64, bidAmount: UFix64) {
 	}
 
 	execute {
-		self.dutchAuctionCap.borrow()!.bid(id: id, vault: <- self.temporaryVault, vaultCap: self.vaultCap, nftCap: self.collectionCap)
+		self.dutchAuctionCap.borrow()!.bid(marketplace: marketplace, id: id, vault: <- self.temporaryVault, vaultCap: self.vaultCap, nftCap: self.collectionCap)
 	}
 }
 
