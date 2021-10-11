@@ -20,21 +20,22 @@ func TestDutchAuction(t *testing.T) {
 
 		auctionId := gwtfTest.setupDutchAuction()
 
-		gwtfTest.dutchBid("buyer1", auctionId, "10.0", 1, 0, "10.00000000", "smallest", 1).tickClock("2.0")
+		gwtfTest.dutchBid("buyer1", auctionId, "10.0").tickClock("2.0")
 		gwtfTest.dutchTickNotFullfilled(auctionId, 1, "9.00000000", "3.0")
 		expectedStatus := `A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionStatus(status: "Ongoing", startTime: 1.00000000, currentTime: 3.00000000, currentPrice: 9.00000000, totalItems: 10, acceptedBids: 1, tickStatus: {1.00000000: A.f8d6e0586b0a20c7.DutchAuction.TickStatus(price: 10.00000000, startedAt: 1.00000000, acceptedBids: 1, cumulativeAcceptedBids: 1)}, metadata: {"nftType": "A.f8d6e0586b0a20c7.Art.NFT", "name": "BULL", "artist": "Kinger9999", "artistAddress": "0x1cf0e2f2f715450", "description": "Teh bull", "type": "type", "contentId": "0", "url": ""})`
 
 		assert.Equal(gwtfTest.T, expectedStatus, gwtfTest.auctionStatus(auctionId))
 
-		gwtfTest.dutchBid("buyer2", auctionId, "9.0", 2, 0, "9.00000000", "smallest", 1)
-		gwtfTest.dutchBid("buyer2", auctionId, "9.0", 3, 1, "9.00000000", "smallest", 2)
-		gwtfTest.dutchBid("buyer2", auctionId, "9.0", 4, 2, "9.00000000", "smallest", 3)
-		gwtfTest.dutchBid("buyer2", auctionId, "9.0", 5, 3, "9.00000000", "smallest", 4)
-		gwtfTest.dutchBid("buyer2", auctionId, "9.0", 6, 4, "9.00000000", "smallest", 5)
-		gwtfTest.dutchBid("buyer2", auctionId, "9.0", 7, 5, "9.00000000", "smallest", 6)
-		gwtfTest.dutchBid("buyer2", auctionId, "9.0", 8, 6, "9.00000000", "smallest", 7)
-		gwtfTest.dutchBid("buyer2", auctionId, "9.0", 9, 7, "9.00000000", "smallest", 8)
-		gwtfTest.dutchBid("buyer2", auctionId, "9.0", 10, 8, "9.00000000", "smallest", 9)
+		gwtfTest.dutchBid("buyer2", auctionId, "9.0")
+		gwtfTest.dutchBid("buyer2", auctionId, "9.0")
+		gwtfTest.dutchBid("buyer2", auctionId, "9.0")
+		gwtfTest.dutchBid("buyer2", auctionId, "9.0")
+		gwtfTest.dutchBid("buyer2", auctionId, "9.0")
+		gwtfTest.dutchBid("buyer2", auctionId, "9.0")
+		gwtfTest.dutchBid("buyer2", auctionId, "9.0")
+		gwtfTest.dutchBid("buyer2", auctionId, "9.0")
+		gwtfTest.dutchBid("buyer2", auctionId, "9.0")
+
 		gwtfTest.tickClock("3.0")
 		gwtfTest.dutchTickFullfilled(auctionId, "9.00000000")
 
@@ -53,8 +54,8 @@ func TestDutchAuction(t *testing.T) {
 
 		auctionId := gwtfTest.setupDutchAuction()
 
-		gwtfTest.dutchBid("buyer1", auctionId, "9.8", 1, 0, "9.00000000", "smallest", 1)
-		gwtfTest.dutchBid("buyer2", auctionId, "9.9", 2, 0, "9.00000000", "larger", 2)
+		gwtfTest.dutchBid("buyer1", auctionId, "9.8")
+		gwtfTest.dutchBid("buyer2", auctionId, "9.9")
 	})
 
 	t.Run("Should return cash if you bid more then roof", func(t *testing.T) {
@@ -78,8 +79,6 @@ func TestDutchAuction(t *testing.T) {
 				"bid":     fmt.Sprintf("%d", bidNumber),
 				"bidder":  bidderAddress,
 				"auction": fmt.Sprintf("%d", auctionId),
-				"order":   fmt.Sprintf("%d", 0),
-				"tick":    "10.00000000",
 			})).
 			AssertEmitEvent(gwtf.NewTestEvent("A.0ae53cb6e3f42a79.FlowToken.TokensDeposited", map[string]interface{}{
 				"amount": "1.00000000",
@@ -98,8 +97,8 @@ func TestDutchAuction(t *testing.T) {
 
 		auctionId := gwtfTest.setupDutchAuction()
 
-		gwtfTest.dutchBid("buyer1", auctionId, "9.1", 1, 0, "9.00000000", "smallest", 1)
-		gwtfTest.dutchBid("buyer2", auctionId, "9.9", 2, 0, "9.00000000", "larger", 2)
+		gwtfTest.dutchBid("buyer1", auctionId, "9.1")
+		gwtfTest.dutchBid("buyer2", auctionId, "9.5")
 
 		bidderAddress := fmt.Sprintf("0x%s", gwtfTest.GWTF.Account("buyer1").Address().String())
 
@@ -112,14 +111,125 @@ func TestDutchAuction(t *testing.T) {
 			UInt64Argument(uint64(bidId)). //id of bid
 			UFix64Argument(amount).        //amount to bid
 			Test(gwtfTest.T).AssertSuccess().
-			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionBid", map[string]interface{}{
+			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionBidIncreased", map[string]interface{}{
 				"amount":  "9.60000000",
 				"bid":     fmt.Sprintf("%d", 1),
 				"bidder":  bidderAddress,
 				"auction": fmt.Sprintf("%d", auctionId),
-				"order":   fmt.Sprintf("%d", 1),
-				"tick":    "9.00000000",
 			}))
+
+	})
+
+	t.Run("Should get all bids even bids not winning", func(t *testing.T) {
+
+		gwtfTest := NewGWTFTest(t).
+			setup().
+			createArtCollectionAndMintFlow("artist", "100.0").
+			createArtCollectionAndMintFlow("buyer1", "1000.0")
+
+		auctionId := gwtfTest.setupDutchAuction()
+
+		gwtfTest.dutchBid("buyer1", auctionId, "9.0")
+		gwtfTest.dutchBid("buyer1", auctionId, "9.2")
+		gwtfTest.dutchBid("buyer1", auctionId, "5.0")
+		gwtfTest.dutchBid("buyer1", auctionId, "4.0")
+		gwtfTest.dutchBid("buyer1", auctionId, "9.0")
+		gwtfTest.dutchBid("buyer1", auctionId, "8.0")
+		gwtfTest.dutchBid("buyer1", auctionId, "2.0")
+		gwtfTest.dutchBid("buyer1", auctionId, "1.0")
+		gwtfTest.dutchBid("buyer1", auctionId, "1.0")
+		gwtfTest.dutchBid("buyer1", auctionId, "1.0")
+		gwtfTest.dutchBid("buyer1", auctionId, "1.0")
+		gwtfTest.dutchBid("buyer1", auctionId, "9.0")
+
+		expectedBids := `[
+    {
+        "amount": "9.20000000",
+        "bidder": "0x179b6b1cb6755e31",
+        "id": "2",
+        "time": "1.00000000",
+        "winning": "true"
+    },
+    {
+        "amount": "9.00000000",
+        "bidder": "0x179b6b1cb6755e31",
+        "id": "1",
+        "time": "1.00000000",
+        "winning": "true"
+    },
+    {
+        "amount": "9.00000000",
+        "bidder": "0x179b6b1cb6755e31",
+        "id": "5",
+        "time": "1.00000000",
+        "winning": "true"
+    },
+    {
+        "amount": "9.00000000",
+        "bidder": "0x179b6b1cb6755e31",
+        "id": "12",
+        "time": "1.00000000",
+        "winning": "true"
+    },
+    {
+        "amount": "8.00000000",
+        "bidder": "0x179b6b1cb6755e31",
+        "id": "6",
+        "time": "1.00000000",
+        "winning": "true"
+    },
+    {
+        "amount": "5.00000000",
+        "bidder": "0x179b6b1cb6755e31",
+        "id": "3",
+        "time": "1.00000000",
+        "winning": "true"
+    },
+    {
+        "amount": "4.00000000",
+        "bidder": "0x179b6b1cb6755e31",
+        "id": "4",
+        "time": "1.00000000",
+        "winning": "true"
+    },
+    {
+        "amount": "2.00000000",
+        "bidder": "0x179b6b1cb6755e31",
+        "id": "7",
+        "time": "1.00000000",
+        "winning": "true"
+    },
+    {
+        "amount": "1.00000000",
+        "bidder": "0x179b6b1cb6755e31",
+        "id": "8",
+        "time": "1.00000000",
+        "winning": "true"
+    },
+    {
+        "amount": "1.00000000",
+        "bidder": "0x179b6b1cb6755e31",
+        "id": "9",
+        "time": "1.00000000",
+        "winning": "true"
+    },
+    {
+        "amount": "1.00000000",
+        "bidder": "0x179b6b1cb6755e31",
+        "id": "10",
+        "time": "1.00000000",
+        "winning": "false"
+    },
+    {
+        "amount": "1.00000000",
+        "bidder": "0x179b6b1cb6755e31",
+        "id": "11",
+        "time": "1.00000000",
+        "winning": "false"
+    }
+]`
+		bids := gwtfTest.auctionBids(auctionId)
+		assert.Equal(gwtfTest.T, expectedBids, bids)
 
 	})
 

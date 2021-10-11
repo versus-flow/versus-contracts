@@ -12,10 +12,11 @@ import (
 type GWTFTestUtils struct {
 	T    *testing.T
 	GWTF *gwtf.GoWithTheFlow
+	Bids int
 }
 
 func NewGWTFTest(t *testing.T) *GWTFTestUtils {
-	return &GWTFTestUtils{T: t, GWTF: gwtf.NewTestingEmulator()}
+	return &GWTFTestUtils{T: t, GWTF: gwtf.NewTestingEmulator(), Bids: 0}
 }
 
 func (gt *GWTFTestUtils) setup() *GWTFTestUtils {
@@ -128,8 +129,14 @@ func (gt *GWTFTestUtils) dutchTickNotFullfilled(id uint64, acceptedBids int, amo
 	return gt
 }
 
-func (gt *GWTFTestUtils) dutchBid(account string, auctionId uint64, amount string, bidNumber uint64, order uint64, tick string, bidType string, bidSize uint64) *GWTFTestUtils {
+func (gt *GWTFTestUtils) incrementBid() int {
+	gt.Bids = gt.Bids + 1
+	return gt.Bids
+}
 
+func (gt *GWTFTestUtils) dutchBid(account string, auctionId uint64, amount string) *GWTFTestUtils {
+
+	bidNumber := gt.incrementBid()
 	bidderAddress := fmt.Sprintf("0x%s", gt.GWTF.Account(account).Address().String())
 	flow := gt.GWTF
 	flow.TransactionFromFile("dutchBid").
@@ -143,11 +150,13 @@ func (gt *GWTFTestUtils) dutchBid(account string, auctionId uint64, amount strin
 			"bid":     fmt.Sprintf("%d", bidNumber),
 			"bidder":  bidderAddress,
 			"auction": fmt.Sprintf("%d", auctionId),
-			"order":   fmt.Sprintf("%d", order),
-			"tick":    tick,
 		}))
 
 	return gt
+}
+
+func (gt *GWTFTestUtils) auctionBids(id uint64) string {
+	return gt.GWTF.ScriptFromFile("dutchAuctionBids").UInt64Argument(id).RunReturnsJsonString()
 }
 
 func (gt *GWTFTestUtils) auctionStatus(id uint64) interface{} {

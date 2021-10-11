@@ -16,16 +16,35 @@ pub contract DutchAuction {
 	pub event DutchAuctionCreated(name: String, artist: String, number: Int, owner:Address, id: UInt64)
 	//TODO: add human readable inptut to events
 	//Not sure if we want to emit for this
-	pub event DutchAuctionBid(amount: UFix64, bidder: Address, tick: UFix64, order: Int, auction: UInt64, bid: UInt64)
+	pub event DutchAuctionBid(amount: UFix64, bidder: Address, auction: UInt64, bid: UInt64)
+
+	//TODO do we need this secondary event?
+	pub event DutchAuctionBidIncreased(amount: UFix64, bidder: Address, auction: UInt64, bid: UInt64)
 
 	pub event DutchAuctionTick(tickPrice: UFix64, acceptedBids: Int, totalItems: Int, tickTime: UFix64, auction: UInt64)
 	pub event DutchAuctionSettle(price: UFix64, auction: UInt64)
+
+	pub struct BidReport {
+		pub let id: UInt64
+		pub let time: UFix64
+		pub let amount: UFix64
+		pub let bidder: Address
+		pub let winning: Bool
+
+		init(id: UInt64, time: UFix64, amount: UFix64, bidder: Address, winning: Bool) {
+			self.id=id
+			self.time=time
+			self.amount=amount
+			self.bidder=bidder
+			self.winning=winning
+		}
+	}
 
 	pub struct BidInfo {
 		access(contract) let id: UInt64
 		access(contract) let vaultCap: Capability<&{FungibleToken.Receiver}>
 		access(contract) let nftCap: Capability<&{NonFungibleToken.Receiver}>
-		access(contract) let time: UFix64
+		access(contract) var time: UFix64
 		access(contract) var balance: UFix64
 
 
@@ -39,6 +58,7 @@ pub contract DutchAuction {
 
 		pub fun increaseBid(_ amount:UFix64) {
 			self.balance=self.balance+amount
+			self.time=Clock.time()
 		}
 	}
 
@@ -182,6 +202,23 @@ pub contract DutchAuction {
 			emit DutchAuctionSettle(price: winningBid, auction: self.uuid)
 		}
 
+
+		pub fun getBids() : [BidReport] {
+			var bids: [BidReport] =[]
+			for tick in self.ticks {
+				let localBids=self.bids[tick.startedAt]!
+				for bid in localBids {
+					var winning=true
+					if bids.length >= self.numberOfItems {
+						winning=false
+					}
+					let bidInfo= self.bidInfo[bid]!
+					bids.append(BidReport(id: bid, time: bidInfo.time, amount: bidInfo.balance, bidder: bidInfo.vaultCap.address, winning: winning))
+				}
+			}
+			return bids
+		}
+
 		pub fun findWinners() : [UInt64] {
 
 			var bids: [UInt64] =[]
@@ -295,7 +332,7 @@ pub contract DutchAuction {
 				bucket.insert(at: index, bid.id)
 				self.bids[tick.startedAt]= bucket
 
-				emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: index, auction: self.uuid, bid: bid.id)
+				emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, auction: self.uuid, bid: bid.id)
 				return 
 			}
 		}
@@ -374,7 +411,7 @@ pub contract DutchAuction {
 				self.bids[tick.startedAt]= bucket
 
 				//todo do we need seperate bid for increase?
-				emit DutchAuctionBid(amount: bidInfo.balance, bidder: bidInfo.nftCap.address, tick: tick.price, order: index, auction: self.uuid, bid: bidInfo.id)
+				emit DutchAuctionBidIncreased(amount: bidInfo.balance, bidder: bidInfo.nftCap.address, auction: self.uuid, bid: bidInfo.id)
 			} else {
 				//why do I need this?
 				destroy vault
@@ -411,6 +448,7 @@ pub contract DutchAuction {
 	pub resource interface Public {
 		pub fun getIds() : [UInt64] 
 		pub fun getStatus(_ id: UInt64) : DutchAuctionStatus
+		pub fun getBids(_ id: UInt64) : [BidReport]
 		//these methods are only allowed to be called from within this contract, but we want to call them on another users resource
 		access(contract) fun getAuction(_ id:UInt64) : &Auction
 		access(contract) fun bid(id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>) : @Bid
@@ -478,10 +516,18 @@ pub contract DutchAuction {
 			metadata:item.metadata)
 		}
 
+		pub fun getBids(_ id:UInt64) : [BidReport] {
+			pre {
+				self.auctions[id] != nil: "auction doesn't exist"
+			}
+
+			let item= self.getAuction(id)
+			return item.getBids()
+		}
 
 		access(contract) fun getAuction(_ id:UInt64) : &Auction {
 			pre {
-				self.auctions[id] != nil: "drop doesn't exist"
+				self.auctions[id] != nil: "auction doesn't exist"
 			}
 			return &self.auctions[id] as &Auction
 		}
@@ -552,6 +598,15 @@ pub contract DutchAuction {
 			destroy self.auctions
 		}
 
+	}
+
+	pub fun getBids(_ id: UInt64) : [BidReport] {
+		let account = DutchAuction.account
+		let cap=account.getCapability<&Collection{Public}>(self.CollectionPublicPath)
+		if let collection = cap.borrow() {
+			return collection.getBids(id)
+		}
+		return []
 	}
 
 	pub fun getDutchAuction(_ id: UInt64) : DutchAuctionStatus? {
