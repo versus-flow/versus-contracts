@@ -88,4 +88,39 @@ func TestDutchAuction(t *testing.T) {
 
 	})
 
+	t.Run("Should be able to increase bid", func(t *testing.T) {
+
+		gwtfTest := NewGWTFTest(t).
+			setup().
+			createArtCollectionAndMintFlow("artist", "100.0").
+			createArtCollectionAndMintFlow("buyer1", "100.0").
+			createArtCollectionAndMintFlow("buyer2", "100.0")
+
+		auctionId := gwtfTest.setupDutchAuction()
+
+		gwtfTest.dutchBid("buyer1", auctionId, "9.1", 1, 0, "9.00000000", "smallest", 1)
+		gwtfTest.dutchBid("buyer2", auctionId, "9.9", 2, 0, "9.00000000", "larger", 2)
+
+		bidderAddress := fmt.Sprintf("0x%s", gwtfTest.GWTF.Account("buyer1").Address().String())
+
+		bidId := 70
+		value := gwtfTest.getBidIds("buyer1")
+		assert.Equal(gwtfTest.T, fmt.Sprintf("[%d]", bidId), value)
+		amount := "0.5"
+		gwtfTest.GWTF.TransactionFromFile("dutchBidIncrease").
+			SignProposeAndPayAs("buyer1").
+			UInt64Argument(uint64(bidId)). //id of bid
+			UFix64Argument(amount).        //amount to bid
+			Test(gwtfTest.T).AssertSuccess().
+			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionBid", map[string]interface{}{
+				"amount":  "9.60000000",
+				"bid":     fmt.Sprintf("%d", 1),
+				"bidder":  bidderAddress,
+				"auction": fmt.Sprintf("%d", auctionId),
+				"order":   fmt.Sprintf("%d", 1),
+				"tick":    "9.00000000",
+			}))
+
+	})
+
 }

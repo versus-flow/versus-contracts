@@ -337,6 +337,16 @@ pub contract DutchAuction {
 			}
 		}
 
+		access(self) fun findTickForAmount(_ amount: UFix64) : Tick{
+			for t in self.ticks {
+				if t.price > amount {
+					continue
+				}
+				return t
+			}
+			panic("Could not find tick for amount")
+		}
+
 		access(contract) fun  increaseBid(id: UInt64, vault: @FlowToken.Vault) {
 			//todo: pre that the bid exist and escrow exist
 			//TODO: pre check that the bid has not been accepted already, that the tick has passed
@@ -350,25 +360,21 @@ pub contract DutchAuction {
 				destroy oldVault
 
 
-				let oldTick=self.findTickForBid(id)
-				if oldTick.price < bidInfo.balance {
-					self.removeBidFromTick(id, tick: oldTick.startedAt)
+				var tick=self.findTickForBid(id)
+				self.removeBidFromTick(id, tick: tick.startedAt)
+				if tick.price < bidInfo.balance {
+					tick=self.findTickForAmount(bidInfo.balance)
+				} 
+				let bucket= self.bids[tick.startedAt]!
+				//find the index of the new bid in the ordred bucket bid list
+				let index= self.bisect(items:bucket, new: bidInfo)
 
-					for tick in self.ticks {
-						if tick.price > bidInfo.balance {
-							continue
-						}
+				//insert bid and mutate state
+				bucket.insert(at: index, bidInfo.id)
+				self.bids[tick.startedAt]= bucket
 
-						let bucket= self.bids[tick.startedAt]!
-						//find the index of the new bid in the ordred bucket bid list
-						let index= self.bisect(items:bucket, new: bidInfo)
-
-						//insert bid and mutate state
-						bucket.insert(at: index, bidInfo.id)
-						self.bids[tick.startedAt]= bucket
-					}
-				}
-				//	emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, tick: tick.price, order: index, auction: self.uuid, bid: bid.id)
+				//todo do we need seperate bid for increase?
+				emit DutchAuctionBid(amount: bidInfo.balance, bidder: bidInfo.nftCap.address, tick: tick.price, order: index, auction: self.uuid, bid: bidInfo.id)
 			} else {
 				//why do I need this?
 				destroy vault
@@ -480,8 +486,7 @@ pub contract DutchAuction {
 			return &self.auctions[id] as &Auction
 		}
 
-		//TODO: This needs to return a resource that has the Cap to this collection, auctionid and bidId.
-		pub fun bid(id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>) : @Bid{
+		access(contract) fun bid(id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>) : @Bid{
 			//TODO: pre id should exist
 
 			let time=Clock.time()
@@ -584,13 +589,9 @@ pub contract DutchAuction {
 		}
 	}
 
-	pub fun createEmptyBidCollection() : @BidCollection {
-		return <- create BidCollection()
-	}
-
-
 	pub resource interface BidCollectionPublic {
 		pub fun bid(marketplace: Address, id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>) 
+		pub fun getIds() :[UInt64]
 	}
 
 	pub resource BidCollection:BidCollectionPublic {
@@ -599,6 +600,10 @@ pub contract DutchAuction {
 
 		init() {
 			self.bids <- {}
+		}
+
+		pub fun getIds() : [UInt64] {
+			return self.bids.keys
 		}
 
 		pub fun bid(marketplace: Address, id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>)  {
@@ -632,6 +637,10 @@ pub contract DutchAuction {
 			destroy  self.bids
 		}
 
+	}
+
+	pub fun createEmptyBidCollection() : @BidCollection {
+		return <- create BidCollection()
 	}
 
 	init() {

@@ -155,3 +155,9 @@ func (gt *GWTFTestUtils) auctionStatus(id uint64) interface{} {
 	assert.NoError(gt.T, err)
 	return value.String()
 }
+
+func (gt *GWTFTestUtils) getBidIds(address string) interface{} {
+	value, err := gt.GWTF.ScriptFromFile("dutchAuctionBidStatus").AccountArgument(address).RunReturns()
+	assert.NoError(gt.T, err)
+	return value.String()
+}
