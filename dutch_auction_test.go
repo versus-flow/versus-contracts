@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/bjartek/go-with-the-flow/v2/gwtf"
+	"github.com/onflow/cadence"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -233,4 +234,25 @@ func TestDutchAuction(t *testing.T) {
 
 	})
 
+	t.Run("Should get all bids with large number of bids", func(t *testing.T) {
+
+		gwtfTest := NewGWTFTest(t).
+			setup().
+			createArtCollectionAndMintFlow("artist", "100.0").
+			createArtCollectionAndMintFlow("buyer1", "100000.0")
+
+		auctionId := gwtfTest.setupDutchAuction()
+
+		//TODO: increase this to test with large number of bids. I have tested with 10000, test timed out after 7800 :p
+		//5000 bids suceeds
+		maxNumber := 100
+		number := 0
+		for ; number < maxNumber; number++ {
+			gwtfTest.dutchBid("buyer1", auctionId, "5.0")
+		}
+		bids, err := gwtfTest.GWTF.ScriptFromFile("dutchAuctionBids").UInt64Argument(auctionId).RunReturns()
+		assert.NoError(gwtfTest.T, err)
+		assert.Equal(gwtfTest.T, maxNumber, len(bids.(cadence.Array).Values))
+
+	})
 }
