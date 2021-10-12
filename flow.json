@@ -6,6 +6,13 @@
 		}
 	},
 	"contracts": {
+		"TopShot": {
+			"source": "./contracts/TopShot.cdc",
+			"aliases": {
+				"mainnet": "0x0b2a3299cc857e29",
+				"testnet": "0x877931736ee77cff"
+			}
+		},
 		"NonFungibleToken": {
 			"source": "./contracts/standard/NonFungibleToken.cdc",
 			"aliases": {
@@ -44,7 +51,8 @@
 		"Marketplace": "./contracts/Marketplace.cdc",
 		"Profile": "./contracts/Profile.cdc",
 		"Debug": "./contracts/Debug.cdc",
-		"Clock": "./contracts/Clock.cdc"
+		"Clock": "./contracts/Clock.cdc",
+		"MarketplaceTopShot": "./contracts/MarketplaceTopShot.cdc"
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -114,7 +122,8 @@
 				"Profile",
 				"DutchAuction",
 				"Clock",
-				"Debug"
+				"Debug",
+				"MarketplaceTopShot"
 			]
 		},
 		"mainnet" : {
@@ -127,7 +136,8 @@
 				"Profile",
 				"DutchAuction",
 				"Clock",
-				"Debug"
+				"Debug",
+				"MarketplaceTopShot"
 			]
 		},
 		"emulator": {
@@ -142,7 +152,10 @@
 				"FUSD",
 				"DutchAuction",
 				"Clock",
-				"Debug"
+				"Debug",
+				"MarketplaceTopShot",
+				"TopShot",
+				"FUSD"
 			],
 			"emulator-artist" : [],
 			"emulator-buyer1" : [],
