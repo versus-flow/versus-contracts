@@ -413,10 +413,9 @@ pub contract DutchAuction {
 				//todo do we need seperate bid for increase?
 				emit DutchAuctionBidIncreased(amount: bidInfo.balance, bidder: bidInfo.nftCap.address, auction: self.uuid, bid: bidInfo.id)
 			} else {
-				//why do I need this?
 				destroy vault
+				panic("Cannot get escrow")
 			}
-
 			//need to check if the bid is in the correct bucket now
 			//emit event
 		}
