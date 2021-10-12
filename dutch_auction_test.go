@@ -103,7 +103,7 @@ func TestDutchAuction(t *testing.T) {
 
 		bidderAddress := fmt.Sprintf("0x%s", gwtfTest.GWTF.Account("buyer1").Address().String())
 
-		bidId := 70
+		bidId := 72
 		value := gwtfTest.getBidIds("buyer1")
 		assert.Equal(gwtfTest.T, fmt.Sprintf("[%d]", bidId), value)
 		amount := "0.5"
