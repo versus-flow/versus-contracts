@@ -33,7 +33,7 @@ transaction(
         self.client = account.borrow<&Versus.Admin>(from: Versus.VersusAdminStoragePath) ?? panic("could not load versus admin")
         self.artistWallet=  getAccount(artist).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
 				//TODO this needs to be linked before somehow
-				self.artistNFTCap=  getAccount(artist).getCapability<&{NonFungibleToken.Receiver}>(Art.CollectionPublicPathStandard)
+				self.artistNFTCap=  getAccount(artist).getCapability<&{NonFungibleToken.Receiver}>(/public/versusArtNFTCollection)
 			  self.royaltyVaultCap= account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
     }
     

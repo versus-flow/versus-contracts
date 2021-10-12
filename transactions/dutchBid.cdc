@@ -17,11 +17,12 @@ transaction(marketplace: Address, id: UInt64, bidAmount: UFix64) {
 	prepare(account: AuthAccount) {
 
 		// get the references to the buyer's Vault and NFT Collection receiver
-		let collectionCap=  account.getCapability<&{NonFungibleToken.Receiver}>(Art.CollectionPublicPathStandard)
+		let collectionCap=  account.getCapability<&{NonFungibleToken.Receiver}>(/public/versusArtNFTCollection)
 
 		// if collection is not created yet we make it.
 		if !collectionCap.check() {
-			account.unlink(Art.CollectionPublicPathStandard)
+			account.unlink(/public/versusArtNFTCollection)
+
 			account.unlink(Art.CollectionPublicPath)
 			destroy <- account.load<@AnyResource>(from:Art.CollectionStoragePath)
 			// store an empty NFT Collection in account storage
@@ -31,7 +32,7 @@ transaction(marketplace: Address, id: UInt64, bidAmount: UFix64) {
 			account.link<&{Art.CollectionPublic}>(Art.CollectionPublicPath, target: Art.CollectionStoragePath)
 
 			//publish the standard link
-			account.link<&{NonFungibleToken.Receiver}>(Art.CollectionPublicPathStandard, target: Art.CollectionStoragePath)
+			account.link<&{NonFungibleToken.Receiver}>(/public/versusArtNFTCollection, target: Art.CollectionStoragePath)
 		}
 
 		let bidCap=account.getCapability<&DutchAuction.BidCollection{DutchAuction.BidCollectionPublic}>(DutchAuction.BidCollectionPublicPath)

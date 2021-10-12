@@ -7,7 +7,6 @@ pub contract Art: NonFungibleToken {
 
 	pub let CollectionStoragePath: StoragePath
 	pub let CollectionPublicPath: PublicPath
-	pub let CollectionPublicPathStandard: PublicPath
 
 	pub var totalSupply: UInt64
 
@@ -298,7 +297,6 @@ pub contract Art: NonFungibleToken {
 			// Initialize the total supply
 			self.totalSupply = 0
 			self.CollectionPublicPath=/public/versusArtCollection
-			self.CollectionPublicPathStandard=/public/versusArtNFTCollection
 			self.CollectionStoragePath=/storage/versusArtCollection
 
 			self.account.save<@NonFungibleToken.Collection>(<- Art.createEmptyCollection(), to: Art.CollectionStoragePath)
