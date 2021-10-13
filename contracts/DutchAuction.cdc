@@ -13,16 +13,25 @@ pub contract DutchAuction {
 	pub let BidCollectionPublicPath: PublicPath
 
 
+	pub event DutchAuctionBidRejected(bidder: Address)
 	pub event DutchAuctionCreated(name: String, artist: String, number: Int, owner:Address, id: UInt64)
-	//TODO: add human readable inptut to events
-	//Not sure if we want to emit for this
+	//TODO: add human readable inptut to events, need to know what ts metadata we add here
 	pub event DutchAuctionBid(amount: UFix64, bidder: Address, auction: UInt64, bid: UInt64)
-
-	//TODO do we need this secondary event?
 	pub event DutchAuctionBidIncreased(amount: UFix64, bidder: Address, auction: UInt64, bid: UInt64)
-
 	pub event DutchAuctionTick(tickPrice: UFix64, acceptedBids: Int, totalItems: Int, tickTime: UFix64, auction: UInt64)
 	pub event DutchAuctionSettle(price: UFix64, auction: UInt64)
+
+	pub struct Bids {
+		pub let bids: [BidReport]
+		pub let winningPrice: UFix64?
+		pub let winningBidId: UInt64?
+
+		init(bids: [BidReport], winningPrice: UFix64?, winningBidId: UInt64?) {
+			self.bids =bids
+			self.winningPrice=winningPrice
+			self.winningBidId=winningBidId
+		}
+	}
 
 	pub struct BidReport {
 		pub let id: UInt64
@@ -157,17 +166,16 @@ pub contract DutchAuction {
 			return self.ticks[0].startedAt
 		}
 
-		pub fun fullfill() {
-			let winners=self.findWinners()
-
-			let winningBidIndex=winners[winners.length-1]
-			let winningBid=self.bidInfo[winningBidIndex]!.balance
-			self.winningBid=winningBid
-
+		access(self) fun fullfillWinners(bidResult: Bids) {
+			let winningBid=bidResult.winningPrice!
 			let nftIds= self.nfts.keys
-
-			for winner in winners {
-				if let vault <- self.escrow[winner] <- nil {
+			for bid in bidResult.bids {
+				if !bid.winning {
+					//emit DutchAuctionBidRejected(bidder: bid.bidder)
+					//Should we emit an event here
+					return
+				}
+				if let vault <- self.escrow[bid.id] <- nil {
 
 					if vault.balance > winningBid {
 						self.ownerVaultCap.borrow()!.deposit(from: <- vault.withdraw(amount: vault.balance-winningBid))
@@ -176,15 +184,32 @@ pub contract DutchAuction {
 						self.royaltyVaultCap.borrow()!.deposit(from: <- vault.withdraw(amount: vault.balance*self.royaltyPercentage))
 					}
 
-					//TODO: fix if unlinked, or maybe just fail then?
 					self.ownerVaultCap.borrow()!.deposit(from: <- vault)
 
 					let nftId=nftIds.removeFirst()
 					if let nft <- self.nfts[nftId] <- nil {
-						self.bidInfo[winner]!.nftCap.borrow()!.deposit(token: <- nft)
+						//TODO: here we might consider adding the nftId that you have won to BidInfo and let the user pull it out
+						self.bidInfo[bid.id]!.nftCap.borrow()!.deposit(token: <- nft)
 					}
 				}
 			}
+
+
+		}
+		pub fun fullfill() {
+			let bids=self.getBids()
+
+			if bids.winningPrice== nil {
+				Debug.log("Winning price is not set")
+				panic("Cannot fullfill is not finished")
+			}
+			let winningBid=bids.winningPrice!
+			self.winningBid=winningBid
+
+			self.fullfillWinners(bidResult: bids)
+
+
+			/*
 			//let just return all other money here and fix the issue with gas later
 			//this will blow the gas limit on high number of bids
 			for tick in self.ticks {
@@ -198,25 +223,46 @@ pub contract DutchAuction {
 					}
 				}
 			}
+			*/
 
 			emit DutchAuctionSettle(price: winningBid, auction: self.uuid)
 		}
 
 
-		pub fun getBids() : [BidReport] {
+		pub fun getBids() : Bids {
 			var bids: [BidReport] =[]
+			var prevBalance: UFix64=0.0
+			var prevId: UInt64=0
+			var winningPrice: UFix64? = nil
+			var winningBid: UInt64?=nil
 			for tick in self.ticks {
 				let localBids=self.bids[tick.startedAt]!
 				for bid in localBids {
+				//	Debug.log("Processing bid ".concat(bid.toString()).concat(" total bids are ").concat(bids.length.toString()))
+					let bidInfo= self.bidInfo[bid]!
 					var winning=true
 					if bids.length >= self.numberOfItems {
 						winning=false
 					}
-					let bidInfo= self.bidInfo[bid]!
+					if bids.length == self.numberOfItems {
+						winningPrice=prevBalance
+				//		Debug.log("Set winningPrice to".concat(prevBalance.toString()))
+						winningBid=prevId
+					}
+					prevBalance=bidInfo.balance
+					prevId=bid
+					var excessBalance: UFix64? = nil
+					if winningPrice != nil && bidInfo.balance > winningPrice! {
+						excessBalance=bidInfo.balance - winningPrice!
+					}
 					bids.append(BidReport(id: bid, time: bidInfo.time, amount: bidInfo.balance, bidder: bidInfo.vaultCap.address, winning: winning))
 				}
 			}
-			return bids
+			if bids.length == self.numberOfItems {
+				winningPrice=prevBalance
+				winningBid=prevId
+			}
+			return Bids(bids: bids, winningPrice: winningPrice, winningBidId: winningBid)
 		}
 
 		pub fun findWinners() : [UInt64] {
@@ -446,8 +492,9 @@ pub contract DutchAuction {
 
 	pub resource interface Public {
 		pub fun getIds() : [UInt64] 
+		//TODO: can we just join these two?
 		pub fun getStatus(_ id: UInt64) : DutchAuctionStatus
-		pub fun getBids(_ id: UInt64) : [BidReport]
+		pub fun getBids(_ id: UInt64) : Bids
 		//these methods are only allowed to be called from within this contract, but we want to call them on another users resource
 		access(contract) fun getAuction(_ id:UInt64) : &Auction
 		access(contract) fun bid(id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>) : @Bid
@@ -515,7 +562,7 @@ pub contract DutchAuction {
 			metadata:item.metadata)
 		}
 
-		pub fun getBids(_ id:UInt64) : [BidReport] {
+		pub fun getBids(_ id:UInt64) : Bids {
 			pre {
 				self.auctions[id] != nil: "auction doesn't exist"
 			}
@@ -599,13 +646,13 @@ pub contract DutchAuction {
 
 	}
 
-	pub fun getBids(_ id: UInt64) : [BidReport] {
+	pub fun getBids(_ id: UInt64) : Bids {
 		let account = DutchAuction.account
 		let cap=account.getCapability<&Collection{Public}>(self.CollectionPublicPath)
 		if let collection = cap.borrow() {
 			return collection.getBids(id)
 		}
-		return []
+		panic("Could not find auction capability")
 	}
 
 	pub fun getDutchAuction(_ id: UInt64) : DutchAuctionStatus? {
@@ -617,7 +664,6 @@ pub contract DutchAuction {
 		return nil
 	}
 
-	//TODO: does this have to be a resource?
 	pub resource Bid {
 
 		pub let capability:Capability<&Collection{Public}>

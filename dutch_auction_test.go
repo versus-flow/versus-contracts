@@ -121,6 +121,27 @@ func TestDutchAuction(t *testing.T) {
 
 	})
 
+	t.Run("Should get all bids with large number of bids", func(t *testing.T) {
+
+		gwtfTest := NewGWTFTest(t).
+			setup().
+			createArtCollectionAndMintFlow("artist", "100.0").
+			createArtCollectionAndMintFlow("buyer1", "100000.0")
+
+		auctionId := gwtfTest.setupDutchAuction()
+
+		//TODO: increase this to test with large number of bids. I have tested with 10000, test timed out after 7800 :p
+		//5000 bids suceeds
+		maxNumber := 100
+		number := 0
+		for ; number < maxNumber; number++ {
+			gwtfTest.dutchBid("buyer1", auctionId, "5.0")
+		}
+		bids, err := gwtfTest.GWTF.ScriptFromFile("dutchAuctionBidReport").UInt64Argument(auctionId).RunReturns()
+		assert.NoError(gwtfTest.T, err)
+		assert.Equal(gwtfTest.T, maxNumber, len(bids.(cadence.Array).Values))
+
+	})
 	t.Run("Should get all bids even bids not winning", func(t *testing.T) {
 
 		gwtfTest := NewGWTFTest(t).
@@ -143,116 +164,99 @@ func TestDutchAuction(t *testing.T) {
 		gwtfTest.dutchBid("buyer1", auctionId, "1.0")
 		gwtfTest.dutchBid("buyer1", auctionId, "9.0")
 
-		expectedBids := `[
-    {
-        "amount": "9.20000000",
-        "bidder": "0x179b6b1cb6755e31",
-        "id": "2",
-        "time": "1.00000000",
-        "winning": "true"
-    },
-    {
-        "amount": "9.00000000",
-        "bidder": "0x179b6b1cb6755e31",
-        "id": "1",
-        "time": "1.00000000",
-        "winning": "true"
-    },
-    {
-        "amount": "9.00000000",
-        "bidder": "0x179b6b1cb6755e31",
-        "id": "5",
-        "time": "1.00000000",
-        "winning": "true"
-    },
-    {
-        "amount": "9.00000000",
-        "bidder": "0x179b6b1cb6755e31",
-        "id": "12",
-        "time": "1.00000000",
-        "winning": "true"
-    },
-    {
-        "amount": "8.00000000",
-        "bidder": "0x179b6b1cb6755e31",
-        "id": "6",
-        "time": "1.00000000",
-        "winning": "true"
-    },
-    {
-        "amount": "5.00000000",
-        "bidder": "0x179b6b1cb6755e31",
-        "id": "3",
-        "time": "1.00000000",
-        "winning": "true"
-    },
-    {
-        "amount": "4.00000000",
-        "bidder": "0x179b6b1cb6755e31",
-        "id": "4",
-        "time": "1.00000000",
-        "winning": "true"
-    },
-    {
-        "amount": "2.00000000",
-        "bidder": "0x179b6b1cb6755e31",
-        "id": "7",
-        "time": "1.00000000",
-        "winning": "true"
-    },
-    {
-        "amount": "1.00000000",
-        "bidder": "0x179b6b1cb6755e31",
-        "id": "8",
-        "time": "1.00000000",
-        "winning": "true"
-    },
-    {
-        "amount": "1.00000000",
-        "bidder": "0x179b6b1cb6755e31",
-        "id": "9",
-        "time": "1.00000000",
-        "winning": "true"
-    },
-    {
-        "amount": "1.00000000",
-        "bidder": "0x179b6b1cb6755e31",
-        "id": "10",
-        "time": "1.00000000",
-        "winning": "false"
-    },
-    {
-        "amount": "1.00000000",
-        "bidder": "0x179b6b1cb6755e31",
-        "id": "11",
-        "time": "1.00000000",
-        "winning": "false"
-    }
-]`
+		expectedBids := `{
+    "bids": [
+        {
+            "amount": "9.20000000",
+            "bidder": "0x179b6b1cb6755e31",
+            "id": "2",
+            "time": "1.00000000",
+            "winning": "true"
+        },
+        {
+            "amount": "9.00000000",
+            "bidder": "0x179b6b1cb6755e31",
+            "id": "1",
+            "time": "1.00000000",
+            "winning": "true"
+        },
+        {
+            "amount": "9.00000000",
+            "bidder": "0x179b6b1cb6755e31",
+            "id": "5",
+            "time": "1.00000000",
+            "winning": "true"
+        },
+        {
+            "amount": "9.00000000",
+            "bidder": "0x179b6b1cb6755e31",
+            "id": "12",
+            "time": "1.00000000",
+            "winning": "true"
+        },
+        {
+            "amount": "8.00000000",
+            "bidder": "0x179b6b1cb6755e31",
+            "id": "6",
+            "time": "1.00000000",
+            "winning": "true"
+        },
+        {
+            "amount": "5.00000000",
+            "bidder": "0x179b6b1cb6755e31",
+            "id": "3",
+            "time": "1.00000000",
+            "winning": "true"
+        },
+        {
+            "amount": "4.00000000",
+            "bidder": "0x179b6b1cb6755e31",
+            "id": "4",
+            "time": "1.00000000",
+            "winning": "true"
+        },
+        {
+            "amount": "2.00000000",
+            "bidder": "0x179b6b1cb6755e31",
+            "id": "7",
+            "time": "1.00000000",
+            "winning": "true"
+        },
+        {
+            "amount": "1.00000000",
+            "bidder": "0x179b6b1cb6755e31",
+            "id": "8",
+            "time": "1.00000000",
+            "winning": "true"
+        },
+        {
+            "amount": "1.00000000",
+            "bidder": "0x179b6b1cb6755e31",
+            "id": "9",
+            "time": "1.00000000",
+            "winning": "true"
+        },
+        {
+            "amount": "1.00000000",
+            "bidder": "0x179b6b1cb6755e31",
+            "id": "10",
+            "time": "1.00000000",
+            "winning": "false"
+        },
+        {
+            "amount": "1.00000000",
+            "bidder": "0x179b6b1cb6755e31",
+            "id": "11",
+            "time": "1.00000000",
+            "winning": "false"
+        }
+    ],
+    "winningBidId": "9",
+    "winningPrice": "1.00000000"
+}`
 		bids := gwtfTest.auctionBids(auctionId)
 		assert.Equal(gwtfTest.T, expectedBids, bids)
 
 	})
 
-	t.Run("Should get all bids with large number of bids", func(t *testing.T) {
-
-		gwtfTest := NewGWTFTest(t).
-			setup().
-			createArtCollectionAndMintFlow("artist", "100.0").
-			createArtCollectionAndMintFlow("buyer1", "100000.0")
-
-		auctionId := gwtfTest.setupDutchAuction()
-
-		//TODO: increase this to test with large number of bids. I have tested with 10000, test timed out after 7800 :p
-		//5000 bids suceeds
-		maxNumber := 100
-		number := 0
-		for ; number < maxNumber; number++ {
-			gwtfTest.dutchBid("buyer1", auctionId, "5.0")
-		}
-		bids, err := gwtfTest.GWTF.ScriptFromFile("dutchAuctionBids").UInt64Argument(auctionId).RunReturns()
-		assert.NoError(gwtfTest.T, err)
-		assert.Equal(gwtfTest.T, maxNumber, len(bids.(cadence.Array).Values))
-
-	})
 }

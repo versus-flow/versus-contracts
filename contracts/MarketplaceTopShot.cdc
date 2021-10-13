@@ -39,9 +39,11 @@ pub contract MarketplaceTopShot {
 	pub struct MarketplaceData {
 		pub let id: UInt64
 		pub let price: UFix64
-		init( id: UInt64, price: UFix64) {
+		pub let metadata: {String: String}
+		init( id: UInt64, price: UFix64, metadata: {String: String}) {
 			self.id=id
 			self.price=price
+			self.metadata=metadata
 		}
 	}
 
@@ -57,6 +59,7 @@ pub contract MarketplaceTopShot {
 
 		// Dictionary of the NFTs that the user is putting up for sale
 		pub var forSale: @{UInt64: TopShot.NFT}
+		pub var metadata: {UInt64: {String: String}}
 
 		// Dictionary of the prices for each NFT by ID
 		pub var prices: {UInt64: UFix64}
@@ -69,6 +72,7 @@ pub contract MarketplaceTopShot {
 		init (vault: Capability<&AnyResource{FungibleToken.Receiver}>, royalty: {String: Art.Royalty}) {
 			self.forSale <- {}
 			self.ownerVault = vault
+			self.metadata={}
 			self.prices = {}
 			self.royalty=royalty
 		}
@@ -102,11 +106,12 @@ pub contract MarketplaceTopShot {
 		}
 
 		// listForSale lists an NFT for sale in this collection
-		pub fun listForSale(token: @TopShot.NFT, price: UFix64) {
+		pub fun listForSale(token: @TopShot.NFT, price: UFix64, metadata: {String: String}) {
 			let id = token.id
 
 			// store the price in the price array
 			self.prices[id] = price
+			self.metadata[id]=metadata
 
 			// put the NFT into the the forSale dictionary
 			let oldToken <- self.forSale[id] <- token
@@ -166,7 +171,8 @@ pub contract MarketplaceTopShot {
 
 			return MarketplaceData(
 				id: tokenID,
-				price: self.prices[tokenID]!
+				price: self.prices[tokenID]!,
+				metadata: self.metadata[tokenID]!
 			)
 		}
 
