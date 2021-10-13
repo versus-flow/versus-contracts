@@ -28,7 +28,7 @@ pub contract Art: NonFungibleToken {
 
 		pub fun content() : String?
 
-		pub let royalty: {String: Royalty}
+		access(account) let royalty: {String: Royalty}
 		pub fun cacheKey() : String
 
 	}
@@ -73,6 +73,7 @@ pub contract Art: NonFungibleToken {
 	}
 
 	pub resource NFT: NonFungibleToken.INFT, Public {
+		//TODO: tighten up the permission here.
 		pub let id: UInt64
 		pub let name: String
 		pub let description: String
@@ -84,7 +85,7 @@ pub contract Art: NonFungibleToken {
 		pub let contentId: UInt64?
 		pub let url: String?
 		pub let metadata: Metadata
-		pub let royalty: {String: Royalty}
+		access(account) let royalty: {String: Royalty}
 
 		init(initID: UInt64, 
 		metadata: Metadata,
