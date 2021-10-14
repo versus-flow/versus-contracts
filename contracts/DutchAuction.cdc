@@ -24,12 +24,10 @@ pub contract DutchAuction {
 	pub struct Bids {
 		pub let bids: [BidReport]
 		pub let winningPrice: UFix64?
-		pub let winningBidId: UInt64?
 
-		init(bids: [BidReport], winningPrice: UFix64?, winningBidId: UInt64?) {
+		init(bids: [BidReport], winningPrice: UFix64?) {
 			self.bids =bids
 			self.winningPrice=winningPrice
-			self.winningBidId=winningBidId
 		}
 	}
 
@@ -39,13 +37,15 @@ pub contract DutchAuction {
 		pub let amount: UFix64
 		pub let bidder: Address
 		pub let winning: Bool
+		pub let confirmed: Bool
 
-		init(id: UInt64, time: UFix64, amount: UFix64, bidder: Address, winning: Bool) {
+		init(id: UInt64, time: UFix64, amount: UFix64, bidder: Address, winning: Bool, confirmed: Bool) {
 			self.id=id
 			self.time=time
 			self.amount=amount
 			self.bidder=bidder
 			self.winning=winning
+			self.confirmed=confirmed
 		}
 	}
 
@@ -55,6 +55,7 @@ pub contract DutchAuction {
 		access(contract) let nftCap: Capability<&{NonFungibleToken.Receiver}>
 		access(contract) var time: UFix64
 		access(contract) var balance: UFix64
+		access(contract) var winning: Bool
 
 
 		init(id: UInt64, nftCap: Capability<&{NonFungibleToken.Receiver}>, vaultCap: Capability<&{FungibleToken.Receiver}>, time: UFix64, balance: UFix64) {
@@ -63,11 +64,16 @@ pub contract DutchAuction {
 			self.vaultCap=vaultCap
 			self.time=time
 			self.balance=balance
+			self.winning=false
 		}
 
 		pub fun increaseBid(_ amount:UFix64) {
 			self.balance=self.balance+amount
 			self.time=Clock.time()
+		}
+
+		pub fun setWinning(_ value: Bool) {
+			self.winning=value
 		}
 	}
 
@@ -107,8 +113,6 @@ pub contract DutchAuction {
 		//this is a counter to keep the number of bids so that we can escrow in a separate resource
 		access(contract) var totalBids: UInt64
 
-		access(contract) var acceptedBids: Int
-
 		//this has to be an array I think, since we need ordering. 
 		access(contract) let ticks: [Tick]
 
@@ -117,6 +121,8 @@ pub contract DutchAuction {
 
 		//this is a lookup table for the bid
 		access(contract) let bidInfo: {UInt64: BidInfo}
+
+		access(contract) let winningBids: [UInt64]
 
 		//this is a table of ticks to ordered list of bid ids
 		access(contract) let bids: {UFix64: [UInt64]}
@@ -141,11 +147,11 @@ pub contract DutchAuction {
 		ticks: [Tick]) {
 			self.metadata=metadata
 			self.totalBids=1
-			self.acceptedBids=0
 			self.currentTickIndex=0
 			self.numberOfItems=nfts.length
 			self.ticks=ticks
 			self.auctionStatus={}
+			self.winningBids=[]
 			//create the ticks
 			self.nfts <- nfts
 			self.winningBid=nil
@@ -166,19 +172,19 @@ pub contract DutchAuction {
 			return self.ticks[0].startedAt
 		}
 
-		access(self) fun fullfillWinners(bidResult: Bids) {
-			let winningBid=bidResult.winningPrice!
-			let nftIds= self.nfts.keys
-			for bid in bidResult.bids {
-				if !bid.winning {
-					//emit DutchAuctionBidRejected(bidder: bid.bidder)
-					//Should we emit an event here
-					return
-				}
-				if let vault <- self.escrow[bid.id] <- nil {
+		access(contract) fun fullfill() {
+			if self.winningBid== nil {
+				Debug.log("Winning price is not set")
+				panic("Cannot fullfill is not finished")
+			}
 
-					if vault.balance > winningBid {
-						self.ownerVaultCap.borrow()!.deposit(from: <- vault.withdraw(amount: vault.balance-winningBid))
+			let nftIds= self.nfts.keys
+
+			for id in self.winningBids {
+				let bid= self.bidInfo[id]!
+				if let vault <- self.escrow[bid.id] <- nil {
+					if vault.balance > self.winningBid! {
+						self.ownerVaultCap.borrow()!.deposit(from: <- vault.withdraw(amount: vault.balance-self.winningBid!))
 					}
 					if self.royaltyPercentage != 0.0 {
 						self.royaltyVaultCap.borrow()!.deposit(from: <- vault.withdraw(amount: vault.balance*self.royaltyPercentage))
@@ -193,22 +199,6 @@ pub contract DutchAuction {
 					}
 				}
 			}
-
-
-		}
-		pub fun fullfill() {
-			let bids=self.getBids()
-
-			if bids.winningPrice== nil {
-				Debug.log("Winning price is not set")
-				panic("Cannot fullfill is not finished")
-			}
-			let winningBid=bids.winningPrice!
-			self.winningBid=winningBid
-
-			self.fullfillWinners(bidResult: bids)
-
-
 			/*
 			//let just return all other money here and fix the issue with gas later
 			//this will blow the gas limit on high number of bids
@@ -225,44 +215,70 @@ pub contract DutchAuction {
 			}
 			*/
 
-			emit DutchAuctionSettle(price: winningBid, auction: self.uuid)
+			emit DutchAuctionSettle(price: self.winningBid!, auction: self.uuid)
 		}
 
 
+		/*
+ pub fun getBids() : Bids {
+                        var bids: [BidReport] =[]
+                       var prevBalance: UFix64=0.0
+                       var prevId: UInt64=0
+                       var winningPrice: UFix64? = nil
+                       var winningBid: UInt64?=nil
+                       for tick in self.ticks {
+                               let localBids=self.bids[tick.startedAt]!
+                               for bid in localBids {
+                               //      Debug.log("Processing bid ".concat(bid.toString()).concat(" total bids are ").concat(bids.length.toString()))
+                                       let bidInfo= self.bidInfo[bid]!
+                                       var winning=true
+                                       if bids.length >= self.numberOfItems {
+                                               winning=false
+                                       }
+                                       if bids.length == self.numberOfItems {
+                                               winningPrice=prevBalance
+                               //              Debug.log("Set winningPrice to".concat(prevBalance.toString()))
+                                               winningBid=prevId
+                                       }
+                                       prevBalance=bidInfo.balance
+                                       prevId=bid
+                                       var excessBalance: UFix64? = nil
+                                       if winningPrice != nil && bidInfo.balance > winningPrice! {
+                                               excessBalance=bidInfo.balance - winningPrice!
+                                       }
+                                       bids.append(BidReport(id: bid, time: bidInfo.time, amount: bidInfo.balance, bidder: bidInfo.vaultCap.address, winning: winning))
+                               }
+                       }
+                       if bids.length == self.numberOfItems {
+                               winningPrice=prevBalance
+                               winningBid=prevId
+                       }
+                       return Bids(bids: bids, winningPrice: winningPrice, winningBidId: winningBid)
+                }
+								*/
+
 		pub fun getBids() : Bids {
 			var bids: [BidReport] =[]
-			var prevBalance: UFix64=0.0
-			var prevId: UInt64=0
-			var winningPrice: UFix64? = nil
-			var winningBid: UInt64?=nil
+			var numberWinning=0
+			var winningBid=self.winningBid
 			for tick in self.ticks {
 				let localBids=self.bids[tick.startedAt]!
 				for bid in localBids {
-				//	Debug.log("Processing bid ".concat(bid.toString()).concat(" total bids are ").concat(bids.length.toString()))
 					let bidInfo= self.bidInfo[bid]!
-					var winning=true
-					if bids.length >= self.numberOfItems {
-						winning=false
+					var winning=bidInfo.winning
+					//we have an ongoing auction
+					if self.winningBid == nil && numberWinning != self.numberOfItems {
+						winning=true
+						numberWinning=numberWinning+1
+						if numberWinning== self.numberOfItems {
+							winningBid=bidInfo.balance
+						}
 					}
-					if bids.length == self.numberOfItems {
-						winningPrice=prevBalance
-				//		Debug.log("Set winningPrice to".concat(prevBalance.toString()))
-						winningBid=prevId
-					}
-					prevBalance=bidInfo.balance
-					prevId=bid
-					var excessBalance: UFix64? = nil
-					if winningPrice != nil && bidInfo.balance > winningPrice! {
-						excessBalance=bidInfo.balance - winningPrice!
-					}
-					bids.append(BidReport(id: bid, time: bidInfo.time, amount: bidInfo.balance, bidder: bidInfo.vaultCap.address, winning: winning))
+
+					bids.append(BidReport(id: bid, time: bidInfo.time, amount: bidInfo.balance, bidder: bidInfo.vaultCap.address, winning: winning, confirmed:bidInfo.winning))
 				}
 			}
-			if bids.length == self.numberOfItems {
-				winningPrice=prevBalance
-				winningBid=prevId
-			}
-			return Bids(bids: bids, winningPrice: winningPrice, winningBidId: winningBid)
+			return Bids(bids: bids, winningPrice: winningBid)
 		}
 
 		pub fun findWinners() : [UInt64] {
@@ -290,8 +306,8 @@ pub contract DutchAuction {
 			return self.ticks[self.currentTickIndex]
 		}
 
+		//this should be called something else
 		pub fun isAuctionFinished() : Bool {
-			//if we are on the last tick we do not increment the tick anymore we just check again and again if we have the right amount of bids
 
 			if !self.isLastTick() {
 				//if the startedAt of the next tick is larger then current time not time to tick yet
@@ -313,25 +329,42 @@ pub contract DutchAuction {
 
 			//calculate number of acceptedBids
 			let bids=self.bids[tick.startedAt]!
-			let previousAcceptedBids=self.acceptedBids
-			self.acceptedBids=self.acceptedBids+bids.length
+
+			let previousAcceptedBids=self.winningBids.length
+			var winning=true
+			for bid in bids {
+
+				 let bidInfo= self.bidInfo[bid]!
+				 //we do not have enough winning bids so we add this bid as a winning bid
+				 if self.winningBids.length < self.numberOfItems {
+					self.winningBids.append(bid)
+					//if we now have enough bids we need to set the winning bid
+					if self.winningBids.length == self.numberOfItems {
+						self.winningBid=bidInfo.balance
+					}
+			   }
+
+				 Debug.log("Processing bid ".concat(bid.toString()).concat(" total accepted bids are ").concat(self.winningBids.length.toString()))
+				 
+				 self.bidInfo[bid]!.setWinning(winning)
+
+				 if self.winningBids.length == self.numberOfItems {
+						winning=false
+				 } 
+			}
 
 			//lets advance the tick
 			self.currentTickIndex=self.currentTickIndex+1
 
-			//we have exactly or over the number of accepted bids. The auction can end!
-			if self.acceptedBids >= self.numberOfItems {
+			if self.winningBids.length == self.numberOfItems {
 				//this could be done later, but i will just do it here for ease of reading
 				self.auctionStatus[tick.startedAt] = TickStatus(price:tick.price, startedAt: tick.startedAt, acceptedBids: self.numberOfItems - previousAcceptedBids, cumulativeAcceptedBids: self.numberOfItems)
 				log(self.auctionStatus)
-
 				return true
 			}
 
-			self.auctionStatus[tick.startedAt] = TickStatus(price:tick.price, startedAt: tick.startedAt, acceptedBids: bids.length, cumulativeAcceptedBids: self.acceptedBids)
+			self.auctionStatus[tick.startedAt] = TickStatus(price:tick.price, startedAt: tick.startedAt, acceptedBids: bids.length, cumulativeAcceptedBids: self.winningBids.length)
 			log(self.auctionStatus)
-
-
 			return false
 		}
 
@@ -429,6 +462,21 @@ pub contract DutchAuction {
 			}
 			panic("Could not find tick for amount")
 		}
+
+		access(contract) fun getExcessBalance(id: UInt64) : UFix64 {
+			let currentBalance=self.bidInfo[id]!.balance
+			if self.winningBid != nil {
+				return currentBalance
+			}
+
+
+			return 0.0
+
+		}
+		access(contract) fun getBalance(id: UInt64) : UFix64 {
+			return self.bidInfo[id]!.balance
+		}
+
 
 		access(contract) fun  increaseBid(id: UInt64, vault: @FlowToken.Vault) {
 			//todo: pre that the bid exist and escrow exist
@@ -556,7 +604,7 @@ pub contract DutchAuction {
 			return DutchAuctionStatus(status: status, 
 			currentPrice: currentPrice,
 			totalItems: item.numberOfItems, 
-			acceptedBids: item.acceptedBids, 
+			acceptedBids: item.winningBids.length, 
 			startTime: item.startAt(),
 			tickStatus: item.auctionStatus,
 			metadata:item.metadata)
@@ -607,11 +655,14 @@ pub contract DutchAuction {
 			let time=Clock.time()
 			let auction=self.getAuction(id)
 
+			//TODO: look at inlineing this
+
 			if !auction.isAuctionFinished() {
 				let tick=auction.getTick()
-				emit DutchAuctionTick(tickPrice: tick.price, acceptedBids: auction.acceptedBids, totalItems: auction.numberOfItems, tickTime: tick.startedAt, auction: id)
+				emit DutchAuctionTick(tickPrice: tick.price, acceptedBids: auction.winningBids.length, totalItems: auction.numberOfItems, tickTime: tick.startedAt, auction: id)
 				return
 			}
+
 			auction.fullfill()
 		}
 
@@ -677,7 +728,7 @@ pub contract DutchAuction {
 		}
 
 		pub fun getBidBalance() : UFix64 {
-			return 0.0 //todo
+			return self.capability.borrow()!.getAuction(self.auctionId).getBalance(id: self.bidId)
 		}
 
 		pub fun increaseBid(vault: @FlowToken.Vault) {

@@ -169,6 +169,7 @@ func TestDutchAuction(t *testing.T) {
         {
             "amount": "9.20000000",
             "bidder": "0x179b6b1cb6755e31",
+            "confirmed": "false",
             "id": "2",
             "time": "1.00000000",
             "winning": "true"
@@ -176,6 +177,7 @@ func TestDutchAuction(t *testing.T) {
         {
             "amount": "9.00000000",
             "bidder": "0x179b6b1cb6755e31",
+            "confirmed": "false",
             "id": "1",
             "time": "1.00000000",
             "winning": "true"
@@ -183,6 +185,7 @@ func TestDutchAuction(t *testing.T) {
         {
             "amount": "9.00000000",
             "bidder": "0x179b6b1cb6755e31",
+            "confirmed": "false",
             "id": "5",
             "time": "1.00000000",
             "winning": "true"
@@ -190,6 +193,7 @@ func TestDutchAuction(t *testing.T) {
         {
             "amount": "9.00000000",
             "bidder": "0x179b6b1cb6755e31",
+            "confirmed": "false",
             "id": "12",
             "time": "1.00000000",
             "winning": "true"
@@ -197,6 +201,7 @@ func TestDutchAuction(t *testing.T) {
         {
             "amount": "8.00000000",
             "bidder": "0x179b6b1cb6755e31",
+            "confirmed": "false",
             "id": "6",
             "time": "1.00000000",
             "winning": "true"
@@ -204,6 +209,7 @@ func TestDutchAuction(t *testing.T) {
         {
             "amount": "5.00000000",
             "bidder": "0x179b6b1cb6755e31",
+            "confirmed": "false",
             "id": "3",
             "time": "1.00000000",
             "winning": "true"
@@ -211,6 +217,7 @@ func TestDutchAuction(t *testing.T) {
         {
             "amount": "4.00000000",
             "bidder": "0x179b6b1cb6755e31",
+            "confirmed": "false",
             "id": "4",
             "time": "1.00000000",
             "winning": "true"
@@ -218,6 +225,7 @@ func TestDutchAuction(t *testing.T) {
         {
             "amount": "2.00000000",
             "bidder": "0x179b6b1cb6755e31",
+            "confirmed": "false",
             "id": "7",
             "time": "1.00000000",
             "winning": "true"
@@ -225,6 +233,7 @@ func TestDutchAuction(t *testing.T) {
         {
             "amount": "1.00000000",
             "bidder": "0x179b6b1cb6755e31",
+            "confirmed": "false",
             "id": "8",
             "time": "1.00000000",
             "winning": "true"
@@ -232,6 +241,7 @@ func TestDutchAuction(t *testing.T) {
         {
             "amount": "1.00000000",
             "bidder": "0x179b6b1cb6755e31",
+            "confirmed": "false",
             "id": "9",
             "time": "1.00000000",
             "winning": "true"
@@ -239,6 +249,7 @@ func TestDutchAuction(t *testing.T) {
         {
             "amount": "1.00000000",
             "bidder": "0x179b6b1cb6755e31",
+            "confirmed": "false",
             "id": "10",
             "time": "1.00000000",
             "winning": "false"
@@ -246,12 +257,12 @@ func TestDutchAuction(t *testing.T) {
         {
             "amount": "1.00000000",
             "bidder": "0x179b6b1cb6755e31",
+            "confirmed": "false",
             "id": "11",
             "time": "1.00000000",
             "winning": "false"
         }
     ],
-    "winningBidId": "9",
     "winningPrice": "1.00000000"
 }`
 		bids := gwtfTest.auctionBids(auctionId)
