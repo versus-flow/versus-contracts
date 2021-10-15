@@ -8,14 +8,14 @@ import (
 
 func main() {
 
-	startTime := "October 12, 2021 08:00:00 AM"
-	durationHrs := 488
+	startTime := "October 15, 2021 01:00:00 AM"
+	durationHrs := 4
 	artistAddress := "0x530212d1a4c6f7eb"
 	artist := "Sample"
-	name := "Sample5"
+	name := "Sample6"
 	editions := 0
-	content := "QmPUwFjbapev1rrppANs17APcpj8YmgU5ThT1FzagHBxm7"
-	description := `This is a sample video drop`
+	content := "QmZ8dHcccdqNBNgEHKnSMCVjAAhLc293tmhDZZcptfF5eD"
+	description := `This is a sample video drop with large video`
 
 	//flow := gwtf.NewGoWithTheFlowMainNet()
 	flow := gwtf.NewGoWithTheFlowDevNet()
