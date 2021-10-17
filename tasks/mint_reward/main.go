@@ -43,10 +43,13 @@ func main() {
 
 	g.TransactionFromFile("mint_art_e").
 		SignProposeAndPayAs("admin").
-		RawAccountArgument("0x518c0a772d80d241").
-		StringArgument("Ben Mauro").
-		StringArgument("B-23 CHIMP"). //artist name
-		StringArgument(`C.H.I.M.P. support robot. A soldiers best companion on the battlefield.`).
+		RawAccountArgument("0x38bcc76e9e4f9a7c").
+		StringArgument("Bryan Brinkman").
+		StringArgument("Cloudy Thoughts"). //artist name
+		StringArgument(`An explosion of ideas, built on past creations with references to “Explode”, “Wired”, “Overcast” and “NimBuds”.`).
+		StringArgument("image/dataurl"). //type
+		UFix64Argument("0.05").          //artistCut 5%
+		UFix64Argument("0.025").         //minterCut 2.5%
 		Argument(cadenceArray).
 		RunPrintEventsFull()
 

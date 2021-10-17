@@ -8,8 +8,7 @@ transaction(id: UInt64) {
 
 	execute {
 		let dropCollection=self.client.getDropCollection()
-		let drop <- dropCollection.drops[id]  <- nil
-		destroy drop
+		destroy dropCollection.withdraw(id)
 	}
 }
 

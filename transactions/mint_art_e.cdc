@@ -7,6 +7,9 @@ transaction(
     artistName: String, 
     artName: String, 
     description: String,
+		type: String, 
+		artistCut: UFix64,
+		minterCut: UFix64,
     addresses: [Address]) {
 
     let client: &Versus.Admin
@@ -20,7 +23,7 @@ transaction(
     }
 
     execute {
-        let art <-  self.client.mintArt(artist: artist, artistName: artistName, artName: artName, content:self.content, description: description)
+			let art <-  self.client.mintArt(artist: artist, artistName: artistName, artName: artName, content:self.content, description: description, type: type, artistCut:artistCut, minterCut:minterCut)
         self.client.editionAndDepositArt(art: &art as &Art.NFT, to: addresses)
         destroy art
     }

@@ -33,6 +33,14 @@ func getContent(tokenID UInt64): String
 
 ---
 
+### fun `getArtType()`
+
+```cadence
+func getArtType(tokenID UInt64): String
+```
+
+---
+
 ### fun `listSaleItems()`
 
 ```cadence

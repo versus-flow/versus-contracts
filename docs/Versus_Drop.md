@@ -49,6 +49,14 @@ func getDropStatus(): DropStatus
 
 ---
 
+### fun `calculateStatus()`
+
+```cadence
+func calculateStatus(edition UFix64, unique UFix64): String
+```
+
+---
+
 ### fun `settle()`
 
 ```cadence
