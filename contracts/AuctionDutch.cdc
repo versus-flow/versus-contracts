@@ -643,10 +643,9 @@ pub contract AuctionDutch {
 			let time=Clock.time()
 			let auction=self.getAuction(id)
 
-			//TODO: look at inlineing this
-
 			if !auction.isAuctionFinished() {
 				let tick=auction.getTick()
+				//TODO: this emits a tick even even if we do not tick
 				emit AuctionDutchTick(tickPrice: tick.price, acceptedBids: auction.winningBids.length, totalItems: auction.numberOfItems, tickTime: tick.startedAt, auction: id)
 				return
 			}
