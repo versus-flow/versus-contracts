@@ -55,8 +55,8 @@ func main() {
 		UFix64Argument("2.0").           //duration
 		UFix64Argument("0.05").          //artistCut 5%
 		UFix64Argument("0.025").         //minterCut 2.5%
-		StringArgument("image/dataurl")
-	RunPrintEventsFull()
+		StringArgument("image/dataurl").
+		RunPrintEventsFull()
 
 	fmt.Println("Setup a buyer and make him bid on the unique auction")
 	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("buyer1").UFix64Argument("1000.0").RunPrintEventsFull()
