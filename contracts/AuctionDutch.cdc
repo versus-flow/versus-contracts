@@ -12,9 +12,9 @@ pub contract AuctionDutch {
 	pub let BidCollectionStoragePath: StoragePath
 	pub let BidCollectionPublicPath: PublicPath
 
-
 	pub event AuctionDutchBidRejected(bidder: Address)
 	pub event AuctionDutchCreated(name: String, artist: String, number: Int, owner:Address, id: UInt64)
+
 	//TODO: add human readable inptut to events, need to know what ts metadata we add here
 	pub event AuctionDutchBid(amount: UFix64, bidder: Address, auction: UInt64, bid: UInt64)
 	pub event AuctionDutchBidIncreased(amount: UFix64, bidder: Address, auction: UInt64, bid: UInt64)
@@ -103,7 +103,6 @@ pub contract AuctionDutch {
 			self.acceptedBids=acceptedBids
 			self.cumulativeAcceptedBids=cumulativeAcceptedBids
 		}
-
 	}
 
 	pub resource Auction {
@@ -407,7 +406,6 @@ pub contract AuctionDutch {
 		access(contract) fun  cancelBid(id: UInt64) {
 			//todo: pre that the bid exist and escrow exist
 			//TODO: pre check that the bid has not been accepted already, that the tick has passed
-			//let bid= self.b
 			let bidInfo=self.bidInfo[id]!
 			if let escrowVault <- self.escrow[id] <- nil {
 				bidInfo.vaultCap.borrow()!.deposit(from: <- escrowVault)
@@ -740,9 +738,8 @@ pub contract AuctionDutch {
 
 	pub struct ExcessFlowReport {
 		pub let id: UInt64
-		pub let winning: Bool
+		pub let winning: Bool //TODO: should this be confirmed winning?
 		pub let excessAmount: UFix64
-
 
 		init(id: UInt64, report: BidInfo, excessAmount: UFix64) {
 			self.id=id
@@ -772,7 +769,6 @@ pub contract AuctionDutch {
 
 		pub fun getReport(_ id: UInt64) : ExcessFlowReport {
 			let bid=self.getBid(id)
-
 			return ExcessFlowReport(id:id, report: bid.getBidInfo(), excessAmount: bid.getExcessBalance())
 		}
 
@@ -783,8 +779,7 @@ pub contract AuctionDutch {
 			self.bids[bid.uuid] <-! bid
 		}
 
-
-		pub fun withdrawExcessFlow( id: UInt64, vaultCap: Capability<&{FungibleToken.Receiver}>) {
+		pub fun withdrawExcessFlow(id: UInt64, vaultCap: Capability<&{FungibleToken.Receiver}>) {
 			let bid = self.getBid(id)
 			bid.withdrawExcessFlow(vaultCap)
 		}

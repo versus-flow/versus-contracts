@@ -65,7 +65,6 @@ transaction(
 				metadata["type"] = artData.type
 				metadata["contentId"] = art.contentId?.toString() ?? ""
 				metadata["url"] = art.url ?? ""
-
 			}
 			nftMap[art.id] <-! art
 			i=i+1
