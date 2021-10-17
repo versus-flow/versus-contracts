@@ -63,6 +63,7 @@ func (gt *GWTFTestUtils) setupAuctionDutch() uint64 {
 		UFix64Argument("2.0").           //duration
 		UFix64Argument("0.05").          //artistCut 5%
 		UFix64Argument("0.025").         //minterCut 2.5%
+		StringArgument("image/dataurl"). //description
 		RunE()
 
 	assert.NoError(gt.T, err)
