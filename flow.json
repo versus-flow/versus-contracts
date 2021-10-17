@@ -44,7 +44,7 @@
 			}
 		},
 		"Content": "./contracts/Content.cdc",
-		"DutchAuction": "./contracts/DutchAuction.cdc",
+		"AuctionDutch": "./contracts/AuctionDutch.cdc",
 		"Art": "./contracts/Art.cdc",
 		"Auction": "./contracts/Auction.cdc",
 		"Versus": "./contracts/Versus.cdc",
@@ -120,7 +120,7 @@
 				"Versus",
 				"Marketplace",
 				"Profile",
-				"DutchAuction",
+				"AuctionDutch",
 				"Clock",
 				"Debug",
 				"MarketplaceTopShot"
@@ -134,7 +134,7 @@
 				"Versus",
 				"Marketplace",
 				"Profile",
-				"DutchAuction",
+				"AuctionDutch",
 				"Clock",
 				"Debug",
 				"MarketplaceTopShot"
@@ -150,7 +150,7 @@
 				"Marketplace",
 				"Profile",
 				"FUSD",
-				"DutchAuction",
+				"AuctionDutch",
 				"Clock",
 				"Debug",
 				"MarketplaceTopShot",

@@ -8,6 +8,6 @@ transaction(id: UInt64){
 	}
 
 	execute {
-		self.client.tickDutchAuction(id)
+		self.client.tickAuctionDutch(id)
 	}
 }
