@@ -72,6 +72,10 @@ pub contract DutchAuction {
 			self.time=Clock.time()
 		}
 
+		access(contract) fun  withdraw(_ amount: UFix64) {
+			self.balance=self.balance - amount
+		}
+
 		pub fun setWinning(_ value: Bool) {
 			self.winning=value
 		}
@@ -235,8 +239,6 @@ pub contract DutchAuction {
 							winningBid=bidInfo.balance
 						}
 					}
-
-					//TODO: add excess flow
 					bids.append(BidReport(id: bid, time: bidInfo.time, amount: bidInfo.balance, bidder: bidInfo.vaultCap.address, winning: winning, confirmed:bidInfo.winning))
 				}
 			}
@@ -296,23 +298,23 @@ pub contract DutchAuction {
 			var winning=true
 			for bid in bids {
 
-				 let bidInfo= self.bidInfo[bid]!
-				 //we do not have enough winning bids so we add this bid as a winning bid
-				 if self.winningBids.length < self.numberOfItems {
+				let bidInfo= self.bidInfo[bid]!
+				//we do not have enough winning bids so we add this bid as a winning bid
+				if self.winningBids.length < self.numberOfItems {
 					self.winningBids.append(bid)
 					//if we now have enough bids we need to set the winning bid
 					if self.winningBids.length == self.numberOfItems {
 						self.winningBid=bidInfo.balance
 					}
-			   }
+				}
 
-				 Debug.log("Processing bid ".concat(bid.toString()).concat(" total accepted bids are ").concat(self.winningBids.length.toString()))
-				 
-				 self.bidInfo[bid]!.setWinning(winning)
+				Debug.log("Processing bid ".concat(bid.toString()).concat(" total accepted bids are ").concat(self.winningBids.length.toString()))
 
-				 if self.winningBids.length == self.numberOfItems {
-						winning=false
-				 } 
+				self.bidInfo[bid]!.setWinning(winning)
+
+				if self.winningBids.length == self.numberOfItems {
+					winning=false
+				} 
 			}
 
 			//lets advance the tick
@@ -425,7 +427,7 @@ pub contract DutchAuction {
 			panic("Could not find tick for amount")
 		}
 
-		access(contract) fun getExcessBalance(id: UInt64) : UFix64 {
+		access(contract) fun getExcessBalance(_ id: UInt64) : UFix64 {
 			let bid=self.bidInfo[id]!
 			if self.winningBid != nil {
 				//if we are done and you are a winning bid you will already have gotten your flow back in fullfillment
@@ -438,8 +440,30 @@ pub contract DutchAuction {
 				}
 			}
 			return 0.0
-
 		}
+
+		access(contract) fun withdrawExcessFlow(id: UInt64, cap: Capability<&{FungibleToken.Receiver}>)  {
+			let balance= self.getExcessBalance(id)
+			if balance == 0.0 {
+				return
+			}
+
+			let bid=self.bidInfo[id]!
+			if let escrowVault <- self.escrow[id] <- nil {
+				bid.withdraw(balance)
+				let withdrawVault= cap.borrow()!
+				if escrowVault.balance == balance {
+					withdrawVault.deposit(from: <- escrowVault)
+				} else {
+					let tmpVault <- escrowVault.withdraw(amount: balance)
+					withdrawVault.deposit(from: <- tmpVault)
+					let oldVault <- self.escrow[id] <- escrowVault
+					destroy oldVault
+				}
+				self.bidInfo[id]=bid
+			}
+		}
+
 		access(contract) fun getBidInfo(id: UInt64) : BidInfo {
 			return self.bidInfo[id]!
 		}
@@ -698,16 +722,19 @@ pub contract DutchAuction {
 		}
 
 		pub fun getExcessBalance() : UFix64 {
-			return self.capability.borrow()!.getAuction(self.auctionId).getExcessBalance(id: self.bidId)
+			return self.capability.borrow()!.getAuction(self.auctionId).getExcessBalance(self.bidId)
 		}
 
 		pub fun increaseBid(vault: @FlowToken.Vault) {
 			self.capability.borrow()!.getAuction(self.auctionId).increaseBid(id: self.bidId, vault: <- vault)
 		}
-		//TODO; add releaseFunds
 
 		pub fun cancelBid() {
 			self.capability.borrow()!.getAuction(self.auctionId).cancelBid(id: self.bidId)
+		}
+
+		pub fun withdrawExcessFlow(_ cap: Capability<&{FungibleToken.Receiver}>) {
+			self.capability.borrow()!.getAuction(self.auctionId).withdrawExcessFlow(id: self.bidId, cap:cap)
 		}
 	}
 
@@ -754,6 +781,12 @@ pub contract DutchAuction {
 			let dutchAuctionCap=getAccount(marketplace).getCapability<&DutchAuction.Collection{DutchAuction.Public}>(DutchAuction.CollectionPublicPath)
 			let bid <- dutchAuctionCap.borrow()!.bid(id: id, vault: <- vault, vaultCap: vaultCap, nftCap: nftCap)
 			self.bids[bid.uuid] <-! bid
+		}
+
+
+		pub fun withdrawExcessFlow( id: UInt64, vaultCap: Capability<&{FungibleToken.Receiver}>) {
+			let bid = self.getBid(id)
+			bid.withdrawExcessFlow(vaultCap)
 		}
 
 		pub fun cancelBid(_ id: UInt64) {
