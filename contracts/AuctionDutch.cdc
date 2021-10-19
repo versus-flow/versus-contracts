@@ -466,10 +466,13 @@ pub contract AuctionDutch {
 		}
 
 		access(contract) fun  increaseBid(id: UInt64, vault: @FlowToken.Vault) {
-			//todo: pre that the bid exist and escrow exist
-			//TODO: pre check that the bid has not been accepted already, that the tick has passed
-			//let bid= self.b
-			let bidInfo=self.bidInfo[id]!
+			pre {
+				self.bidInfo[id] != nil: "bid info doesn not exist"
+				!self.bidInfo[id]!.winning : "bid is already accepted"
+				self.escrow[id] != nil: "escrow for bid does not exist"
+			}
+
+		  let bidInfo=self.bidInfo[id]!
 			if let escrowVault <- self.escrow[id] <- nil {
 				bidInfo.increaseBid(vault.balance)
 				escrowVault.deposit(from: <- vault)
