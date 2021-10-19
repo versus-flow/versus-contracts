@@ -15,7 +15,6 @@ pub contract AuctionDutch {
 	pub event AuctionDutchBidRejected(bidder: Address)
 	pub event AuctionDutchCreated(name: String, artist: String, number: Int, owner:Address, id: UInt64)
 
-	//TODO: add human readable inptut to events, need to know what ts metadata we add here
 	pub event AuctionDutchBid(amount: UFix64, bidder: Address, auction: UInt64, bid: UInt64)
 	pub event AuctionDutchBidIncreased(amount: UFix64, bidder: Address, auction: UInt64, bid: UInt64)
 	pub event AuctionDutchTick(tickPrice: UFix64, acceptedBids: Int, totalItems: Int, tickTime: UFix64, auction: UInt64)
@@ -400,17 +399,17 @@ pub contract AuctionDutch {
 
 		access(contract) fun  cancelBid(id: UInt64) {
 			pre {
-				self.bidInfo[id] != nil: "bid info doesn not exist"
+				self.bidInfo[id] != nil: "bid info does not exist"
 				!self.bidInfo[id]!.winning : "bid is already accepted"
 				self.escrow[id] != nil: "escrow for bid does not exist"
 			}
 
 			let bidInfo=self.bidInfo[id]!
 			if let escrowVault <- self.escrow[id] <- nil {
-				bidInfo.vaultCap.borrow()!.deposit(from: <- escrowVault)
 				let oldTick=self.findTickForBid(id)
 				self.removeBidFromTick(id, tick: oldTick.startedAt)
 				self.bidInfo.remove(key: id)
+				bidInfo.vaultCap.borrow()!.deposit(from: <- escrowVault)
 			}
 		}
 
