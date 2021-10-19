@@ -353,10 +353,6 @@ pub contract AuctionDutch {
 			return low
 		}
 
-
-
-
-		//this will not work well with cancelling of bids or increasing bids. I am thinking just add to tick array and sort it.
 		priv fun insertBid(_ bid: BidInfo) {
 			for tick in self.ticks {
 				if tick.price > bid.balance {
@@ -390,7 +386,6 @@ pub contract AuctionDutch {
 		}
 
 		pub fun removeBidFromTick(_ id:UInt64, tick: UFix64) {
-			//test om bisect vil funke her?
 			var index=0
 			let bids= self.bids[tick]!
 			while index < bids.length {
@@ -404,8 +399,12 @@ pub contract AuctionDutch {
 		}
 
 		access(contract) fun  cancelBid(id: UInt64) {
-			//todo: pre that the bid exist and escrow exist
-			//TODO: pre check that the bid has not been accepted already, that the tick has passed
+			pre {
+				self.bidInfo[id] != nil: "bid info doesn not exist"
+				!self.bidInfo[id]!.winning : "bid is already accepted"
+				self.escrow[id] != nil: "escrow for bid does not exist"
+			}
+
 			let bidInfo=self.bidInfo[id]!
 			if let escrowVault <- self.escrow[id] <- nil {
 				bidInfo.vaultCap.borrow()!.deposit(from: <- escrowVault)

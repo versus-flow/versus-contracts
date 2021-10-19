@@ -65,22 +65,31 @@ func main() {
 	flow.TransactionFromFile("dutchBid").
 		SignProposeAndPayAs("buyer1").
 		AccountArgument("account").
-		UInt64Argument(60).      //id of auction
+		UInt64Argument(62).      //id of auction
 		UFix64Argument("10.00"). //amount to bid
 		RunPrintEventsFull()
 
-	flow.TransactionFromFile("dutchBid").
+	flow.ScriptFromFile("dutchAuctionUserBid").AccountArgument("buyer1").Run()
+
+	flow.TransactionFromFile("dutchBidCancel").
 		SignProposeAndPayAs("buyer1").
-		AccountArgument("account").
-		UInt64Argument(60).     //id of auction
-		UFix64Argument("9.00"). //amount to bid
+		UInt64Argument(70). //id of bid
 		RunPrintEventsFull()
 
-	flow.TransactionFromFile("dutchBid").
-		SignProposeAndPayAs("buyer1").
-		AccountArgument("account").
-		UInt64Argument(60).     //id of auction
-		UFix64Argument("8.01"). //amount to bid
-		RunPrintEventsFull()
+	/*
+		flow.TransactionFromFile("dutchBid").
+			SignProposeAndPayAs("buyer1").
+			AccountArgument("account").
+			UInt64Argument(60).     //id of auction
+			UFix64Argument("9.00"). //amount to bid
+			RunPrintEventsFull()
 
+		flow.TransactionFromFile("dutchBid").
+			SignProposeAndPayAs("buyer1").
+			AccountArgument("account").
+			UInt64Argument(60).     //id of auction
+			UFix64Argument("8.01"). //amount to bid
+			RunPrintEventsFull()
+
+	*/
 }

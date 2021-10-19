@@ -270,4 +270,29 @@ func TestAuctionDutch(t *testing.T) {
 
 	})
 
+	t.Run("Should be able to cancel bid", func(t *testing.T) {
+
+		gwtfTest := NewGWTFTest(t).
+			setup().
+			createArtCollectionAndMintFlow("artist", "100.0").
+			createArtCollectionAndMintFlow("buyer1", "100000.0")
+
+		auctionId := gwtfTest.setupAuctionDutch()
+		gwtfTest.dutchBid("buyer1", auctionId, "1.0").tickClock("2.0")
+
+		value := gwtfTest.GWTF.ScriptFromFile("dutchAuctionUserBid").AccountArgument("buyer1").RunReturnsJsonString()
+		output := `[
+    {
+        "excessAmount": "0.00000000",
+        "id": "69",
+        "winning": "false"
+    }
+]`
+
+		assert.Equal(gwtfTest.T, output, value)
+
+		gwtfTest.GWTF.TransactionFromFile("dutchBidCancel").SignProposeAndPayAs("buyer1").UInt64Argument(69).Test(gwtfTest.T).AssertSuccess()
+
+	})
+
 }
