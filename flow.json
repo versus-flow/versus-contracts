@@ -122,8 +122,7 @@
 				"Profile",
 				"DutchAuction",
 				"Clock",
-				"Debug",
-				"MarketplaceTopShot"
+				"Debug"
 			]
 		},
 		"mainnet" : {
@@ -136,8 +135,7 @@
 				"Profile",
 				"DutchAuction",
 				"Clock",
-				"Debug",
-				"MarketplaceTopShot"
+				"Debug"
 			]
 		},
 		"emulator": {
@@ -153,7 +151,6 @@
 				"DutchAuction",
 				"Clock",
 				"Debug",
-				"MarketplaceTopShot",
 				"TopShot"
 			],
 			"emulator-artist" : [],
