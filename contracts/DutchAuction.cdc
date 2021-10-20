@@ -732,9 +732,11 @@ pub contract DutchAuction {
 		pub let id: UInt64
 		pub let winning: Bool //TODO: should this be confirmed winning?
 		pub let excessAmount: UFix64
+		pub let auctionId: UInt64
 
-		init(id: UInt64, report: BidInfo, excessAmount: UFix64) {
+		init(id: UInt64, report: BidInfo, excessAmount: UFix64, auctionId: UInt64) {
 			self.id=id
+			self.auctionId=auctionId
 			self.winning=report.winning
 			self.excessAmount=excessAmount
 		}
@@ -761,7 +763,7 @@ pub contract DutchAuction {
 
 		pub fun getReport(_ id: UInt64) : ExcessFlowReport {
 			let bid=self.getBid(id)
-			return ExcessFlowReport(id:id, report: bid.getBidInfo(), excessAmount: bid.getExcessBalance())
+			return ExcessFlowReport(id:id, report: bid.getBidInfo(), excessAmount: bid.getExcessBalance(), auctionId: bid.auctionId)
 		}
 
 		pub fun bid(marketplace: Address, id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>)  {
@@ -807,11 +809,11 @@ pub contract DutchAuction {
 	}
 
 	init() {
-		self.CollectionPublicPath= /public/versusDutchAuctionCollection2
-		self.CollectionStoragePath= /storage/versusDutchAuctionCollection2
+		self.CollectionPublicPath= /public/versusDutchAuctionCollection3
+		self.CollectionStoragePath= /storage/versusDutchAuctionCollection3
 
-		self.BidCollectionPublicPath= /public/versusDutchAuctionBidCollection2
-		self.BidCollectionStoragePath= /storage/versusDutchAuctionBidCollection2
+		self.BidCollectionPublicPath= /public/versusDutchAuctionBidCollection3
+		self.BidCollectionStoragePath= /storage/versusDutchAuctionBidCollection3
 
 
 		let account=self.account
