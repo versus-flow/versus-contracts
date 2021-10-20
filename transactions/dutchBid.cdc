@@ -1,7 +1,7 @@
 import FungibleToken from "../contracts/standard/FungibleToken.cdc"
 import NonFungibleToken from "../contracts/standard/NonFungibleToken.cdc"
 import Versus from "../contracts/Versus.cdc"
-import AuctionDutch from "../contracts/AuctionDutch.cdc"
+import DutchAuction from "../contracts/DutchAuction.cdc"
 import Art from "../contracts/Art.cdc"
 
 // Transaction to make a bid in a marketplace for the given dropId and auctionId
@@ -11,7 +11,7 @@ transaction(marketplace: Address, id: UInt64, bidAmount: UFix64) {
 
 	let vaultCap: Capability<&{FungibleToken.Receiver}>
 	let collectionCap: Capability<&{NonFungibleToken.Receiver}> 
-	let dutchAuctionCap: Capability<&AuctionDutch.BidCollection{AuctionDutch.BidCollectionPublic}>
+	let dutchAuctionCap: Capability<&DutchAuction.BidCollection{DutchAuction.BidCollectionPublic}>
 	let temporaryVault: @FungibleToken.Vault
 
 	prepare(account: AuthAccount) {
@@ -35,15 +35,15 @@ transaction(marketplace: Address, id: UInt64, bidAmount: UFix64) {
 			account.link<&{NonFungibleToken.Receiver}>(/public/versusArtNFTCollection, target: Art.CollectionStoragePath)
 		}
 
-		let bidCap=account.getCapability<&AuctionDutch.BidCollection{AuctionDutch.BidCollectionPublic}>(AuctionDutch.BidCollectionPublicPath)
+		let bidCap=account.getCapability<&DutchAuction.BidCollection{DutchAuction.BidCollectionPublic}>(DutchAuction.BidCollectionPublicPath)
 		if ! bidCap.check() {
 
-			account.unlink(AuctionDutch.BidCollectionPublicPath)
-			destroy <- account.load<@AnyResource>(from:AuctionDutch.BidCollectionStoragePath)
+			account.unlink(DutchAuction.BidCollectionPublicPath)
+			destroy <- account.load<@AnyResource>(from:DutchAuction.BidCollectionStoragePath)
 
-			let collection <- AuctionDutch.createEmptyBidCollection()
-			account.save(<- collection, to: AuctionDutch.BidCollectionStoragePath)
-			account.link<&AuctionDutch.BidCollection{AuctionDutch.BidCollectionPublic}>(AuctionDutch.BidCollectionPublicPath, target: AuctionDutch.BidCollectionStoragePath)
+			let collection <- DutchAuction.createEmptyBidCollection()
+			account.save(<- collection, to: DutchAuction.BidCollectionStoragePath)
+			account.link<&DutchAuction.BidCollection{DutchAuction.BidCollectionPublic}>(DutchAuction.BidCollectionPublicPath, target: DutchAuction.BidCollectionStoragePath)
 		}
 
 		self.dutchAuctionCap=bidCap

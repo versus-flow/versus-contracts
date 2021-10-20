@@ -4,7 +4,7 @@ import FlowToken from "./standard/FlowToken.cdc"
 import Debug from "./Debug.cdc"
 import Clock from "./Clock.cdc"
 
-pub contract AuctionDutch {
+pub contract DutchAuction {
 
 	pub let CollectionStoragePath: StoragePath
 	pub let CollectionPublicPath: PublicPath
@@ -12,13 +12,13 @@ pub contract AuctionDutch {
 	pub let BidCollectionStoragePath: StoragePath
 	pub let BidCollectionPublicPath: PublicPath
 
-	pub event AuctionDutchBidRejected(bidder: Address)
-	pub event AuctionDutchCreated(name: String, artist: String, number: Int, owner:Address, id: UInt64)
+	pub event DutchAuctionBidRejected(bidder: Address)
+	pub event DutchAuctionCreated(name: String, artist: String, number: Int, owner:Address, id: UInt64)
 
-	pub event AuctionDutchBid(amount: UFix64, bidder: Address, auction: UInt64, bid: UInt64)
-	pub event AuctionDutchBidIncreased(amount: UFix64, bidder: Address, auction: UInt64, bid: UInt64)
-	pub event AuctionDutchTick(tickPrice: UFix64, acceptedBids: Int, totalItems: Int, tickTime: UFix64, auction: UInt64)
-	pub event AuctionDutchSettle(price: UFix64, auction: UInt64)
+	pub event DutchAuctionBid(amount: UFix64, bidder: Address, auction: UInt64, bid: UInt64)
+	pub event DutchAuctionBidIncreased(amount: UFix64, bidder: Address, auction: UInt64, bid: UInt64)
+	pub event DutchAuctionTick(tickPrice: UFix64, acceptedBids: Int, totalItems: Int, tickTime: UFix64, auction: UInt64)
+	pub event DutchAuctionSettle(price: UFix64, auction: UInt64)
 
 	pub struct Bids {
 		pub let bids: [BidReport]
@@ -213,7 +213,7 @@ pub contract AuctionDutch {
 			}
 			*/
 
-			emit AuctionDutchSettle(price: self.winningBid!, auction: self.uuid)
+			emit DutchAuctionSettle(price: self.winningBid!, auction: self.uuid)
 		}
 
 		pub fun getBids() : Bids {
@@ -365,7 +365,7 @@ pub contract AuctionDutch {
 				bucket.insert(at: index, bid.id)
 				self.bids[tick.startedAt]= bucket
 
-				emit AuctionDutchBid(amount: bid.balance, bidder: bid.nftCap.address, auction: self.uuid, bid: bid.id)
+				emit DutchAuctionBid(amount: bid.balance, bidder: bid.nftCap.address, auction: self.uuid, bid: bid.id)
 				return 
 			}
 		}
@@ -490,7 +490,7 @@ pub contract AuctionDutch {
 				self.bids[tick.startedAt]= bucket
 
 				//todo do we need seperate bid for increase?
-				emit AuctionDutchBidIncreased(amount: bidInfo.balance, bidder: bidInfo.nftCap.address, auction: self.uuid, bid: bidInfo.id)
+				emit DutchAuctionBidIncreased(amount: bidInfo.balance, bidder: bidInfo.nftCap.address, auction: self.uuid, bid: bidInfo.id)
 			} else {
 				destroy vault
 				panic("Cannot get escrow")
@@ -501,7 +501,7 @@ pub contract AuctionDutch {
 
 		pub fun addBid(vault: @FlowToken.Vault, nftCap: Capability<&{NonFungibleToken.Receiver}>, vaultCap: Capability<&{FungibleToken.Receiver}>, time: UFix64, auctionId: UInt64) : @Bid{
 
-			let bidResource <- create Bid(capability: AuctionDutch.account.getCapability<&Collection{Public}>(AuctionDutch.CollectionPublicPath), auctionId: auctionId)
+			let bidResource <- create Bid(capability: DutchAuction.account.getCapability<&Collection{Public}>(DutchAuction.CollectionPublicPath), auctionId: auctionId)
 
 			let bid=BidInfo(id: bidResource.uuid, nftCap: nftCap, vaultCap:vaultCap, time: time, balance: vault.balance)
 			self.insertBid(bid)
@@ -526,7 +526,7 @@ pub contract AuctionDutch {
 	pub resource interface Public {
 		pub fun getIds() : [UInt64] 
 		//TODO: can we just join these two?
-		pub fun getStatus(_ id: UInt64) : AuctionDutchStatus
+		pub fun getStatus(_ id: UInt64) : DutchAuctionStatus
 		pub fun getBids(_ id: UInt64) : Bids
 		//these methods are only allowed to be called from within this contract, but we want to call them on another users resource
 		access(contract) fun getAuction(_ id:UInt64) : &Auction
@@ -534,7 +534,7 @@ pub contract AuctionDutch {
 	}
 
 
-	pub struct AuctionDutchStatus {
+	pub struct DutchAuctionStatus {
 
 		pub let status: String
 		pub let startTime: UFix64
@@ -572,7 +572,7 @@ pub contract AuctionDutch {
 			return self.auctions.keys
 		}
 
-		pub fun getStatus(_ id: UInt64) : AuctionDutchStatus{
+		pub fun getStatus(_ id: UInt64) : DutchAuctionStatus{
 			let item= self.getAuction(id)
 			let currentTime=Clock.time()
 
@@ -586,7 +586,7 @@ pub contract AuctionDutch {
 			}
 
 
-			return AuctionDutchStatus(status: status, 
+			return DutchAuctionStatus(status: status, 
 			currentPrice: currentPrice,
 			totalItems: item.numberOfItems, 
 			acceptedBids: item.winningBids.length, 
@@ -641,7 +641,7 @@ pub contract AuctionDutch {
 			if !auction.isAuctionFinished() {
 				let tick=auction.getTick()
 				//TODO: this emits a tick even even if we do not tick
-				emit AuctionDutchTick(tickPrice: tick.price, acceptedBids: auction.winningBids.length, totalItems: auction.numberOfItems, tickTime: tick.startedAt, auction: id)
+				emit DutchAuctionTick(tickPrice: tick.price, acceptedBids: auction.winningBids.length, totalItems: auction.numberOfItems, tickTime: tick.startedAt, auction: id)
 				return
 			}
 
@@ -667,7 +667,7 @@ pub contract AuctionDutch {
 
 			let auction <- create Auction(nfts: <- nfts, metadata: metadata, ownerVaultCap:ownerVaultCap, ownerNFTCap:ownerNFTCap, royaltyVaultCap:royaltyVaultCap, royaltyPercentage: royaltyPercentage, ticks: ticks)
 
-			emit AuctionDutchCreated(name: metadata["name"] ?? "Unknown name", artist: metadata["artist"] ?? "Unknown artist",  number: length, owner: ownerVaultCap.address, id: auction.uuid)
+			emit DutchAuctionCreated(name: metadata["name"] ?? "Unknown name", artist: metadata["artist"] ?? "Unknown artist",  number: length, owner: ownerVaultCap.address, id: auction.uuid)
 
 			let oldAuction <- self.auctions[auction.uuid] <- auction
 			destroy oldAuction
@@ -680,7 +680,7 @@ pub contract AuctionDutch {
 	}
 
 	pub fun getBids(_ id: UInt64) : Bids {
-		let account = AuctionDutch.account
+		let account = DutchAuction.account
 		let cap=account.getCapability<&Collection{Public}>(self.CollectionPublicPath)
 		if let collection = cap.borrow() {
 			return collection.getBids(id)
@@ -688,8 +688,8 @@ pub contract AuctionDutch {
 		panic("Could not find auction capability")
 	}
 
-	pub fun getAuctionDutch(_ id: UInt64) : AuctionDutchStatus? {
-		let account = AuctionDutch.account
+	pub fun getDutchAuction(_ id: UInt64) : DutchAuctionStatus? {
+		let account = DutchAuction.account
 		let cap=account.getCapability<&Collection{Public}>(self.CollectionPublicPath)
 		if let collection = cap.borrow() {
 			return collection.getStatus(id)
@@ -766,7 +766,7 @@ pub contract AuctionDutch {
 
 		pub fun bid(marketplace: Address, id: UInt64, vault: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, nftCap: Capability<&{NonFungibleToken.Receiver}>)  {
 
-			let dutchAuctionCap=getAccount(marketplace).getCapability<&AuctionDutch.Collection{AuctionDutch.Public}>(AuctionDutch.CollectionPublicPath)
+			let dutchAuctionCap=getAccount(marketplace).getCapability<&DutchAuction.Collection{DutchAuction.Public}>(DutchAuction.CollectionPublicPath)
 			let bid <- dutchAuctionCap.borrow()!.bid(id: id, vault: <- vault, vaultCap: vaultCap, nftCap: nftCap)
 			self.bids[bid.uuid] <-! bid
 		}
@@ -807,17 +807,17 @@ pub contract AuctionDutch {
 	}
 
 	init() {
-		self.CollectionPublicPath= /public/versusAuctionDutchCollection
-		self.CollectionStoragePath= /storage/versusAuctionDutchCollection
+		self.CollectionPublicPath= /public/versusDutchAuctionCollection2
+		self.CollectionStoragePath= /storage/versusDutchAuctionCollection2
 
-		self.BidCollectionPublicPath= /public/versusAuctionDutchBidCollection
-		self.BidCollectionStoragePath= /storage/versusAuctionDutchBidCollection
+		self.BidCollectionPublicPath= /public/versusDutchAuctionBidCollection2
+		self.BidCollectionStoragePath= /storage/versusDutchAuctionBidCollection2
 
 
 		let account=self.account
 		let collection <- create Collection()
-		account.save(<-collection, to: AuctionDutch.CollectionStoragePath)
-		account.link<&Collection{Public}>(AuctionDutch.CollectionPublicPath, target: AuctionDutch.CollectionStoragePath)
+		account.save(<-collection, to: DutchAuction.CollectionStoragePath)
+		account.link<&Collection{Public}>(DutchAuction.CollectionPublicPath, target: DutchAuction.CollectionStoragePath)
 
 	}
 }

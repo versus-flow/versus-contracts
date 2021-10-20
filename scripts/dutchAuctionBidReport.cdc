@@ -1,5 +1,5 @@
-import AuctionDutch from "../contracts/AuctionDutch.cdc"
+import DutchAuction from "../contracts/DutchAuction.cdc"
 //check the status of a dutch auction
-pub fun main(id: UInt64) : [AuctionDutch.BidReport]{
-    return AuctionDutch.getBids(id).bids
+pub fun main(id: UInt64) : [DutchAuction.BidReport]{
+    return DutchAuction.getBids(id).bids
 }

@@ -4,7 +4,7 @@ import Art from "./Art.cdc"
 import Content from "./Content.cdc"
 import Auction from "./Auction.cdc"
 import Profile from "./Profile.cdc"
-import AuctionDutch from "./AuctionDutch.cdc"
+import DutchAuction from "./DutchAuction.cdc"
 import Debug from "./Debug.cdc"
 import Clock from "./Clock.cdc"
 
@@ -718,16 +718,16 @@ pub contract Versus {
 		}
 
 
-		pub fun tickAuctionDutch(_ id: UInt64) {
+		pub fun tickDutchAuction(_ id: UInt64) {
 			pre {
 				self.server != nil : "Your client has not been linked to the server"
 			}
-			Versus.account.borrow<&AuctionDutch.Collection>(from: AuctionDutch.CollectionStoragePath)!.tickOrFullfill(id)        
+			Versus.account.borrow<&DutchAuction.Collection>(from: DutchAuction.CollectionStoragePath)!.tickOrFullfill(id)        
 		}
 
 
 
-		pub fun createAuctionDutch(nfts: @{UInt64:NonFungibleToken.NFT}, metadata: {String:String},
+		pub fun createDutchAuction(nfts: @{UInt64:NonFungibleToken.NFT}, metadata: {String:String},
 		startAt: UFix64
 		startPrice: UFix64,
 		floorPrice: UFix64,
@@ -738,7 +738,7 @@ pub contract Versus {
 		ownerNFTCap: Capability<&{NonFungibleToken.Receiver}>, 
 		royaltyVaultCap: Capability<&{FungibleToken.Receiver}>, 
 		royaltyPercentage: UFix64) {
-			Versus.account.borrow<&AuctionDutch.Collection>(from: AuctionDutch.CollectionStoragePath)!.createAuction(nfts: <- nfts, metadata: metadata, startAt: startAt, startPrice: startPrice, floorPrice: floorPrice, decreasePriceFactor: decreasePriceFactor, decreasePriceAmount: decreasePriceAmount, tickDuration: tickDuration, ownerVaultCap: ownerVaultCap, ownerNFTCap: ownerNFTCap, royaltyVaultCap: royaltyVaultCap, royaltyPercentage: royaltyPercentage)
+			Versus.account.borrow<&DutchAuction.Collection>(from: DutchAuction.CollectionStoragePath)!.createAuction(nfts: <- nfts, metadata: metadata, startAt: startAt, startPrice: startPrice, floorPrice: floorPrice, decreasePriceFactor: decreasePriceFactor, decreasePriceAmount: decreasePriceAmount, tickDuration: tickDuration, ownerVaultCap: ownerVaultCap, ownerNFTCap: ownerNFTCap, royaltyVaultCap: royaltyVaultCap, royaltyPercentage: royaltyPercentage)
 		}
 
 		/* A stored Transaction to mintArt on versus to a given artist */

@@ -1,13 +1,13 @@
-import AuctionDutch from "../contracts/AuctionDutch.cdc"
+import DutchAuction from "../contracts/DutchAuction.cdc"
 
 // Transaction to cancel a dutch auction bid
 transaction(id: UInt64) {
 
-	let dutchAuction: &AuctionDutch.BidCollection
+	let dutchAuction: &DutchAuction.BidCollection
 
 	prepare(account: AuthAccount) {
 
-		self.dutchAuction=account.borrow<&AuctionDutch.BidCollection>(from: AuctionDutch.BidCollectionStoragePath) ?? panic("Could not borrow bid collection")
+		self.dutchAuction=account.borrow<&DutchAuction.BidCollection>(from: DutchAuction.BidCollectionStoragePath) ?? panic("Could not borrow bid collection")
 	}
 
 	execute {

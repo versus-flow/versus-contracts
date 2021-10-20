@@ -69,7 +69,7 @@ transaction(
 			nftMap[art.id] <-! art
 			i=i+1
 		}
-		self.client.createAuctionDutch(nfts: <- nftMap,
+		self.client.createDutchAuction(nfts: <- nftMap,
 		metadata: metadata,
 		startAt: startTime,
 		startPrice: startPrice,
