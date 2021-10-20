@@ -112,9 +112,6 @@ pub contract AuctionDutch {
 		// bids are put into buckets based on the tick they are in.
 		// tick 1 will be the first tick, 
 
-		//this is a counter to keep the number of bids so that we can escrow in a separate resource
-		access(contract) var totalBids: UInt64
-
 		//this has to be an array I think, since we need ordering. 
 		access(contract) let ticks: [Tick]
 
@@ -148,7 +145,6 @@ pub contract AuctionDutch {
 		royaltyPercentage: UFix64, 
 		ticks: [Tick]) {
 			self.metadata=metadata
-			self.totalBids=1
 			self.currentTickIndex=0
 			self.numberOfItems=nfts.length
 			self.ticks=ticks
@@ -503,16 +499,16 @@ pub contract AuctionDutch {
 			//emit event
 		}
 
-		pub fun addBid(vault: @FlowToken.Vault, nftCap: Capability<&{NonFungibleToken.Receiver}>, vaultCap: Capability<&{FungibleToken.Receiver}>, time: UFix64) : UInt64{
+		pub fun addBid(vault: @FlowToken.Vault, nftCap: Capability<&{NonFungibleToken.Receiver}>, vaultCap: Capability<&{FungibleToken.Receiver}>, time: UFix64, auctionId: UInt64) : @Bid{
 
-			let bidId=self.totalBids
+			let bidResource <- create Bid(capability: AuctionDutch.account.getCapability<&Collection{Public}>(AuctionDutch.CollectionPublicPath), auctionId: auctionId)
 
-			let bid=BidInfo(id: bidId, nftCap: nftCap, vaultCap:vaultCap, time: time, balance: vault.balance)
+			let bid=BidInfo(id: bidResource.uuid, nftCap: nftCap, vaultCap:vaultCap, time: time, balance: vault.balance)
 			self.insertBid(bid)
-			let oldEscrow <- self.escrow[bidId] <- vault
-			self.totalBids=self.totalBids+(1 as UInt64)			
+			let oldEscrow <- self.escrow[bidResource.uuid] <- vault
 			destroy oldEscrow
-			return bid.id
+
+			return <- bidResource
 		}
 
 		pub fun calculatePrice() : UFix64{
@@ -626,8 +622,7 @@ pub contract AuctionDutch {
 
 			//the currentPrice is still higher then your bid, this is find we just add your bid to the correct tick bucket
 			if price > vault.balance {
-				let bidId =auction.addBid(vault: <- vault, nftCap:nftCap, vaultCap: vaultCap, time: time)
-				return <- create Bid(capability: AuctionDutch.account.getCapability<&Collection{Public}>(AuctionDutch.CollectionPublicPath), auctionId: id, bidId: bidId)
+				return <- auction.addBid(vault: <- vault, nftCap:nftCap, vaultCap: vaultCap, time: time, auctionId: id)
 			}
 
 			let tooMuchCash=vault.balance - price
@@ -636,8 +631,7 @@ pub contract AuctionDutch {
 				vaultCap.borrow()!.deposit(from: <- vault.withdraw(amount: tooMuchCash))
 			}
 
-			let bidId=auction.addBid(vault: <- vault, nftCap:nftCap, vaultCap: vaultCap, time: time)
-			return <- create Bid(capability: AuctionDutch.account.getCapability<&Collection{Public}>(AuctionDutch.CollectionPublicPath), auctionId: id, bidId: bidId)
+			return <- auction.addBid(vault: <- vault, nftCap:nftCap, vaultCap: vaultCap, time: time, auctionId: id)
 		}
 
 		pub fun tickOrFullfill(_ id:UInt64) {
@@ -707,32 +701,30 @@ pub contract AuctionDutch {
 
 		pub let capability:Capability<&Collection{Public}>
 		pub let auctionId: UInt64
-		pub let bidId: UInt64
 
-		init(capability:Capability<&Collection{Public}>, auctionId: UInt64, bidId:UInt64) {
+		init(capability:Capability<&Collection{Public}>, auctionId: UInt64) {
 			self.capability=capability
 			self.auctionId=auctionId
-			self.bidId=bidId
 		}
 
 		pub fun getBidInfo() : BidInfo {
-			return self.capability.borrow()!.getAuction(self.auctionId).getBidInfo(id: self.bidId)
+			return self.capability.borrow()!.getAuction(self.auctionId).getBidInfo(id: self.uuid)
 		}
 
 		pub fun getExcessBalance() : UFix64 {
-			return self.capability.borrow()!.getAuction(self.auctionId).getExcessBalance(self.bidId)
+			return self.capability.borrow()!.getAuction(self.auctionId).getExcessBalance(self.uuid)
 		}
 
 		pub fun increaseBid(vault: @FlowToken.Vault) {
-			self.capability.borrow()!.getAuction(self.auctionId).increaseBid(id: self.bidId, vault: <- vault)
+			self.capability.borrow()!.getAuction(self.auctionId).increaseBid(id: self.uuid, vault: <- vault)
 		}
 
 		pub fun cancelBid() {
-			self.capability.borrow()!.getAuction(self.auctionId).cancelBid(id: self.bidId)
+			self.capability.borrow()!.getAuction(self.auctionId).cancelBid(id: self.uuid)
 		}
 
 		pub fun withdrawExcessFlow(_ cap: Capability<&{FungibleToken.Receiver}>) {
-			self.capability.borrow()!.getAuction(self.auctionId).withdrawExcessFlow(id: self.bidId, cap:cap)
+			self.capability.borrow()!.getAuction(self.auctionId).withdrawExcessFlow(id: self.uuid, cap:cap)
 		}
 	}
 

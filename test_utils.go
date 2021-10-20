@@ -130,14 +130,8 @@ func (gt *GWTFTestUtils) dutchTickNotFullfilled(id uint64, acceptedBids int, amo
 	return gt
 }
 
-func (gt *GWTFTestUtils) incrementBid() int {
-	gt.Bids = gt.Bids + 1
-	return gt.Bids
-}
+func (gt *GWTFTestUtils) dutchBid(account string, auctionId uint64, amount string, bidNumber uint64) *GWTFTestUtils {
 
-func (gt *GWTFTestUtils) dutchBid(account string, auctionId uint64, amount string) *GWTFTestUtils {
-
-	bidNumber := gt.incrementBid()
 	bidderAddress := fmt.Sprintf("0x%s", gt.GWTF.Account(account).Address().String())
 	flow := gt.GWTF
 	flow.TransactionFromFile("dutchBid").

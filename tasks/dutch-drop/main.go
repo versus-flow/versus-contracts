@@ -6,13 +6,13 @@ import (
 
 func main() {
 
-	startTime := "October 19, 2021 14:00:00 PM"
+	startTime := "October 20, 2021 15:00:00 PM"
 	artist := "Kinger9999"
 	name := "Teh Bull"
-	editions := 10
+	editions := 2
 	description := `The bull`
-	startPrice := "100000.0"
-	floorPrice := "10.0"
+	startPrice := "10.0"
+	floorPrice := "1.0"
 	tickDuration := "300.0"
 	priceDecreasePerTick := "0.95"
 

@@ -10,20 +10,36 @@ func main() {
 	flow := gwtf.NewGoWithTheFlowDevNet()
 
 	/*
-		flow.ScriptFromFile("dutchAuctionUserBid").AccountArgument("admin").Run()
-
 		flow.TransactionFromFile("dutchBid").
-			SignProposeAndPayAs("admin").
+			SignProposeAndPayAs("versus").
 			AccountArgument("versus").
-			UInt64Argument(14302812). //id of auction
-			UFix64Argument("10.00").  //amount to bid
+			UInt64Argument(14349706). //id of auction
+			UFix64Argument("9.00").   //amount to bid
 			RunPrintEventsFull()
 
-		flow.ScriptFromFile("dutchAuctionUserBid").AccountArgument("admin").Run()
+		flow.TransactionFromFile("dutchBid").
+			SignProposeAndPayAs("versus").
+			AccountArgument("versus").
+			UInt64Argument(14349706). //id of auction
+			UFix64Argument("9.00").   //amount to bid
+			RunPrintEventsFull()
 	*/
-	flow.TransactionFromFile("dutchBidCancel").
-		SignProposeAndPayAs("admin").
-		UInt64Argument(14310642). //id of bid
-		RunPrintEventsFull()
+
+	flow.ScriptFromFile("dutchAuctionUserBid").AccountArgument("versus").Run()
+
+	/*
+		flow.TransactionFromFile("dutchBidCancel").
+			SignProposeAndPayAs("versus").
+			UInt64Argument(14349744). //id of bid
+			RunPrintEventsFull()
+
+		/*
+
+			flow.TransactionFromFile("dutchBidIncrease").
+				SignProposeAndPayAs("admin").
+				UInt64Argument(14310642). //id of bid
+				UFix64Argument("10.0").   //id of bid
+				RunPrintEventsFull()
+	*/
 
 }
