@@ -276,7 +276,7 @@ pub contract Versus {
 				let auctionRef = &self.uniqueAuction as &Auction.AuctionItem
 				uniquePrice=bidTokens.balance
 				auctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
-			} else { 
+			} else {
 				editionPrice= editionPrice+bidTokens.balance
 				let editionStatus=dropStatus.editionsStatuses[auctionId]!
 				edition=editionStatus.edition.toString().concat( " of ").concat(editionStatus.maxEdition.toString())
@@ -722,7 +722,7 @@ pub contract Versus {
 			pre {
 				self.server != nil : "Your client has not been linked to the server"
 			}
-			Versus.account.borrow<&DutchAuction.Collection>(from: DutchAuction.CollectionStoragePath)!.tickOrFullfill(id)        
+			Versus.account.borrow<&DutchAuction.Collection>(from: DutchAuction.CollectionStoragePath)!.tickOrFullfill(id)
 		}
 
 
@@ -734,9 +734,9 @@ pub contract Versus {
 		decreasePriceFactor: UFix64,
 		decreasePriceAmount: UFix64,
 		tickDuration: UFix64,
-		ownerVaultCap: Capability<&{FungibleToken.Receiver}>, 
-		ownerNFTCap: Capability<&{NonFungibleToken.Receiver}>, 
-		royaltyVaultCap: Capability<&{FungibleToken.Receiver}>, 
+		ownerVaultCap: Capability<&{FungibleToken.Receiver}>,
+		ownerNFTCap: Capability<&{NonFungibleToken.Receiver}>,
+		royaltyVaultCap: Capability<&{FungibleToken.Receiver}>,
 		royaltyPercentage: UFix64) {
 			Versus.account.borrow<&DutchAuction.Collection>(from: DutchAuction.CollectionStoragePath)!.createAuction(nfts: <- nfts, metadata: metadata, startAt: startAt, startPrice: startPrice, floorPrice: floorPrice, decreasePriceFactor: decreasePriceFactor, decreasePriceAmount: decreasePriceAmount, tickDuration: tickDuration, ownerVaultCap: ownerVaultCap, ownerNFTCap: ownerNFTCap, royaltyVaultCap: royaltyVaultCap, royaltyPercentage: royaltyPercentage)
 		}
@@ -757,7 +757,7 @@ pub contract Versus {
 			let artistWallet= artistAccount.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
 			let minterWallet= Versus.account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
 
-			let royalty = {
+				let royalty = {
 				"artist" : Art.Royalty(wallet: artistWallet, cut: artistCut),
 				"minter" : Art.Royalty(wallet: minterWallet, cut: minterCut)
 			}
@@ -866,4 +866,4 @@ pub contract Versus {
 		account.link<&{Versus.PublicDrop}>(Versus.CollectionPublicPath, target: Versus.CollectionStoragePath)
 		account.link<&Versus.DropCollection>(Versus.CollectionPrivatePath, target: Versus.CollectionStoragePath)
 	}
-} 	
+}

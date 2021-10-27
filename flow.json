@@ -115,10 +115,11 @@
 		"testnet" : {
 			"testnet-versus" : [
 				"Content",
-				"Art", 
-				"Auction", 
+				"Art",
+				"Auction",
 				"Versus",
 				"Marketplace",
+				"MarketplaceTopShot",
 				"Profile",
 				"DutchAuction",
 				"Clock",
@@ -128,10 +129,11 @@
 		"mainnet" : {
 			"mainnet-versus" : [
 				"Content",
-				"Art", 
-				"Auction", 
+				"Art",
+				"Auction",
 				"Versus",
 				"Marketplace",
+				"MarketplaceTopShot",
 				"Profile",
 				"DutchAuction",
 				"Clock",
@@ -142,10 +144,11 @@
 			"emulator-account": [
 				"NonFungibleToken",
 				"Content",
-				"Art", 
-				"Auction", 
+				"Art",
+				"Auction",
 				"Versus",
 				"Marketplace",
+                 :"MarketplaceTopShot",
 				"Profile",
 				"FUSD",
 				"DutchAuction",
