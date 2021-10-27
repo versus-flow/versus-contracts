@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAuctionDutch(t *testing.T) {
+func TestDutchAuction(t *testing.T) {
 
 	t.Run("Should start and fullfill an auction", func(t *testing.T) {
 
@@ -19,11 +19,11 @@ func TestAuctionDutch(t *testing.T) {
 			createArtCollectionAndMintFlow("buyer1", "100.0").
 			createArtCollectionAndMintFlow("buyer2", "100.0")
 
-		auctionId := gwtfTest.setupAuctionDutch()
+		auctionId := gwtfTest.setupDutchAuction()
 
 		gwtfTest.dutchBid("buyer1", auctionId, "10.0", 72).tickClock("2.0")
 		gwtfTest.dutchTickNotFullfilled(auctionId, 1, "9.00000000", "3.0")
-		expectedStatus := `A.f8d6e0586b0a20c7.AuctionDutch.AuctionDutchStatus(status: "Ongoing", startTime: 1.00000000, currentTime: 3.00000000, currentPrice: 9.00000000, totalItems: 10, acceptedBids: 1, tickStatus: {1.00000000: A.f8d6e0586b0a20c7.AuctionDutch.TickStatus(price: 10.00000000, startedAt: 1.00000000, acceptedBids: 1, cumulativeAcceptedBids: 1)}, metadata: {"nftType": "A.f8d6e0586b0a20c7.Art.NFT", "name": "BULL", "artist": "Kinger9999", "artistAddress": "0x1cf0e2f2f715450", "description": "Teh bull", "type": "image/dataurl", "contentId": "0", "url": ""})`
+		expectedStatus := `A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionStatus(status: "Ongoing", startTime: 1.00000000, currentTime: 3.00000000, currentPrice: 9.00000000, totalItems: 10, acceptedBids: 1, tickStatus: {1.00000000: A.f8d6e0586b0a20c7.DutchAuction.TickStatus(price: 10.00000000, startedAt: 1.00000000, acceptedBids: 1, cumulativeAcceptedBids: 1)}, metadata: {"nftType": "A.f8d6e0586b0a20c7.Art.NFT", "name": "BULL", "artist": "Kinger9999", "artistAddress": "0x1cf0e2f2f715450", "description": "Teh bull", "type": "image/dataurl", "contentId": "0", "url": ""})`
 
 		assert.Equal(gwtfTest.T, expectedStatus, gwtfTest.auctionStatus(auctionId))
 
@@ -40,7 +40,7 @@ func TestAuctionDutch(t *testing.T) {
 		gwtfTest.tickClock("3.0")
 		gwtfTest.dutchTickFullfilled(auctionId, "9.00000000")
 
-		expectedStatus = `A.f8d6e0586b0a20c7.AuctionDutch.AuctionDutchStatus(status: "Finished", startTime: 1.00000000, currentTime: 6.00000000, currentPrice: 9.00000000, totalItems: 10, acceptedBids: 10, tickStatus: {1.00000000: A.f8d6e0586b0a20c7.AuctionDutch.TickStatus(price: 10.00000000, startedAt: 1.00000000, acceptedBids: 1, cumulativeAcceptedBids: 1), 3.00000000: A.f8d6e0586b0a20c7.AuctionDutch.TickStatus(price: 9.00000000, startedAt: 3.00000000, acceptedBids: 9, cumulativeAcceptedBids: 10)}, metadata: {"nftType": "A.f8d6e0586b0a20c7.Art.NFT", "name": "BULL", "artist": "Kinger9999", "artistAddress": "0x1cf0e2f2f715450", "description": "Teh bull", "type": "image/dataurl", "contentId": "0", "url": ""})`
+		expectedStatus = `A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionStatus(status: "Finished", startTime: 1.00000000, currentTime: 6.00000000, currentPrice: 9.00000000, totalItems: 10, acceptedBids: 10, tickStatus: {1.00000000: A.f8d6e0586b0a20c7.DutchAuction.TickStatus(price: 10.00000000, startedAt: 1.00000000, acceptedBids: 1, cumulativeAcceptedBids: 1), 3.00000000: A.f8d6e0586b0a20c7.DutchAuction.TickStatus(price: 9.00000000, startedAt: 3.00000000, acceptedBids: 9, cumulativeAcceptedBids: 10)}, metadata: {"nftType": "A.f8d6e0586b0a20c7.Art.NFT", "name": "BULL", "artist": "Kinger9999", "artistAddress": "0x1cf0e2f2f715450", "description": "Teh bull", "type": "image/dataurl", "contentId": "0", "url": ""})`
 		assert.Equal(gwtfTest.T, expectedStatus, gwtfTest.auctionStatus(auctionId))
 
 	})
@@ -53,7 +53,7 @@ func TestAuctionDutch(t *testing.T) {
 			createArtCollectionAndMintFlow("buyer1", "100.0").
 			createArtCollectionAndMintFlow("buyer2", "100.0")
 
-		auctionId := gwtfTest.setupAuctionDutch()
+		auctionId := gwtfTest.setupDutchAuction()
 
 		gwtfTest.dutchBid("buyer1", auctionId, "9.8", 72)
 		gwtfTest.dutchBid("buyer2", auctionId, "9.9", 76)
@@ -66,7 +66,7 @@ func TestAuctionDutch(t *testing.T) {
 			createArtCollectionAndMintFlow("buyer1", "100.0")
 
 		bidderAddress := fmt.Sprintf("0x%s", gwtfTest.GWTF.Account("buyer1").Address().String())
-		auctionId := gwtfTest.setupAuctionDutch()
+		auctionId := gwtfTest.setupDutchAuction()
 		amount := "11.0"
 		bidNumber := 67
 		gwtfTest.GWTF.TransactionFromFile("dutchBid").
@@ -75,7 +75,7 @@ func TestAuctionDutch(t *testing.T) {
 			UInt64Argument(auctionId). //id of auction
 			UFix64Argument(amount).    //amount to bid
 			Test(gwtfTest.T).AssertSuccess().
-			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.AuctionDutch.AuctionDutchBid", map[string]interface{}{
+			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionBid", map[string]interface{}{
 				"amount":  "10.00000000",
 				"bid":     fmt.Sprintf("%d", bidNumber),
 				"bidder":  bidderAddress,
@@ -96,7 +96,7 @@ func TestAuctionDutch(t *testing.T) {
 			createArtCollectionAndMintFlow("buyer1", "100.0").
 			createArtCollectionAndMintFlow("buyer2", "100.0")
 
-		auctionId := gwtfTest.setupAuctionDutch()
+		auctionId := gwtfTest.setupDutchAuction()
 
 		gwtfTest.dutchBid("buyer1", auctionId, "9.1", 72)
 		gwtfTest.dutchBid("buyer2", auctionId, "9.5", 76)
@@ -112,7 +112,7 @@ func TestAuctionDutch(t *testing.T) {
 			UInt64Argument(uint64(bidId)). //id of bid
 			UFix64Argument(amount).        //amount to bid
 			Test(gwtfTest.T).AssertSuccess().
-			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.AuctionDutch.AuctionDutchBidIncreased", map[string]interface{}{
+			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionBidIncreased", map[string]interface{}{
 				"amount":  "9.60000000",
 				"bid":     fmt.Sprintf("%d", bidId),
 				"bidder":  bidderAddress,
@@ -128,7 +128,7 @@ func TestAuctionDutch(t *testing.T) {
 			createArtCollectionAndMintFlow("artist", "100.0").
 			createArtCollectionAndMintFlow("buyer1", "100000.0")
 
-		auctionId := gwtfTest.setupAuctionDutch()
+		auctionId := gwtfTest.setupDutchAuction()
 
 		//TODO: increase this to test with large number of bids. I have tested with 10000, test timed out after 7800 :p
 		//5000 bids suceeds
@@ -152,7 +152,7 @@ func TestAuctionDutch(t *testing.T) {
 			createArtCollectionAndMintFlow("artist", "100.0").
 			createArtCollectionAndMintFlow("buyer1", "1000.0")
 
-		auctionId := gwtfTest.setupAuctionDutch()
+		auctionId := gwtfTest.setupDutchAuction()
 
 		gwtfTest.dutchBid("buyer1", auctionId, "9.0", 69)
 		gwtfTest.dutchBid("buyer1", auctionId, "9.2", 71)
@@ -281,7 +281,7 @@ func TestAuctionDutch(t *testing.T) {
 				createArtCollectionAndMintFlow("artist", "100.0").
 				createArtCollectionAndMintFlow("buyer1", "100000.0")
 
-			auctionId := gwtfTest.setupAuctionDutch()
+			auctionId := gwtfTest.setupDutchAuction()
 			gwtfTest.dutchBid("buyer1", auctionId, "1.0", 69).tickClock("2.0")
 
 			value := gwtfTest.GWTF.ScriptFromFile("dutchAuctionUserBid").AccountArgument("buyer1").RunReturnsJsonString()

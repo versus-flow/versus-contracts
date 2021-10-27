@@ -38,7 +38,7 @@ func (gt *GWTFTestUtils) setup() *GWTFTestUtils {
 	return gt.tickClock("1.0")
 }
 
-func (gt *GWTFTestUtils) setupAuctionDutch() uint64 {
+func (gt *GWTFTestUtils) setupDutchAuction() uint64 {
 
 	flow := gt.GWTF
 	err := flow.UploadImageAsDataUrl("bull.png", "marketplace")
@@ -106,7 +106,7 @@ func (gt *GWTFTestUtils) dutchTickFullfilled(id uint64, amount string) *GWTFTest
 		SignProposeAndPayAs("marketplace").
 		UInt64Argument(id).
 		Test(gt.T).AssertSuccess().
-		AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.AuctionDutch.AuctionDutchSettle", map[string]interface{}{
+		AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionSettle", map[string]interface{}{
 			"price":   amount,
 			"auction": fmt.Sprintf("%d", id),
 		}))
@@ -120,7 +120,7 @@ func (gt *GWTFTestUtils) dutchTickNotFullfilled(id uint64, acceptedBids int, amo
 		SignProposeAndPayAs("marketplace").
 		UInt64Argument(id).
 		Test(gt.T).AssertSuccess().
-		AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.AuctionDutch.AuctionDutchTick", map[string]interface{}{
+		AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionTick", map[string]interface{}{
 			"acceptedBids": fmt.Sprintf("%d", acceptedBids),
 			"tickPrice":    amount,
 			"auction":      fmt.Sprintf("%d", id),
@@ -140,7 +140,7 @@ func (gt *GWTFTestUtils) dutchBid(account string, auctionId uint64, amount strin
 		UInt64Argument(auctionId). //id of auction
 		UFix64Argument(amount).    //amount to bid
 		Test(gt.T).AssertSuccess().
-		AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.AuctionDutch.AuctionDutchBid", map[string]interface{}{
+		AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DutchAuction.DutchAuctionBid", map[string]interface{}{
 			"amount":  fmt.Sprintf("%s0000000", amount),
 			"bid":     fmt.Sprintf("%d", bidNumber),
 			"bidder":  bidderAddress,
