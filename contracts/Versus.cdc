@@ -31,7 +31,7 @@ pub contract Versus {
 	pub event DropExtended(name: String, artist: String, dropId: UInt64, extendWith: Fix64, extendTo: Fix64)
 
 	//emitted when a bid is made
-	pub event Bid(name: String, artist: String, edition:String, bidder: Address, price: UFix64, dropId: UInt64, auctionId:UInt64)
+	pub event Bid(name: String, artist: String, edition:String, bidder: Address, price: UFix64, dropId: UInt64, auctionId:UInt64, auctionEndAt: Fix64, extendWith: Fix64)
 
 	//emitted when a drop is created
 	pub event DropCreated(name: String, artist: String, editions: UInt64, owner:Address, dropId: UInt64)
@@ -249,9 +249,14 @@ pub contract Versus {
 				self.firstBidBlock=block.height
 			}
 
+
+			var endTime=dropStatus.endTime
+			var extendWith=(0.0 as Fix64)
+
 			//We need to extend the auction since there is too little time left. If we did not do this a late user could potentially win with a cheecky bid
 			if dropStatus.endTime < bidEndTime {
-				let extendWith=bidEndTime - dropStatus.endTime
+				 extendWith=bidEndTime - dropStatus.endTime
+				endTime=bidEndTime
 				emit DropExtended(name: dropStatus.metadata.name, artist: dropStatus.metadata.artist, dropId:self.dropID, extendWith: extendWith, extendTo: bidEndTime)
 				self.extendDropWith(UFix64(extendWith))
 			}
@@ -265,17 +270,17 @@ pub contract Versus {
 			//the bid is on a unique auction so we place the bid there
 			if self.uniqueAuction.auctionID == auctionId {
 				let auctionRef = &self.uniqueAuction as &Auction.AuctionItem
-				uniquePrice=bidTokens.balance
+				uniquePrice=bidPrice
 				auctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
 			} else {
-				editionPrice= editionPrice+bidTokens.balance
+				editionPrice=editionPrice+bidTokens.balance
 				let editionStatus=dropStatus.editionsStatuses[auctionId]!
 				edition=editionStatus.edition.toString().concat( " of ").concat(editionStatus.maxEdition.toString())
 				let editionsRef = &self.editionAuctions as &Auction.AuctionCollection
 				editionsRef.placeBid(id: auctionId, bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
 			}
 
-			emit Bid(name: dropStatus.metadata.name, artist:dropStatus.metadata.artist, edition: edition, bidder:bidder, price:bidPrice, dropId:self.dropID, auctionId:auctionId)
+			emit Bid(name: dropStatus.metadata.name, artist:dropStatus.metadata.artist, edition: edition, bidder:bidder, price:bidPrice, dropId:self.dropID, auctionId:auctionId, auctionEndAt: endTime, extendWith: extendWith)
 
 			let newStatus=self.calculateStatus(edition:editionPrice, unique: uniquePrice)
 

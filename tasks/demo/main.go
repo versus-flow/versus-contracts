@@ -46,8 +46,8 @@ func main() {
 		StringArgument("when?").                                                                        //name of art
 		StringArgument("Here's a lockdown painting I did of a super cool guy and pal, @jburrowsactor"). //description
 		Argument(cadence.NewUInt64(10)).                                                                //number of editions to use for the editioned auction
-		UFix64Argument("5.0").                                                                          //min bid increment
-		UFix64Argument("10.0").                                                                         //min bid increment unique
+		UFix64Argument("2.0").                                                                          //min bid increment
+		UFix64Argument("4.0").                                                                          //min bid increment unique
 		UFix64Argument("5.0").                                                                          //duration
 		UFix64Argument("5.0").                                                                          //extensionOnLateBid
 		StringArgument("image/dataurl").                                                                //type
@@ -67,6 +67,28 @@ func main() {
 		UFix64Argument("10.00").      //amount to bid
 		RunPrintEventsFull()
 
+	fmt.Scanln()
+
+	flow.TransactionFromFile("bid").
+		SignProposeAndPayAs("buyer2").
+		AccountArgument("account").
+		UInt64Argument(1).           //id of drop
+		Argument(cadence.UInt64(8)). //id of edition auction auction to bid on
+		UFix64Argument("11.00").     //amount to bid
+		RunPrintEventsFull()
+
+	fmt.Scanln()
+
+	flow.TransactionFromFile("bid").
+		SignProposeAndPayAs("buyer2").
+		AccountArgument("account").
+		UInt64Argument(1).           //id of drop
+		Argument(cadence.UInt64(7)). //id of edition auction auction to bid on
+		UFix64Argument("11.00").     //amount to bid
+		RunPrintEventsFull()
+
+	fmt.Scanln()
+
 	flow.TransactionFromFile("bid").
 		SignProposeAndPayAs("buyer2").
 		AccountArgument("account").
@@ -74,6 +96,8 @@ func main() {
 		Argument(cadence.UInt64(11)). //id of unique auction auction to bid on
 		UFix64Argument("30.00").      //amount to bid
 		RunPrintEventsFull()
+
+	fmt.Scanln()
 
 	fmt.Println("Go to website to bid there")
 	fmt.Println("Tick the clock to make the auction end and settle it")
