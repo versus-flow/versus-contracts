@@ -22,13 +22,12 @@ func main() {
 
 	imageThumNailPattern := "https://res.cloudinary.com/dxra4agvf/image/upload/v1629285775/maincache%s.jpg"
 
-	purchaseEvent := "A.d796ff17107bbff6.Marketplace.TokenPurchased"
-	saleEvent := "A.d796ff17107bbff6.Marketplace.SaleItem"
+	bidEvent = "A.d796ff17107bbff6.Versus.Bid"
 	events, err := g.EventFetcher().
-		TrackProgressIn(".flow-prod.marketplaceEvents").
+		TrackProgressIn(".flow-prod.eventBot").
 		Workers(1).
-		Event(saleEvent).
-		Event(purchaseEvent).Run()
+		Event(bidEvent).
+		).Run()
 
 	discord, err := discordgo.New()
 	if err != nil {

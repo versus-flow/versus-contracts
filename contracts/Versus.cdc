@@ -30,8 +30,9 @@ pub contract Versus {
 	//emitted when a drop is extended
 	pub event DropExtended(name: String, artist: String, dropId: UInt64, extendWith: Fix64, extendTo: Fix64)
 
+	pub event Bid(name: String, artist: String, edition:String, bidder: Address, price: UFix64, dropId: UInt64, auctionId:UInt64)
 	//emitted when a bid is made
-	pub event Bid(name: String, artist: String, edition:String, bidder: Address, price: UFix64, dropId: UInt64, auctionId:UInt64, auctionEndAt: Fix64, extendWith: Fix64)
+	pub event ExtendedBid(name: String, artist: String, edition:String, bidder: Address, price: UFix64, oldBidder: Address?, oldPrice:UFix64?, dropId: UInt64, auctionId:UInt64, auctionEndAt: Fix64, extendWith: Fix64, cacheKey: String, oldLeader:String, newLeader:String)
 
 	//emitted when a drop is created
 	pub event DropCreated(name: String, artist: String, editions: UInt64, owner:Address, dropId: UInt64)
@@ -249,7 +250,6 @@ pub contract Versus {
 				self.firstBidBlock=block.height
 			}
 
-
 			var endTime=dropStatus.endTime
 			var extendWith=(0.0 as Fix64)
 
@@ -267,26 +267,35 @@ pub contract Versus {
 
 			var edition:String="1 of 1"
 
+
+			var oldBidder : Address?=nil
+			var oldPrice: UFix64?=nil
 			//the bid is on a unique auction so we place the bid there
 			if self.uniqueAuction.auctionID == auctionId {
 				let auctionRef = &self.uniqueAuction as &Auction.AuctionItem
+				oldBidder=dropStatus.uniqueStatus.leader
+				oldPrice=dropStatus.uniquePrice
 				uniquePrice=bidPrice
 				auctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
 			} else {
 				editionPrice=editionPrice+bidTokens.balance
 				let editionStatus=dropStatus.editionsStatuses[auctionId]!
+				oldBidder=editionStatus.leader
+				oldPrice=editionStatus.price
 				edition=editionStatus.edition.toString().concat( " of ").concat(editionStatus.maxEdition.toString())
 				let editionsRef = &self.editionAuctions as &Auction.AuctionCollection
 				editionsRef.placeBid(id: auctionId, bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
 			}
 
-			emit Bid(name: dropStatus.metadata.name, artist:dropStatus.metadata.artist, edition: edition, bidder:bidder, price:bidPrice, dropId:self.dropID, auctionId:auctionId, auctionEndAt: endTime, extendWith: extendWith)
+			emit Bid(name: dropStatus.metadata.name, artist:dropStatus.metadata.artist, edition: edition, bidder:bidder, price:bidPrice, dropId:self.dropID, auctionId:auctionId)
 
 			let newStatus=self.calculateStatus(edition:editionPrice, unique: uniquePrice)
 
 			if dropStatus.winning != newStatus {
 				emit LeaderChanged(name:dropStatus.metadata.name, artist: dropStatus.metadata.artist, winning:newStatus, dropId: self.dropID)
 			}
+
+			emit ExtendedBid(name: dropStatus.metadata.name, artist:dropStatus.metadata.artist, edition: edition, bidder:bidder, price:bidPrice, oldBidder: oldBidder, oldPrice: oldPrice, dropId:self.dropID, auctionId:auctionId, auctionEndAt: endTime, extendWith: extendWith, cacheKey: self.contentId.toString(), oldLeader: dropStatus.winning, newLeader: newStatus)
 		}
 
 		//This would make it possible to extend the drop with more time from an admin interface
