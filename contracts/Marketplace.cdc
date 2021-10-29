@@ -233,6 +233,5 @@ pub contract Marketplace {
         self.CollectionPublicPath= /public/versusArtMarketplace
         self.CollectionStoragePath= /storage/versusArtMarketplace
     }
-
 }
  

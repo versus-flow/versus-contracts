@@ -267,7 +267,7 @@ pub contract Versus {
 				let auctionRef = &self.uniqueAuction as &Auction.AuctionItem
 				uniquePrice=bidTokens.balance
 				auctionRef.placeBid(bidTokens: <- bidTokens, vaultCap:vaultCap, collectionCap:collectionCap)
-			} else { 
+			} else {
 				editionPrice= editionPrice+bidTokens.balance
 				let editionStatus=dropStatus.editionsStatuses[auctionId]!
 				edition=editionStatus.edition.toString().concat( " of ").concat(editionStatus.maxEdition.toString())
@@ -443,10 +443,11 @@ pub contract Versus {
 
 			var currentEdition=(1 as UInt64)
 			while currentEdition <= editions {
-					editionedAuctions.createAuction( token: <- Art.makeEdition(original: &art as &Art.NFT, edition: currentEdition, maxEdition: editions), minimumBidIncrement: minimumBidIncrement, auctionLength: duration, auctionStartTime:startTime, startPrice: startPrice, collectionCap: self.marketplaceNFTTrash, vaultCap: vaultCap) currentEdition=currentEdition+(1 as UInt64) 
+					editionedAuctions.createAuction( token: <- Art.makeEdition(original: &art as &Art.NFT, edition: currentEdition, maxEdition: editions), minimumBidIncrement: minimumBidIncrement, auctionLength: duration, auctionStartTime:startTime, startPrice: startPrice, collectionCap: self.marketplaceNFTTrash, vaultCap: vaultCap)
+					currentEdition=currentEdition+(1 as UInt64)
 			}
 
-					//copy the metadata of the previous art since that is used to mint the copies
+			//copy the metadata of the previous art since that is used to mint the copies
 			let item <- Auction.createStandaloneAuction( token: <- art, minimumBidIncrement: minimumBidUniqueIncrement, auctionLength: duration, auctionStartTime: startTime, startPrice: startPrice, collectionCap: self.marketplaceNFTTrash, vaultCap: vaultCap)
 
 			let drop  <- create Drop( uniqueAuction: <- item, editionAuctions:  <- editionedAuctions, extensionOnLateBid: extensionOnLateBid, contentId: contentId, contentCapability: contentCapability)
@@ -464,7 +465,6 @@ pub contract Versus {
   			dropStatus[id] = itemRef.getDropStatus()
   		}
   		return dropStatus
-  
   	}
 
   	access(contract) fun getDrop(_ dropId:UInt64) : &Drop {
@@ -489,30 +489,26 @@ pub contract Versus {
 		pub fun getCacheKeyForDrop(_ dropId: UInt64) : UInt64 {
 			return self.getDrop(dropId).contentId
 		}
-	
+
 		pub fun getStatus(dropId:UInt64): DropStatus {
 			return self.getDrop(dropId).getDropStatus()
 		}
-	
+
 		//get the art for this drop
 		pub fun getArt(dropId:UInt64) : String {
 			return self.getDrop(dropId).getContent()
 		}
-	
+
 		pub fun getArtType(dropId:UInt64): String {
 			return self.getDrop(dropId).metadata.type
 		}
-	
+
 		//settle a drop
 		pub fun settle(_ dropId: UInt64) {
 			self.getDrop(dropId).settle(cutPercentage: self.cutPercentage, vault: self.marketplaceVault)
 		}
-	
-		pub fun currentBidForUser(
-			dropId: UInt64,
-			auctionId: UInt64,
-			address:Address
-		) : UFix64 {
+		
+		pub fun currentBidForUser( dropId: UInt64, auctionId: UInt64, address:Address) : UFix64 {
 			return  self.getDrop(dropId).currentBidForUser(
 				auctionId: auctionId,
 				address:address
