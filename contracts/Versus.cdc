@@ -32,7 +32,7 @@ pub contract Versus {
 
 	pub event Bid(name: String, artist: String, edition:String, bidder: Address, price: UFix64, dropId: UInt64, auctionId:UInt64)
 	//emitted when a bid is made
-	pub event ExtendedBid(name: String, artist: String, edition:String, bidder: Address, price: UFix64, oldBidder: Address?, oldPrice:UFix64?, dropId: UInt64, auctionId:UInt64, auctionEndAt: Fix64, extendWith: Fix64, cacheKey: String, oldLeader:String, newLeader:String)
+	pub event ExtendedBid(name: String, artist: String, edition:String, bidderAddress: Address, bidderName: String, price: UFix64, oldBidderAddress: Address?, oldBidderName:String, oldPrice:UFix64?, dropId: UInt64, auctionId:UInt64, auctionEndAt: Fix64, extendWith: Fix64, cacheKey: String, oldLeader:String, newLeader:String)
 
 	//emitted when a drop is created
 	pub event DropCreated(name: String, artist: String, editions: UInt64, owner:Address, dropId: UInt64)
@@ -295,7 +295,23 @@ pub contract Versus {
 				emit LeaderChanged(name:dropStatus.metadata.name, artist: dropStatus.metadata.artist, winning:newStatus, dropId: self.dropID)
 			}
 
-			emit ExtendedBid(name: dropStatus.metadata.name, artist:dropStatus.metadata.artist, edition: edition, bidder:bidder, price:bidPrice, oldBidder: oldBidder, oldPrice: oldPrice, dropId:self.dropID, auctionId:auctionId, auctionEndAt: endTime, extendWith: extendWith, cacheKey: self.contentId.toString(), oldLeader: dropStatus.winning, newLeader: newStatus)
+
+			var bidderName=""
+			let bidderProfileCap= getAccount(bidder).getCapability<&{Profile.Public}>(Profile.publicPath)
+			if bidderProfileCap.check() {
+				bidderName=bidderProfileCap.borrow()!.getName()
+			}
+
+			var oldBidderName=""
+			if oldBidder != nil {
+				let oldBidderProfileCap= getAccount(oldBidder!).getCapability<&{Profile.Public}>(Profile.publicPath)
+			  if oldBidderProfileCap.check() {
+				  bidderName=oldBidderProfileCap.borrow()!.getName()
+			  }
+			}
+
+
+			emit ExtendedBid(name: dropStatus.metadata.name, artist:dropStatus.metadata.artist, edition: edition, bidderAddress:bidder, bidderName: bidderName, price:bidPrice, oldBidderAddress: oldBidder, oldBidderName: oldBidderName, oldPrice: oldPrice, dropId:self.dropID, auctionId:auctionId, auctionEndAt: endTime, extendWith: extendWith, cacheKey: self.contentId.toString(), oldLeader: dropStatus.winning, newLeader: newStatus)
 		}
 
 		//This would make it possible to extend the drop with more time from an admin interface
