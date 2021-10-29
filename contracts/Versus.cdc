@@ -304,10 +304,14 @@ pub contract Versus {
 
 			var oldBidderName=""
 			if oldBidder != nil {
-				let oldBidderProfileCap= getAccount(oldBidder!).getCapability<&{Profile.Public}>(Profile.publicPath)
-			  if oldBidderProfileCap.check() {
-				  bidderName=oldBidderProfileCap.borrow()!.getName()
-			  }
+				if oldBidder == bidder {
+					oldBidderName=bidderName
+				} else{
+					let oldBidderProfileCap= getAccount(oldBidder!).getCapability<&{Profile.Public}>(Profile.publicPath)
+					if oldBidderProfileCap.check() {
+					 oldBidderName=oldBidderProfileCap.borrow()!.getName()
+					}
+				}
 			}
 
 
