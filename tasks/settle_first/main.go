@@ -8,9 +8,10 @@ import (
 
 func main() {
 
-	flow := gwtf.NewGoWithTheFlowMainNet()
+	//	flow := gwtf.NewGoWithTheFlowMainNet()
+	flow := gwtf.NewGoWithTheFlowDevNet()
 
-	value := flow.ScriptFromFile("check_unsettled_drop").AccountArgument("versus").RunReturns()
+	value, _ := flow.ScriptFromFile("check_unsettled_drop").AccountArgument("versus").RunReturns()
 
 	stringValue := value.String()
 
