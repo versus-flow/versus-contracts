@@ -8,17 +8,19 @@ import (
 
 func main() {
 
-	startTime := "October 15, 2021 01:00:00 AM"
-	durationHrs := 4
-	artistAddress := "0x530212d1a4c6f7eb"
-	artist := "Sample"
-	name := "Sample6"
-	editions := 0
-	content := "QmZ8dHcccdqNBNgEHKnSMCVjAAhLc293tmhDZZcptfF5eD"
-	description := `This is a sample video drop with large video`
+	startTime := "November 3, 2021 12:00:00 PM"
+	durationHrs := 24
+	artistAddress := "0x5643c6c249c52fb8"
+	artist := "Leo Isikdogan"
+	name := "Geodiversity of an Exoplanet"
+	editions := 20
+	content := "QmU5W5t4H4cEJhXWfZTxHyUn9aSoq3VMtv6hTkYV1Tdx7u"
+	description := `This work explores geodiversity in the context of extraterrestrial environments. It is an artistic representation of Earth-like planetary landscapes we may one day encounter on celestial bodies. The work was created using a custom-designed AI art model and creative algorithms. 
 
-	//flow := gwtf.NewGoWithTheFlowMainNet()
-	flow := gwtf.NewGoWithTheFlowDevNet()
+Verisart Certified: https://verisart.com/edition/a8afeb80-bf29-43a7-84f8-ac1d89472a7e`
+
+	flow := gwtf.NewGoWithTheFlowMainNet()
+	//	flow := gwtf.NewGoWithTheFlowDevNet()
 
 	flow.TransactionFromFile("drop_single").
 		SignProposeAndPayAs("admin").
