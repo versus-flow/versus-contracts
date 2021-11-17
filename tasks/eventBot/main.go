@@ -9,15 +9,12 @@ import (
 
 	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	"github.com/bwmarrin/discordgo"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func main() {
 
 	// cronjob ready, read blockHeight from file
 	g := gwtf.NewGoWithTheFlowMainNet()
-
-	//	g := gwtf.NewGoWithTheFlowDevNet()
 
 	url, ok := os.LookupEnv("DISCORD_WEBHOOK_URL")
 	if !ok {
@@ -29,7 +26,7 @@ func main() {
 
 	imageThumNailPattern := "https://res.cloudinary.com/dxra4agvf/image/upload/v1629285775/maincache%s.jpg"
 
-	bidEvent := "A.99ca04281098b33d.Versus.ExtendedBid"
+	bidEvent := "A.d796ff17107bbff6.Versus.ExtendedBid"
 	events, err := g.EventFetcher().
 		TrackProgressIn(".flow-prod.eventBot").
 		Workers(1).
@@ -117,7 +114,6 @@ func main() {
 		Embeds: embeds,
 	}
 
-	spew.Dump(message)
 	_, err = discord.WebhookExecute(
 		dwh.ID,
 		dwh.Token,
