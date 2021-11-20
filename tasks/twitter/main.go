@@ -28,10 +28,8 @@ func main() {
 	purchaseEvent := "A.d796ff17107bbff6.Marketplace.TokenPurchased"
 	saleEvent := "A.d796ff17107bbff6.Marketplace.SaleItem"
 	events, err := g.EventFetcher().
-		From(20298360).
-		UntilCurrent().
-		//	TrackProgressIn(".flow-prod.marketplaceEvents").
-		Workers(10).
+		TrackProgressIn(".versus-prod.twitterbot").
+		Workers(1).
 		Event(saleEvent).
 		Event(purchaseEvent).Run()
 	if err != nil {

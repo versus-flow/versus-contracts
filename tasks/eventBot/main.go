@@ -30,6 +30,7 @@ func main() {
 	events, err := g.EventFetcher().
 		TrackProgressIn(".flow-prod.eventBot").
 		Workers(1).
+		BatchSize(100).
 		Event(bidEvent).
 		Run()
 
@@ -45,26 +46,28 @@ func main() {
 	dwh := gwtf.NewDiscordWebhook(url)
 	var embeds []*discordgo.MessageEmbed
 	for _, event := range events {
-		cacheKey := event.Fields["cacheKey"]
-
-		price := strings.TrimSuffix(event.Fields["price"].(string), "000000") + " Flow"
 
 		bidder := event.Fields["bidderAddress"]
 		if event.Fields["bidderName"] != "" {
 			bidder = event.Fields["bidderName"]
 		}
+		//TODO; remove in a while
+		fmt.Printf("Found bid by %s on %s\n", bidder, event.Fields["edition"])
+		cacheKey := event.Fields["cacheKey"]
+
+		price := strings.TrimSuffix(event.Fields["price"].(string), "000000") + " Flow"
 
 		fields := map[string]interface{}{
-			"bidder": fmt.Sprintf("[%s](%s/profiles/%s)", bidder, prefix, event.Fields["bidderAddress"]),
+			"bidder": fmt.Sprintf("[%s](%s/profile/%s)", bidder, prefix, event.Fields["bidderAddress"]),
 		}
 
-		if event.Fields["oldBidderName"].(string) != "" {
+		if event.Fields["oldBidderAddress"].(string) != "" {
 			oldPrice := strings.TrimSuffix(event.Fields["oldPrice"].(string), "000000") + " Flow"
 			oldBidder := event.Fields["oldBidderAddress"]
 			if event.Fields["oldBidderName"] != "" {
 				oldBidder = event.Fields["oldBidderName"]
 			}
-			fields["previousBid"] = fmt.Sprintf("%s by [%s](%s/profiles/%s)", oldPrice, oldBidder, prefix, event.Fields["oldBidderAddress"])
+			fields["previousBid"] = fmt.Sprintf("%s by [%s](%s/profile/%s)", oldPrice, oldBidder, prefix, event.Fields["oldBidderAddress"])
 		}
 
 		leader := event.Fields["newLeader"].(string)
