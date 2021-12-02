@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	"github.com/bwmarrin/discordgo"
@@ -29,6 +29,7 @@ func main() {
 	bidEvent := "A.d796ff17107bbff6.Versus.ExtendedBid"
 	events, err := g.EventFetcher().
 		TrackProgressIn(".flow-prod.eventBot").
+		//Start(52749400).End(52749479).
 		Workers(1).
 		BatchSize(100).
 		Event(bidEvent).
@@ -44,7 +45,6 @@ func main() {
 	}
 
 	dwh := gwtf.NewDiscordWebhook(url)
-	var embeds []*discordgo.MessageEmbed
 	for _, event := range events {
 
 		bidder := event.Fields["bidderAddress"]
@@ -52,13 +52,13 @@ func main() {
 			bidder = event.Fields["bidderName"]
 		}
 		//TODO; remove in a while
-		fmt.Printf("Found bid by %s on %s\n", bidder, event.Fields["edition"])
-		cacheKey := event.Fields["cacheKey"]
-
 		price := strings.TrimSuffix(event.Fields["price"].(string), "000000") + " Flow"
+		fmt.Printf("Found bid by %s on %s for %s flow\n", bidder, event.Fields["edition"], price)
+		cacheKey := event.Fields["cacheKey"]
 
 		fields := map[string]interface{}{
 			"bidder": fmt.Sprintf("[%s](%s/profile/%s)", bidder, prefix, event.Fields["bidderAddress"]),
+			"bid":    price,
 		}
 
 		if event.Fields["oldBidderAddress"].(string) != "" {
@@ -78,10 +78,10 @@ func main() {
 		}
 
 		endAt := event.Fields["auctionEndAt"].(string)
-		if s, err := strconv.ParseFloat(endAt, 64); err == nil {
-			endTime := time.Unix(int64(s), 0)
-			fields["auctionEndAt"] = endTime
+		if _, err := strconv.ParseFloat(endAt, 64); err == nil {
 			if event.Fields["extendWith"] != "0.00000000" {
+				//endTime := time.Unix(int64(s), 0)
+				//fields["auctionEndAt"] = endTime
 				fields["lateBidExtension"] = event.Fields["extendWith"]
 			}
 		}
@@ -94,10 +94,13 @@ func main() {
 			})
 		}
 
-		//https://versusapptest.vercel.app/drop/5/#
-		embeds = append(embeds, &discordgo.MessageEmbed{
+		sort.SliceStable(mef, func(i, j int) bool {
+			return mef[i].Name < mef[j].Name
+		})
+
+		embed := &discordgo.MessageEmbed{
 			URL:    fmt.Sprintf("%s/drop/%s", prefix, event.Fields["dropId"]),
-			Title:  fmt.Sprintf("bid on %s - %s by %s for %s!", event.Fields["edition"], event.Fields["name"], event.Fields["artist"], price),
+			Title:  fmt.Sprintf("bid on %s - %s by %s!", event.Fields["edition"], event.Fields["name"], event.Fields["artist"]),
 			Type:   discordgo.EmbedTypeRich,
 			Fields: mef,
 			Thumbnail: &discordgo.MessageEmbedThumbnail{
@@ -106,24 +109,20 @@ func main() {
 			Footer: &discordgo.MessageEmbedFooter{
 				Text: fmt.Sprintf("blockHeight %d @ %v", event.BlockHeight, event.Time),
 			},
-		})
+		}
+		message := &discordgo.WebhookParams{
+			Embeds: []*discordgo.MessageEmbed{embed},
+		}
 
-	}
-	if len(embeds) == 0 {
-		os.Exit(0)
-	}
+		_, err = discord.WebhookExecute(
+			dwh.ID,
+			dwh.Token,
+			dwh.Wait,
+			message)
 
-	message := &discordgo.WebhookParams{
-		Embeds: embeds,
-	}
-
-	_, err = discord.WebhookExecute(
-		dwh.ID,
-		dwh.Token,
-		dwh.Wait,
-		message)
-
-	if err != nil {
-		panic(err)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			panic(err)
+		}
 	}
 }
