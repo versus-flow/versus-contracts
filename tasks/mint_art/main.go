@@ -20,7 +20,7 @@ func main() {
 		imageFile = "bull.png"
 	}
 
-	err := flow.UploadImageAsDataUrl(imageFile, "admin")
+	err := flow.DownloadImageAndUploadAsDataUrl(imageFile, "admin")
 	if err != nil {
 		panic(err)
 	}
@@ -28,13 +28,12 @@ func main() {
 	flow.TransactionFromFile("mint_art").
 		SignProposeAndPayAs("admin").
 		AccountArgument("admin").
-		StringArgument("Kinger999"). //artist name
-		StringArgument("TheBull").   //name of art
-		StringArgument(`The crypto bull`).
+		StringArgument("Example Artist"). //artist name
+		StringArgument("Image").          //name of art
+		StringArgument(`An example image`).
 		RawAccountArgument(account).     //target
 		StringArgument("image/dataurl"). //type
 		UFix64Argument("0.05").          //artistCut 5%
 		UFix64Argument("0.025").         //minterCut 2.5%
 		RunPrintEventsFull()
-
 }

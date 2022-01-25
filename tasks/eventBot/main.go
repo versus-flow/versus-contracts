@@ -70,18 +70,9 @@ func main() {
 			fields["previousBid"] = fmt.Sprintf("%s by [%s](%s/profile/%s)", oldPrice, oldBidder, prefix, event.Fields["oldBidderAddress"])
 		}
 
-		leader := event.Fields["newLeader"].(string)
-		oldLeader := event.Fields["oldLeader"].(string)
-
-		if leader != oldLeader {
-			fields["leaderChanged"] = leader
-		}
-
 		endAt := event.Fields["auctionEndAt"].(string)
 		if _, err := strconv.ParseFloat(endAt, 64); err == nil {
 			if event.Fields["extendWith"] != "0.00000000" {
-				//endTime := time.Unix(int64(s), 0)
-				//fields["auctionEndAt"] = endTime
 				fields["lateBidExtension"] = event.Fields["extendWith"]
 			}
 		}

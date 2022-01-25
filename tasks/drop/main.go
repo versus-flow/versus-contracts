@@ -8,19 +8,21 @@ import (
 
 func main() {
 
-	startTime := "November 18, 2021 08:00:00 AM"
-	durationHrs := 4
-	artistAddress := "0xb082dd2dcb0c4acf"
-	artist := "Blake Jamieson"
-	name := "Mr. Brown's Garden"
-	editions := 10
-	description := ``
+	startTime := "November 30, 2021 08:00:00 AM"
+	durationHrs := 72
+	artistAddress := "0xdc5b887c1bfb1b10"
+	artist := "Bjartek"
+	name := "LeetLines"
+	editions := 5
+	description := `My leety lines`
 
-	imageUrl := "https://uploads.linear.app/b5013517-8161-4940-b2a0-d5fc21b1fafb/68cf741b-4a68-4483-af31-0195b6443eb3/41dc133d-2136-4bea-b251-116fce4850d1"
+	imageUrl := "contourline-1637789359.jpeg"
 
-	flow := gwtf.NewGoWithTheFlowMainNet()
-	//	flow := gwtf.NewGoWithTheFlowDevNet()
-	err := flow.DownloadImageAndUploadAsDataUrl(imageUrl, "admin")
+	//flow := gwtf.NewGoWithTheFlowMainNet()
+	flow := gwtf.NewGoWithTheFlowDevNet()
+
+	err := flow.UploadImageAsDataUrl(imageUrl, "admin")
+	//	err := flow.DownloadImageAndUploadAsDataUrl(imageUrl, "admin")
 	if err != nil {
 		panic(err)
 	}

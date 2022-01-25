@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	flow := gwtf.NewGoWithTheFlowDevNet()
+	flow := gwtf.NewGoWithTheFlowMainNet()
 
 	account, ok := os.LookupEnv("account")
 	if !ok {

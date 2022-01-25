@@ -166,6 +166,7 @@ pub contract Profile {
 		pub fun getFollowing(): [FriendStatus]
 		pub fun getWallets() : [Wallet]
 		pub fun getLinks() : [Link]
+		//TODO: create another method to deposit with message
 		pub fun deposit(from: @FungibleToken.Vault)
 		pub fun supportedFungigleTokenTypes() : [Type]
 		pub fun asProfile() : UserProfile
@@ -375,6 +376,7 @@ pub contract Profile {
 		pub fun setTags(_ val: [String]) { self.tags=val}
 
 		pub fun removeCollection(_ val: String) { self.collections.remove(key: val)}
+		//TODO: make this the identifier of the collection type rather then the name. just remove the name
 		pub fun addCollection(_ val: ResourceCollection) { self.collections[val.name]=val}
 		pub fun getCollections(): [ResourceCollection] { return self.collections.values}
 
