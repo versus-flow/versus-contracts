@@ -34,6 +34,7 @@ transaction(
 
   execute {
 
+		self.client.setVersusCut(0.15)
 
     let art <-  self.client.mintArt(
         artist: artist,

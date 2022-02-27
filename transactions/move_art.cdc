@@ -1,4 +1,3 @@
-
 import NonFungibleToken from "../contracts/standard/NonFungibleToken.cdc"
 import Art from "../contracts/Art.cdc"
 

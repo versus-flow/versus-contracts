@@ -8,20 +8,16 @@ import (
 
 func main() {
 
-	startTime := "November 18, 2021 08:00:00 AM"
+	startTime := "January 27, 2022 08:00:00 AM"
 	durationHrs := 4
-	artistAddress := "0xb082dd2dcb0c4acf"
-	artist := "Blake Jamieson"
-	name := "Mr. Brown's Garden"
+	artistAddress := "0x012f215167af8d8d"
+	artist := "Buba Viedma"
+	name := "Smile, is the Apocalypse"
 	editions := 10
 
-	content := "QmdZ2ULAWYongs4Dtbo8BHst5GFrreSGRgQgVwCuKvd9yA"
+	content := "QmZgYyUvYHm4Y4G3wA1agPKwwygxyvx6QKx6JKdJzutz1b"
 
-	description := `Mr. Brown's Garden
-
-Blake Jamieson
-
-Bringing new life to a photograph captured by my dad (Patrick Jamieson) in 1969.`
+	description := `Soon we will all die, but we will die with a smile on our faces.`
 
 	flow := gwtf.NewGoWithTheFlowMainNet()
 	//	flow := gwtf.NewGoWithTheFlowDevNet()
@@ -41,7 +37,7 @@ Bringing new life to a photograph captured by my dad (Patrick Jamieson) in 1969.
 		UFix64Argument("4.0").                                    //min bid increment unique
 		UFix64Argument(fmt.Sprintf("%d.0", durationHrs*60*60)).   //duration 60 * 60 * 24 1 day
 		UFix64Argument("300.0").                                  //extensionOnLateBid 5 * 60 5 min
-		StringArgument("ipfs/image").                             //type
+		StringArgument("ipfs/video").                             //type
 		UFix64Argument("0.05").                                   //artistCut 5%
 		UFix64Argument("0.025").                                  //minterCut 2.5%
 		RunPrintEventsFull()

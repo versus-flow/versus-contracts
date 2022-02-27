@@ -28,7 +28,8 @@ func main() {
 	purchaseEvent := "A.d796ff17107bbff6.Marketplace.TokenPurchased"
 	saleEvent := "A.d796ff17107bbff6.Marketplace.SaleItem"
 	events, err := g.EventFetcher().
-		TrackProgressIn(".versus-prod.twitterbot").
+		Start(22793683).End(22793684).
+		//		TrackProgressIn(".versus-prod.twitterbot").
 		Workers(1).
 		Event(saleEvent).
 		Event(purchaseEvent).Run()

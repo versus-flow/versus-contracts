@@ -7,22 +7,21 @@ import (
 )
 
 func main() {
+	startTime := "February 10, 2022 08:00:00 AM"
+	durationHrs := 28
+	artistAddress := "0x3db67c59f4da358d"
+	artist := "Elise Swopes"
+	name := "Rise and Shine"
+	editions := 10
+	description := `Black Women on Boards aims to remove the obstacles Black women executives face when pursuing board memberships. On February 8, BWOB rings the opening bell at NASDAQ.
 
-	startTime := "November 30, 2021 08:00:00 AM"
-	durationHrs := 72
-	artistAddress := "0xdc5b887c1bfb1b10"
-	artist := "Bjartek"
-	name := "LeetLines"
-	editions := 5
-	description := `My leety lines`
+Despite her obstacles, Elise Swopes, the Black female fine artist of Rise and Shine, made a name for herself using only her iPhone as a tool for building her vision. This artwork is created in celebration of Patricia Roberts Harris, the first Black woman to serve on a Fortune 500 board, and the “Lift As You Climb” Fellowship, created to inspire the next generation of diverse talent.`
 
-	imageUrl := "contourline-1637789359.jpeg"
+	imageUrl := "https://uploads.linear.app/b5013517-8161-4940-b2a0-d5fc21b1fafb/14fb3f01-9f9e-4252-b1c3-5c06c30939d3/8698ee37-1182-49cc-96ef-4b0ec7fc8f05"
 
-	//flow := gwtf.NewGoWithTheFlowMainNet()
-	flow := gwtf.NewGoWithTheFlowDevNet()
-
-	err := flow.UploadImageAsDataUrl(imageUrl, "admin")
-	//	err := flow.DownloadImageAndUploadAsDataUrl(imageUrl, "admin")
+	flow := gwtf.NewGoWithTheFlowMainNet()
+	//	flow := gwtf.NewGoWithTheFlowDevNet()
+	err := flow.DownloadImageAndUploadAsDataUrl(imageUrl, "admin")
 	if err != nil {
 		panic(err)
 	}
