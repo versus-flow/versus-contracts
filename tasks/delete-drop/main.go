@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/bjartek/go-with-the-flow/v2/gwtf"
+	"github.com/bjartek/overflow/overflow"
 )
 
 func main() {
@@ -19,16 +19,16 @@ func main() {
 	if err != nil {
 		fmt.Println("could not parse drop as number")
 	}
-	flow := gwtf.NewGoWithTheFlowMainNet()
+	flow := overflow.NewOverflowMainnet().Start()
 
-	flow.ScriptFromFile("drop_status").UInt64Argument(drop).Run()
+	flow.ScriptFromFile("drop_status").Args(flow.Arguments().UInt64(drop)).Run()
 
 	//	value := flow.ScriptFromFile("not_valid_drop").UInt64Argument(drop).RunReturns()
 
 	//	if value == cadence.Bool(true) {
 	fmt.Println("can we delete this drop?, press CTRL-C to abort, or any other key to delete")
 	fmt.Scanln()
-	flow.TransactionFromFile("destroy_versus").SignProposeAndPayAs("admin").UInt64Argument(drop).Run()
+	flow.TransactionFromFile("destroy_versus").SignProposeAndPayAs("admin").Args(flow.Arguments().UInt64(drop)).Run()
 	//	} else {
 	//		fmt.Println("We cannot delete this")
 	//	}

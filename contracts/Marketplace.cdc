@@ -32,6 +32,7 @@ pub contract Marketplace {
     pub resource interface SalePublic {
         pub fun purchase(tokenID: UInt64, recipientCap: Capability<&{Art.CollectionPublic}>, buyTokens: @FungibleToken.Vault)
         pub fun getSaleItem(tokenID: UInt64): MarketplaceData
+        pub fun getUUIDforSaleItem(tokenID:UInt64): UInt64
         pub fun getIDs(): [UInt64]
         pub fun listSaleItems() : [MarketplaceData]
         pub fun getContent(tokenID: UInt64) : String
@@ -72,6 +73,10 @@ pub contract Marketplace {
             self.forSale <- {}
             self.ownerVault = vault
             self.prices = {}
+        }
+
+        pub fun getUUIDforSaleItem(tokenID:UInt64): UInt64 {
+           return self.forSale[tokenID]?.uuid!
         }
 
         pub fun getContent(tokenID: UInt64) : String {

@@ -5,12 +5,12 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/bjartek/go-with-the-flow/v2/gwtf"
+	"github.com/bjartek/overflow/overflow"
 )
 
 func main() {
 
-	flow := gwtf.NewGoWithTheFlowMainNet()
+	flow := overflow.NewOverflowMainnet().Start()
 
 	account, ok := os.LookupEnv("account")
 	if !ok {
@@ -29,8 +29,7 @@ func main() {
 
 	flow.TransactionFromFile("move_art").
 		SignProposeAndPayAs("admin").
-		RawAccountArgument(account).
-		UInt64Argument(artId).
+		Args(flow.Arguments().RawAccount(account).UInt64(artId)).
 		RunPrintEventsFull()
 
 }
