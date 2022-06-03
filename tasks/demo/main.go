@@ -16,7 +16,7 @@ func main() {
 	t := now.Unix() - 5
 	timeString := strconv.FormatInt(t, 10) + ".0"
 
-	flow := gwtf.NewGoWithTheFlowInMemoryEmulator()
+	flow := gwtf.NewGoWithTheFlowEmulator()
 
 	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("account").UFix64Argument("100.0").RunPrintEventsFull()
 	flow.TransactionFromFile("mint_tokens").SignProposeAndPayAsService().AccountArgument("artist").UFix64Argument("100.0").RunPrintEventsFull()

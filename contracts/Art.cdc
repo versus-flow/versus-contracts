@@ -143,6 +143,14 @@ pub contract Art: NonFungibleToken {
 			self.ownedNFTs <- {}
 		}
 
+		// used after settlement to burn remaining art that was not sold
+		access(account) fun burnAll() {
+			for key in self.ownedNFTs.keys{
+				log("burning art with key=".concat(key.toString()))
+				destroy <- self.ownedNFTs.remove(key: key)
+			}
+		}
+
 		// withdraw removes an NFT from the collection and moves it to the caller
 		pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
 			let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
@@ -175,7 +183,7 @@ pub contract Art: NonFungibleToken {
 		// borrowNFT gets a reference to an NFT in the collection
 		// so that the caller can read its metadata and call its methods
 		pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
-			return &self.ownedNFTs[id] as &NonFungibleToken.NFT
+			return (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
 		}
 
 		// borrowArt returns a borrowed reference to a Art 
@@ -186,7 +194,7 @@ pub contract Art: NonFungibleToken {
 		// Returns: A reference to the NFT
 		pub fun borrowArt(id: UInt64): &{Art.Public}? {
 			if self.ownedNFTs[id] != nil {
-				let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+				let ref = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
 				return ref as! &Art.NFT
 			} else {
 				return nil

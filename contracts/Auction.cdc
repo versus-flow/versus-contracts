@@ -426,7 +426,7 @@ pub contract Auction {
 
         pub fun extendAllAuctionsWith(_ amount: UFix64) {
             for id in self.auctionItems.keys {
-                let itemRef = &self.auctionItems[id] as? &AuctionItem
+                let itemRef = (&self.auctionItems[id] as? &AuctionItem?)!
                 itemRef.extendWith(amount)
             }
             
@@ -475,7 +475,7 @@ pub contract Auction {
             let priceList: {UInt64: AuctionStatus} = {}
 
             for id in self.auctionItems.keys {
-                let itemRef = &self.auctionItems[id] as? &AuctionItem
+                let itemRef = (&self.auctionItems[id] as? &AuctionItem?)!
                 priceList[id] = itemRef.getAuctionStatus()
             }
             
@@ -489,7 +489,7 @@ pub contract Auction {
             }
 
             // Get the auction item resources
-            let itemRef = &self.auctionItems[id] as &AuctionItem
+            let itemRef = (&self.auctionItems[id] as &AuctionItem?)!
             return itemRef.getAuctionStatus()
 
         }
@@ -497,7 +497,7 @@ pub contract Auction {
         // settleAuction sends the auction item to the highest bidder
         // and deposits the FungibleTokens into the auction owner's account
         pub fun settleAuction(_ id: UInt64) {
-            let itemRef = &self.auctionItems[id] as &AuctionItem
+            let itemRef = (&self.auctionItems[id] as &AuctionItem?)!
             itemRef.settleAuction(cutPercentage: self.cutPercentage, cutVault: self.marketplaceVault)
 
         }
@@ -507,7 +507,7 @@ pub contract Auction {
                 self.auctionItems[id] != nil:
                     "Auction does not exist"
             }
-            let itemRef = &self.auctionItems[id] as &AuctionItem
+            let itemRef = (&self.auctionItems[id] as &AuctionItem?)!
             itemRef.returnAuctionItemToOwner()
             emit Canceled(tokenID: id)
         }
@@ -521,7 +521,7 @@ pub contract Auction {
             }
 
             // Get the auction item resources
-            let itemRef = &self.auctionItems[id] as &AuctionItem
+            let itemRef = (&self.auctionItems[id] as &AuctionItem?)!
             itemRef.placeBid(bidTokens: <- bidTokens, 
               vaultCap:vaultCap, 
               collectionCap:collectionCap)

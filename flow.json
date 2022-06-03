@@ -127,7 +127,6 @@
 				"Auction", 
 				"Versus",
 				"Marketplace",
-				"MarketplaceTopShot",
 				"Profile"
 			]
 		},
@@ -139,10 +138,7 @@
 				"Auction", 
 				"Versus",
 				"Marketplace",
-				"MarketplaceTopShot",
-				"TopShot",
-				"Profile",
-				"FUSD"
+				"Profile"
 			],
 			"emulator-artist" : [],
 			"emulator-buyer1" : [],
