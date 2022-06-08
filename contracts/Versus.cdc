@@ -210,7 +210,7 @@ pub contract Versus {
 				return &self.uniqueAuction as &Auction.AuctionItem
 			} else {
 				let editionStatus=dropStatus.editionsStatuses[auctionId]!
-				return &self.editionAuctions.auctionItems[auctionId] as &Auction.AuctionItem
+				return (&self.editionAuctions.auctionItems[auctionId] as &Auction.AuctionItem?)!
 			}
 		}
 
@@ -382,8 +382,8 @@ pub contract Versus {
 			firstBidBlock:UInt64?,
 			difference:UFix64,
 			metadata: Art.Metadata,
-			settledAt: UInt64?
-			active: Bool
+			settledAt: UInt64?,
+			active: Bool,
 			startPrice: UFix64
 		) {
 			self.dropId=dropId
@@ -495,7 +495,7 @@ pub contract Versus {
   	pub fun getAllStatuses(): {UInt64: DropStatus} {
   		var dropStatus: {UInt64: DropStatus }= {}
   		for id in self.drops.keys {
-  			let itemRef = &self.drops[id] as? &Drop
+  			let itemRef = (&self.drops[id] as? &Drop?)!
   			dropStatus[id] = itemRef.getDropStatus()
   		}
   		return dropStatus
@@ -506,13 +506,13 @@ pub contract Versus {
   			self.drops[dropId] != nil:
   			"drop doesn't exist"
   		}
-  		return &self.drops[dropId] as &Drop
+  		return (&self.drops[dropId] as &Drop?)!
   	}
 
 		pub fun getDropByCacheKey(_ cacheKey: UInt64) : DropStatus? {
 			var dropStatus: {UInt64: DropStatus }= {}
 			for id in self.drops.keys {
-				let itemRef = &self.drops[id] as? &Drop
+				let itemRef = (&self.drops[id] as? &Drop?)!
 				if itemRef.contentId == cacheKey {
 					return itemRef.getDropStatus()
 				}
@@ -639,11 +639,8 @@ pub contract Versus {
 			self.server!.borrow()!.settle(dropId)
 
 			//since settling will return all items not sold to the NFTTrash, we take out the trash here.
-			let artC=Versus.account.borrow<&NonFungibleToken.Collection>(from: Art.CollectionStoragePath)!
-			for key in artC.ownedNFTs.keys{
-				log("burning art with key=".concat(key.toString()))
-				destroy <- artC.ownedNFTs.remove(key: key)
-			}
+			let artC=Versus.account.borrow<&Art.Collection>(from: Art.CollectionStoragePath)!
+			artC.burnAll()
 		}
 
 		pub fun setVersusCut(_ num:UFix64) {
@@ -662,7 +659,7 @@ pub contract Versus {
 			minimumBidUniqueIncrement: UFix64,
 			startTime: UFix64,
 			startPrice: UFix64,  //TODO: seperate startPrice for unique and edition
-			vaultCap: Capability<&{FungibleToken.Receiver}>
+			vaultCap: Capability<&{FungibleToken.Receiver}>,
 			duration: UFix64,
 			extensionOnLateBid: UFix64)  {
 

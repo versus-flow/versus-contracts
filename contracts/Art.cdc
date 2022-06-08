@@ -1,5 +1,6 @@
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 import FungibleToken from "./standard/FungibleToken.cdc"
+import MetadataViews from "./standard/MetadataViews.cdc"
 import Content from "./Content.cdc"
 
 /// A NFT contract to store art
@@ -72,7 +73,7 @@ pub contract Art: NonFungibleToken {
 		}
 	}
 
-	pub resource NFT: NonFungibleToken.INFT, Public {
+	pub resource NFT: NonFungibleToken.INFT, Public, MetadataViews.Resolver {
 		//TODO: tighten up the permission here.
 		pub let id: UInt64
 		pub let name: String
@@ -121,6 +122,57 @@ pub contract Art: NonFungibleToken {
 			let contentCollection= self.contentCapability!.borrow()!
 			return contentCollection.content(self.contentId!)
 		}
+
+		pub fun getViews() : [Type] {
+
+			var views : [Type]=[]
+			views.append(Type<MetadataViews.NFTCollectionData>())
+			views.append(Type<MetadataViews.NFTCollectionDisplay>())
+			views.append(Type<MetadataViews.Display>())
+			views.append(Type<MetadataViews.Royalties>())
+			views.append(Type<MetadataViews.Edition>())
+			return views
+		}
+		pub fun resolveView(_ type: Type): AnyStruct? {
+
+			if type == Type<MetadataViews.NFTCollectionDisplay>() {
+				let externalURL = MetadataViews.ExternalURL("https://versus.auctin")
+				let squareImage = MetadataViews.Media(file: MetadataViews.HTTPFile(url: "https://pbs.twimg.com/profile_images/1295757455679528963/ibkAIRww_400x400.jpg"), mediaType: "image/jpeg")
+				let bannerImage = MetadataViews.Media(file: MetadataViews.HTTPFile(url: "https://pbs.twimg.com/profile_images/1295757455679528963/ibkAIRww_400x400.jpg"), mediaType: "image/jpeg")
+				return MetadataViews.NFTCollectionDisplay(name: "Versus", description: "Curated auction house for fine art", externalURL: externalURL, squareImage: squareImage, bannerImage: bannerImage, socials: {"twitter" : MetadataViews.ExternalURL("https://twitter.com/FlowVersus")})
+			}
+
+			if type == Type<MetadataViews.NFTCollectionData>() {
+				return MetadataViews.NFTCollectionData(storagePath: Art.CollectionStoragePath,
+				publicPath: Art.CollectionPublicPath,
+				providerPath: /private/versusArtCollection,
+				publicCollection: Type<&Art.Collection{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection, Art.CollectionPublic}>(),
+				publicLinkedType: Type<&Art.Collection{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection, Art.CollectionPublic}>(),
+				providerLinkedType: Type<&Art.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection, Art.CollectionPublic}>(),
+				createEmptyCollectionFunction: fun(): @NonFungibleToken.Collection {return <- Art.createEmptyCollection()}
+				)
+			}
+
+			if type == Type<MetadataViews.Royalties>() {
+				let royalties : [MetadataViews.Royalty] = []
+				for royaltyKey in self.royalty.keys {
+					let value = self.royalty[royaltyKey]!
+					royalties.append(MetadataViews.Royalty(recepient: value.wallet, cut: value.cut, description: royaltyKey))
+				}
+				return MetadataViews.Royalties(cutInfos: royalties)
+			}
+
+			if type == Type<MetadataViews.Display>() {
+				return MetadataViews.Display(name: self.name, description: self.description, thumbnail: MetadataViews.HTTPFile(url: "https://res.cloudinary.com/dxra4agvf/image/upload/c_fill,w_200/f_auto/maincache".concat(self.cacheKey()))
+			)
+
+			if type == Type<MetadataViews.Edition>() {
+				return MetadataViews.Edition(name:nil, number: self.edition, max: self.maxEdition)
+			}
+
+			return nil
+		}
+
 	}
 
 
@@ -134,13 +186,21 @@ pub contract Art: NonFungibleToken {
 	}
 
 
-	pub resource Collection: CollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
+	pub resource Collection: CollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, MetadataViews.ResolverCollection {
 		// dictionary of NFT conforming tokens
 		// NFT is a resource type with an `UInt64` ID field
 		pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
 		init () {
 			self.ownedNFTs <- {}
+		}
+
+		// used after settlement to burn remaining art that was not sold
+		access(account) fun burnAll() {
+			for key in self.ownedNFTs.keys{
+				log("burning art with key=".concat(key.toString()))
+				destroy <- self.ownedNFTs.remove(key: key)
+			}
 		}
 
 		// withdraw removes an NFT from the collection and moves it to the caller
@@ -175,7 +235,7 @@ pub contract Art: NonFungibleToken {
 		// borrowNFT gets a reference to an NFT in the collection
 		// so that the caller can read its metadata and call its methods
 		pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
-			return &self.ownedNFTs[id] as &NonFungibleToken.NFT
+			return (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
 		}
 
 		// borrowArt returns a borrowed reference to a Art 
@@ -186,11 +246,19 @@ pub contract Art: NonFungibleToken {
 		// Returns: A reference to the NFT
 		pub fun borrowArt(id: UInt64): &{Art.Public}? {
 			if self.ownedNFTs[id] != nil {
-				let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+				let ref = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
 				return ref as! &Art.NFT
 			} else {
 				return nil
 			}
+		}
+
+		pub fun borrowViewResolver(id: UInt64): &AnyResource{MetadataViews.Resolver} {
+			pre {
+				self.ownedNFTs[id] != nil : "NFT does not exist"
+			}
+			let nft = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
+			return nft as! &Art.NFT
 		}
 
 

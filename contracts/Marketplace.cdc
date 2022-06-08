@@ -98,7 +98,7 @@ pub contract Marketplace {
 
           pub fun borrowArt(id: UInt64): &{Art.Public}? {
             if self.forSale[id] != nil {
-                return &self.forSale[id] as &Art.NFT
+                return (&self.forSale[id] as &Art.NFT?)!
             } else {
                 return nil
             }
