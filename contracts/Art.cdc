@@ -133,6 +133,7 @@ pub contract Art: NonFungibleToken {
 			views.append(Type<MetadataViews.Edition>())
 			return views
 		}
+
 		pub fun resolveView(_ type: Type): AnyStruct? {
 
 			if type == Type<MetadataViews.NFTCollectionDisplay>() {
@@ -163,11 +164,11 @@ pub contract Art: NonFungibleToken {
 			}
 
 			if type == Type<MetadataViews.Display>() {
-				return MetadataViews.Display(name: self.name, description: self.description, thumbnail: MetadataViews.HTTPFile(url: "https://res.cloudinary.com/dxra4agvf/image/upload/c_fill,w_200/f_auto/maincache".concat(self.cacheKey()))
-			)
+				return MetadataViews.Display(name: self.name, description: self.description, thumbnail: MetadataViews.HTTPFile(url: "https://res.cloudinary.com/dxra4agvf/image/upload/c_fill,w_200/f_auto/maincache".concat(self.cacheKey())))
+			}
 
 			if type == Type<MetadataViews.Edition>() {
-				return MetadataViews.Edition(name:nil, number: self.edition, max: self.maxEdition)
+				return MetadataViews.Edition(name:nil, number: self.metadata.edition, max: self.metadata.maxEdition)
 			}
 
 			return nil
