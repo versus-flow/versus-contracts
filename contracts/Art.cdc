@@ -131,13 +131,18 @@ pub contract Art: NonFungibleToken {
 			views.append(Type<MetadataViews.Display>())
 			views.append(Type<MetadataViews.Royalties>())
 			views.append(Type<MetadataViews.Edition>())
+			views.append(Type<MetadataViews.ExternalURL>())
 			return views
 		}
 
 		pub fun resolveView(_ type: Type): AnyStruct? {
 
+			if type == Type<MetadataViews.ExternalURL>() {
+				 return MetadataViews.ExternalURL("https://www.versus.auction/piece/".concat(self.owner!.address.toString()).concat("/").concat(self.id.toString()))
+			}
+
 			if type == Type<MetadataViews.NFTCollectionDisplay>() {
-				let externalURL = MetadataViews.ExternalURL("https://versus.auctin")
+				let externalURL = MetadataViews.ExternalURL("https://versus.auction")
 				let squareImage = MetadataViews.Media(file: MetadataViews.HTTPFile(url: "https://pbs.twimg.com/profile_images/1295757455679528963/ibkAIRww_400x400.jpg"), mediaType: "image/jpeg")
 				let bannerImage = MetadataViews.Media(file: MetadataViews.HTTPFile(url: "https://pbs.twimg.com/profile_images/1295757455679528963/ibkAIRww_400x400.jpg"), mediaType: "image/jpeg")
 				return MetadataViews.NFTCollectionDisplay(name: "Versus", description: "Curated auction house for fine art", externalURL: externalURL, squareImage: squareImage, bannerImage: bannerImage, socials: {"twitter" : MetadataViews.ExternalURL("https://twitter.com/FlowVersus")})
