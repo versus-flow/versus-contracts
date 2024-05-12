@@ -113,7 +113,6 @@ contract Art: NonFungibleToken{
 
     access(all)
     resource NFT: NonFungibleToken.NFT, Public, ViewResolver.Resolver{ 
-        //TODO: tighten up the permission here.
         access(all)
         let id: UInt64
 
@@ -164,6 +163,11 @@ contract Art: NonFungibleToken{
         access(all) 
         view fun getMetadata(): Metadata{ 
             return self.metadata
+        }
+
+        access(all) 
+        view fun getRoyalty(): {String: Royalty}{ 
+            return self.royalty
         }
 
         access(all) 
@@ -267,7 +271,7 @@ contract Art: NonFungibleToken{
         }
 
         // withdraw removes an NFT from the collection and moves it to the caller
-        access(NonFungibleToken.Withdraw |NonFungibleToken.Owner)
+        access(NonFungibleToken.Withdraw)
         fun withdraw(withdrawID: UInt64): @{NonFungibleToken.NFT}{ 
             let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
             return <-token
