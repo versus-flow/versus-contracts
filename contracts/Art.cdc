@@ -7,6 +7,8 @@ import "Content"
 /// A NFT contract to store art
 access(all)
 contract Art: NonFungibleToken{ 
+
+
     access(all)
     let CollectionStoragePath: StoragePath
 
@@ -151,6 +153,12 @@ contract Art: NonFungibleToken{
             self.schema = nil
             self.name = metadata.name
             self.description = metadata.description
+        }
+
+
+        access(all)
+        fun getRoyalty() : {String: Royalty} {
+            return self.royalty
         }
 
         access(all) 
@@ -412,7 +420,7 @@ contract Art: NonFungibleToken{
     access(account)
     fun makeEdition(original: &NFT, edition: UInt64, maxEdition: UInt64): @Art.NFT{ 
         let metadata = Metadata(name: original.metadata.name, artist: original.metadata.artist, artistAddress: original.metadata.artistAddress, description: original.metadata.description, type: original.metadata.type, edition: edition, maxEdition: maxEdition)
-        var newNFT <- create NFT(initID: Art.totalSupply, metadata: metadata, contentCapability: original.contentCapability, contentId: original.contentId, url: original.url, royalty: *original.royalty)
+        var newNFT <- create NFT(initID: Art.totalSupply, metadata: metadata, contentCapability: original.contentCapability, contentId: original.contentId, url: original.url, royalty: original.getRoyalty())
         emit Created(id: Art.totalSupply, metadata: newNFT.metadata)
         emit Editioned(id: Art.totalSupply, from: original.id, edition: edition, maxEdition: maxEdition)
         Art.totalSupply = Art.totalSupply + 1

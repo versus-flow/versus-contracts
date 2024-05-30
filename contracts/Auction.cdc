@@ -9,6 +9,8 @@ import "NonFungibleToken"
 access(all)
 contract Auction{ 
 
+    access(all) entitlement Owner
+
     // This struct aggreates status for the auction and is exposed in order to create websites using auction information
     access(all)
     struct AuctionStatus{ 
@@ -480,7 +482,7 @@ contract Auction{
             self.auctionItems <-{} 
         }
 
-        access(all)
+        access(Owner)
         fun extendAllAuctionsWith(_ amount: UFix64){ 
             for id in self.auctionItems.keys{ 
                 let itemRef = (&self.auctionItems[id] as &AuctionItem?)!
@@ -534,13 +536,13 @@ contract Auction{
 
         // settleAuction sends the auction item to the highest bidder
         // and deposits the FungibleTokens into the auction owner's account
-        access(all)
+        access(Owner)
         fun settleAuction(_ id: UInt64){ 
             let itemRef = (&self.auctionItems[id] as &AuctionItem?)!
             itemRef.settleAuction(cutPercentage: self.cutPercentage, cutVault: self.marketplaceVault)
         }
 
-        access(all)
+        access(Owner)
         fun cancelAuction(_ id: UInt64){ 
             pre{ 
                 self.auctionItems[id] != nil:

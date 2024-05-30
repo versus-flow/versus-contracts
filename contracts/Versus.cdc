@@ -21,6 +21,8 @@ reuse the Auction contract for other things if somebody would want that.
 access(all)
 contract Versus{ 
 
+    access(all) entitlement Owner
+
     //A set of capability and storage paths used in this contract
     access(all)
     let VersusAdminPublicPath: PublicPath
@@ -567,7 +569,7 @@ contract Versus{
 
     access(all)
     resource interface AdminDrop{ 
-        access(all)
+        access(Owner)
         fun createDrop(
             nft: @{NonFungibleToken.NFT},
             editions: UInt64,
@@ -580,7 +582,7 @@ contract Versus{
             extensionOnLateBid: UFix64
         )
 
-        access(all)
+        access(Owner)
         fun settle(_ dropId: UInt64)
     }
 
@@ -607,7 +609,7 @@ contract Versus{
             self.drops <-{} 
         }
 
-        access(all)
+        access(Owner)
         fun withdraw(_ withdrawID: UInt64): @Drop{ 
             let token <- self.drops.remove(key: withdrawID) ?? panic("missing drop")
             return <-token
@@ -615,14 +617,14 @@ contract Versus{
 
         /// Set the cut percentage for versus
         /// @param cut: The cut percentage as a Ufix64 that versus will take for each drop
-        access(all)
+        access(Owner)
         fun setCutPercentage(_ cut: UFix64){ 
             self.cutPercentage = cut
         }
 
         // When creating a drop you send in an NFT and the number of editions you want to sell vs the unique one
         // There will then be minted edition number of extra copies and put into the editions auction
-        access(all)
+        access(Owner)
         fun createDrop(nft: @{NonFungibleToken.NFT}, editions: UInt64, minimumBidIncrement: UFix64, minimumBidUniqueIncrement: UFix64, startTime: UFix64, startPrice: UFix64, vaultCap: Capability<&{FungibleToken.Receiver}>, duration: UFix64, extensionOnLateBid: UFix64){ 
             pre{ 
                 vaultCap.check() == true:
@@ -636,7 +638,7 @@ contract Versus{
             let editionedAuctions <- Auction.createAuctionCollection(marketplaceVault: self.marketplaceVault, cutPercentage: self.cutPercentage)
             var currentEdition = 1 as UInt64
             while currentEdition <= editions{ 
-                editionedAuctions.createAuction(token: <-Art.makeEdition(original: &art as &Art.NFT, edition: currentEdition, maxEdition: editions), minimumBidIncrement: minimumBidIncrement, auctionLength: duration, auctionStartTime: startTime, startPrice: startPrice, collectionCap: self.marketplaceNFTTrash, vaultCap: vaultCap)
+                editionedAuctions.createAuction(token: <-Art.makeEdition(original: &art, edition: currentEdition, maxEdition: editions), minimumBidIncrement: minimumBidIncrement, auctionLength: duration, auctionStartTime: startTime, startPrice: startPrice, collectionCap: self.marketplaceNFTTrash, vaultCap: vaultCap)
                 currentEdition = currentEdition + 1 
             }
 
@@ -702,7 +704,7 @@ contract Versus{
         }
 
         //settle a drop
-        access(all)
+        access(Owner)
         fun settle(_ dropId: UInt64){ 
             self.getDrop(dropId).settle(cutPercentage: self.cutPercentage, vault: self.marketplaceVault)
         }
@@ -802,7 +804,7 @@ contract Versus{
         }
 
         // This will settle/end an auction
-        access(all)
+        access(Owner)
         fun settle(_ dropId: UInt64){ 
             pre{ 
                 self.server != nil:
@@ -815,7 +817,7 @@ contract Versus{
             artC.burnAll()
         }
 
-        access(all)
+        access(Owner)
         fun setVersusCut(_ num: UFix64){ 
             pre{ 
                 self.server != nil:
@@ -825,7 +827,7 @@ contract Versus{
             dc.setCutPercentage(num)
         }
 
-        access(all)
+        access(Owner)
         fun createDrop(nft: @{NonFungibleToken.NFT}, editions: UInt64, minimumBidIncrement: UFix64, minimumBidUniqueIncrement: UFix64, startTime: UFix64, startPrice: UFix64, //TODO: seperate startPrice for unique and edition																																											  
         vaultCap: Capability<&{FungibleToken.Receiver}>, duration: UFix64, extensionOnLateBid: UFix64){ 
             pre{ 
@@ -836,7 +838,7 @@ contract Versus{
         }
 
         /* A stored Transaction to mintArt on versus to a given artist */
-        access(all)
+        access(Owner)
         fun mintArt(artist: Address, artistName: String, artName: String, content: String, description: String, type: String, artistCut: UFix64, minterCut: UFix64): @Art.NFT{ 
             pre{ 
                 self.server != nil:
@@ -857,12 +859,12 @@ contract Versus{
             return <-art
         }
 
-        access(all)
+        access(Owner)
         fun editionArt(art: &Art.NFT, edition: UInt64, maxEdition: UInt64): @Art.NFT{ 
             return <-Art.makeEdition(original: art, edition: edition, maxEdition: maxEdition)
         }
 
-        access(all)
+        access(Owner)
         fun editionAndDepositArt(art: &Art.NFT, to: [Address]){ 
             let maxEdition: UInt64 = UInt64(to.length)
             var i: UInt64 = 1

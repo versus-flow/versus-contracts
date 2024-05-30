@@ -1,5 +1,8 @@
 access(all)
 contract Content{ 
+
+    access(all) entitlement Owner
+
     access(all)
     var totalSupply: UInt64
 
@@ -52,7 +55,7 @@ contract Content{
         }
 
         // withdraw removes an NFT from the collection and moves it to the caller
-        access(all)
+        access(Owner)
         fun withdraw(withdrawID: UInt64): @Blob{ 
             let token <- self.contents.remove(key: withdrawID) ?? panic("missing content")
             emit Withdraw(id: token.id, from: self.owner?.address)
@@ -92,7 +95,7 @@ contract Content{
     fun createContent(_ content: String): @Content.Blob{ 
         var newNFT <- create Blob(initID: Content.totalSupply, content: content)
         emit Created(id: Content.totalSupply)
-        Content.totalSupply = Content.totalSupply + UInt64(1)
+        Content.totalSupply = Content.totalSupply + 1
         return <-newNFT
     }
 

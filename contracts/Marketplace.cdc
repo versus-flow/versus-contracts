@@ -6,6 +6,9 @@ import "NonFungibleToken"
 // A standard marketplace contract only hardcoded against Versus art that pay out Royalty as stored int he Art NFT
 access(all)
 contract Marketplace{ 
+
+    access(all) entitlement Owner
+
     access(all)
     let CollectionStoragePath: StoragePath
 
@@ -155,7 +158,7 @@ contract Marketplace{
             }
         }
 
-        access(all)
+        access(Owner)
         fun withdraw(tokenID: UInt64): @Art.NFT{ 
             let price = self.prices.remove(key: tokenID)
             // remove and return the token
@@ -166,7 +169,7 @@ contract Marketplace{
         }
 
         // listForSale lists an NFT for sale in this collection
-        access(all)
+        access(Owner)
         fun listForSale(token: @Art.NFT, price: UFix64){ 
             emit SaleItem(id: token.id, seller: self.ownerVault.address, price: price, active: true, title: token.metadata.name, artist: token.metadata.artist, edition: token.metadata.edition, maxEdition: token.metadata.maxEdition, cacheKey: token.cacheKey())
             let id = token.id
@@ -181,7 +184,7 @@ contract Marketplace{
         }
 
         // changePrice changes the price of a token that is currently for sale
-        access(all)
+        access(Owner)
         fun changePrice(tokenID: UInt64, newPrice: UFix64){ 
             self.prices[tokenID] = newPrice
             emit PriceChanged(id: tokenID, newPrice: newPrice)
